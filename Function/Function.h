@@ -1,0 +1,118 @@
+#ifndef _XMUTIL_SYMBOL_FUNCTION_H
+#define _XMUTIL_SYMBOL_FUNCTION_H
+#include "../Symbol/Symbol.h"
+#include <boost/utility.hpp>
+#include "State.h"
+
+class Expression ; /* forward declaration */
+class ExpressionList ; // forward
+
+/* abstract class - every function has its own subclass
+   defined here with bodies in Function.cpp or in their own 
+   files depending on complexity */
+
+class Function :
+   public Symbol
+{
+public:
+   Function(SymbolNameSpace *sns,const std::string &name,int narg) ;
+   virtual ~Function(void) = 0 ;
+   SYMTYPE isType(void) { return Symtype_Function ; }
+   virtual bool AsKeyword(void) { return false ; } // for the parser - treats name as keyword not function
+   virtual bool IsMemoryless(void) { return true ; }
+   virtual bool IsTimeDependent(void) { return false ; }
+   virtual double Eval(Expression *ex,ExpressionList *arg,ContextInfo *info) = 0 ;
+   virtual bool CheckComputed(ContextInfo *info,ExpressionList *arg) ;
+   virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
+   virtual const char *ComputableName(void) { return "" ; }
+   virtual const char *ComputableNameInit(void) { return "" ; }
+   int NumberArgs(void) { return iNumberArgs ; }
+protected :
+   int iNumberArgs ;
+};
+
+
+class FunctionMemoryBase : public Function {
+public:
+   FunctionMemoryBase(SymbolNameSpace *sns,const std::string &name,int narg,unsigned actarg,unsigned iniarg) : Function(sns,name,narg) {iActiveArgMark=BitFlip(actarg) ; iInitArgMark = BitFlip(iniarg) ;}
+   ~FunctionMemoryBase(void) {}
+   unsigned BitFlip(unsigned bits) ;
+   bool IsMemoryless(void) { return false ; }
+   bool CheckComputed(ContextInfo *info,ExpressionList *arg) ;
+   void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
+private :
+   unsigned iInitArgMark ;
+   unsigned iActiveArgMark ;
+} ;
+
+#define FSubclassKeyword(name,xname,narg) \
+class name : public Function {\
+public :\
+   name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
+   ~name(void) {}\
+   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) {return -FLT_MAX ; }\
+    const char *ComputableName(void) { return " ?? " ; }\
+    bool AsKeyword(void) { return true ; } \
+} ;
+
+
+
+
+#define FSubclassStart(name,xname,narg,cname) \
+class name : public Function {\
+public :\
+   name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
+   ~name(void) {}\
+   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) ;\
+    const char *ComputableName(void) { return cname ; }\
+private :
+
+#define FSubclass(name,xname,narg,cname) FSubclassStart(name,xname,narg,cname) };
+
+
+
+
+#define FSubclassMemoryStart(name,xname,narg,actarg,iniarg,cnamea,cnamei) \
+class name : public FunctionMemoryBase {\
+public :\
+   name(SymbolNameSpace *sns) : FunctionMemoryBase(sns,xname,narg,actarg,iniarg) { }\
+   ~name(void) {}\
+   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) ;\
+   const char *ComputableName(void) { return cnamea ; }\
+   const char *ComputableNameInit(void) { return cnamei ; }\
+private :
+
+#define FSubclassMemory(name,xname,narg,actarg,iniarg,cnamea,cnamei) FSubclassMemoryStart(name,xname,narg,actarg,iniarg,cnamea,cnamei) };
+
+
+#define FSubclassTimeStart(name,xname,narg,cname) \
+class name : public Function {\
+public :\
+   name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
+   ~name(void) {}\
+   bool IsTimeDependent(void) { return true ; }\
+   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) ;\
+   const char *ComputableName(void) { return cname ; }\
+private :
+
+#define FSubclassTime(name,xname,narg,cname) FSubclassTimeStart(name,xname,narg,cname) };
+
+FSubclass(FunctionMax,"MAX",2,"max")
+FSubclass(FunctionMin,"MIN",2,"min")
+FSubclassMemory(FunctionInteg,"INTEG",2,BOOST_BINARY(10),BOOST_BINARY(01),"integ_active","integ_init")
+FSubclassTime(FunctionPulse,"PULSE",2,"pulse") 
+FSubclassKeyword(FunctionTabbedArray,"TABBED ARRAY",1)
+
+/*
+class FunctionMin :
+   public Function
+{
+public :
+   FunctionMin(SymbolNameSpace *sns) : Function(sal,"MIN",2) { ; }
+   ~FunctionMin(void) { }
+   inline double Eval(Expression *,ExpressionList *arg) ;
+} ;
+
+*/
+
+#endif
