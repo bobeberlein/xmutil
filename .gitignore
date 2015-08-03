@@ -1,2 +1,5 @@
 /Debug
 /ipch
+*.user
+*.sdf
+*.suo
