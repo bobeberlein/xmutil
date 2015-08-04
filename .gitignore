@@ -6,3 +6,4 @@ ipch/
 third_party/include/
 third_party/lib64/
 third_party/lib32/
+third_party/bison/

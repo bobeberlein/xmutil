@@ -70,7 +70,7 @@
 
 /* Copy the first part of user declarations.  */
 /* Line 371 of yacc.c  */
-#line 7 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 7 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
 
 #include "../Symbol/Parse.h"
 #include "VensimParseFunctions.h"
@@ -80,7 +80,7 @@ extern void vpyyerror (char const *);
 #define YYDEBUG 1
 
 /* Line 371 of yacc.c  */
-#line 84 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.tab.c"
+#line 84 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.tab.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -100,8 +100,8 @@ extern void vpyyerror (char const *);
 
 /* In a future release of Bison, this section will be replaced
    by #include "VYacc.tab.h".  */
-#ifndef YY_VPYY_C_USERS_BOB_DROPBOX_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
-# define YY_VPYY_C_USERS_BOB_DROPBOX_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
+#ifndef YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
+# define YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -165,12 +165,12 @@ int vpyyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_VPYY_C_USERS_BOB_DROPBOX_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED  */
+#endif /* !YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 174 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.tab.c"
+#line 174 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.tab.c"
 
 #ifdef short
 # undef short
@@ -1483,379 +1483,379 @@ yyreduce:
     {
         case 2:
 /* Line 1792 of yacc.c  */
-#line 73 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 73 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { return VPTT_eqend ; }
     break;
 
   case 3:
 /* Line 1792 of yacc.c  */
-#line 74 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 74 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { return VPTT_groupstar ; }
     break;
 
   case 4:
 /* Line 1792 of yacc.c  */
-#line 75 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 75 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {vpyy_addfulleq((yyvsp[(1) - (4)].eqn),(yyvsp[(3) - (4)].uni)) ; return '~' ; }
     break;
 
   case 5:
 /* Line 1792 of yacc.c  */
-#line 76 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 76 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {vpyy_addfulleq((yyvsp[(1) - (4)].eqn),(yyvsp[(3) - (4)].uni)) ; return '|' ; }
     break;
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 77 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 77 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {vpyy_addfulleq((yyvsp[(1) - (3)].eqn),'\0') ; return '~' ;}
     break;
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 78 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 78 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {vpyy_addfulleq((yyvsp[(1) - (3)].eqn),'\0') ; return '|' ;}
     break;
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 82 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 82 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),'\0',(yyvsp[(3) - (3)].exl),'=') ; }
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 83 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 83 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.eqn) = vpyy_addeq((yyvsp[(1) - (4)].lhs),(Expression *)(yyvsp[(3) - (4)].tbl),'\0','(') ; }
     break;
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 84 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 84 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),(yyvsp[(3) - (3)].exn),'\0',VPTT_dataequals) ; }
     break;
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 85 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 85 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[(1) - (4)].sym),'\0'),'\0','\0'),(Expression *)vpyy_symlist_expression((yyvsp[(3) - (4)].sml),(yyvsp[(4) - (4)].sml)),'\0',':') ; }
     break;
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 86 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 86 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),(yyvsp[(3) - (3)].exn),'\0','=') ; }
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 91 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 91 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (1)].var),'\0','\0') ; }
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 92 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 92 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (2)].var),(yyvsp[(2) - (2)].sll),'\0') ;}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 93 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 93 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (2)].var),'\0',(yyvsp[(2) - (2)].tok)) ;}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 97 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 97 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.var) = vpyy_var_expression((yyvsp[(1) - (1)].sym),'\0');}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 98 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 98 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.var) = vpyy_var_expression((yyvsp[(1) - (2)].sym),(yyvsp[(2) - (2)].sml)) ;}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 102 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 102 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.sml) = (yyvsp[(2) - (3)].sml) ;}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 106 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 106 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (1)].sym),0,'\0') ; }
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 107 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 107 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (2)].sym),1,'\0') ; }
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 108 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 108 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,'\0') ;}
     break;
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 109 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 109 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (4)].sml),(yyvsp[(3) - (4)].sym),1,'\0') ;}
     break;
 
   case 23:
 /* Line 1792 of yacc.c  */
-#line 112 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 112 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (1)].sym),0,'\0') ; }
     break;
 
   case 24:
 /* Line 1792 of yacc.c  */
-#line 113 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 113 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.sml) = vpyy_symlist('\0',(yyvsp[(2) - (5)].sym),0,(yyvsp[(4) - (5)].sym)) ;}
     break;
 
   case 25:
 /* Line 1792 of yacc.c  */
-#line 114 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 114 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,'\0') ; }
     break;
 
   case 26:
 /* Line 1792 of yacc.c  */
-#line 115 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 115 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.sml) = vpyy_symlist((yyvsp[(1) - (7)].sml),(yyvsp[(4) - (7)].sym),0,(yyvsp[(6) - (7)].sym)) ; }
     break;
 
   case 27:
 /* Line 1792 of yacc.c  */
-#line 119 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 119 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.uni) = (yyvsp[(1) - (1)].uni) ; }
     break;
 
   case 28:
 /* Line 1792 of yacc.c  */
-#line 120 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 120 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.uni) = vpyy_unitsrange((yyvsp[(1) - (6)].uni),(yyvsp[(3) - (6)].num),(yyvsp[(5) - (6)].num)) ; }
     break;
 
   case 29:
 /* Line 1792 of yacc.c  */
-#line 124 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 124 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.num) = (yyvsp[(1) - (1)].num) ; }
     break;
 
   case 30:
 /* Line 1792 of yacc.c  */
-#line 125 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 125 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.num) = -1e30 ; }
     break;
 
   case 31:
 /* Line 1792 of yacc.c  */
-#line 128 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 128 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.num) = (yyvsp[(1) - (1)].num) ; }
     break;
 
   case 32:
 /* Line 1792 of yacc.c  */
-#line 129 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 129 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.num) = -(yyvsp[(2) - (2)].num) ;}
     break;
 
   case 33:
 /* Line 1792 of yacc.c  */
-#line 130 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 130 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.num) = (yyvsp[(2) - (2)].num) ;}
     break;
 
   case 34:
 /* Line 1792 of yacc.c  */
-#line 134 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 134 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.uni) = (yyvsp[(1) - (1)].uni) ; }
     break;
 
   case 35:
 /* Line 1792 of yacc.c  */
-#line 135 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 135 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.uni) = vpyy_unitsdiv((yyvsp[(1) - (3)].uni),(yyvsp[(3) - (3)].uni));}
     break;
 
   case 36:
 /* Line 1792 of yacc.c  */
-#line 136 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 136 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.uni) = vpyy_unitsmult((yyvsp[(1) - (3)].uni),(yyvsp[(3) - (3)].uni));}
     break;
 
   case 37:
 /* Line 1792 of yacc.c  */
-#line 137 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 137 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.uni) = (yyvsp[(2) - (3)].uni) ; }
     break;
 
   case 38:
 /* Line 1792 of yacc.c  */
-#line 142 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 142 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tok) = (yyvsp[(1) - (1)].tok) ; }
     break;
 
   case 39:
 /* Line 1792 of yacc.c  */
-#line 143 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 143 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tok) = (yyvsp[(1) - (1)].tok) ; }
     break;
 
   case 40:
 /* Line 1792 of yacc.c  */
-#line 144 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 144 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tok) = (yyvsp[(1) - (1)].tok) ; }
     break;
 
   case 41:
 /* Line 1792 of yacc.c  */
-#line 145 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 145 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tok) = (yyvsp[(1) - (1)].tok) ; }
     break;
 
   case 42:
 /* Line 1792 of yacc.c  */
-#line 149 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 149 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sll) = vpyy_chain_sublist('\0',(yyvsp[(2) - (2)].sml)) ; }
     break;
 
   case 43:
 /* Line 1792 of yacc.c  */
-#line 150 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 150 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { vpyy_chain_sublist((yyvsp[(1) - (3)].sll),(yyvsp[(3) - (3)].sml)) ; (yyval.sll) = (yyvsp[(1) - (3)].sll) ; }
     break;
 
   case 44:
 /* Line 1792 of yacc.c  */
-#line 154 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 154 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) = '\0' ; }
     break;
 
   case 45:
 /* Line 1792 of yacc.c  */
-#line 155 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 155 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.sml) =  (yyvsp[(2) - (2)].sml) ; }
     break;
 
   case 46:
 /* Line 1792 of yacc.c  */
-#line 159 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 159 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.exl) = vpyy_chain_exprlist('\0',(yyvsp[(1) - (1)].exn)) ;}
     break;
 
   case 47:
 /* Line 1792 of yacc.c  */
-#line 160 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 160 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.exl) = vpyy_chain_exprlist((yyvsp[(1) - (3)].exl),(yyvsp[(3) - (3)].exn)) ; }
     break;
 
   case 48:
 /* Line 1792 of yacc.c  */
-#line 164 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 164 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_num_expression((yyvsp[(1) - (1)].num)) ; }
     break;
 
   case 49:
 /* Line 1792 of yacc.c  */
-#line 165 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 165 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = (Expression *)(yyvsp[(1) - (1)].var) ; }
     break;
 
   case 50:
 /* Line 1792 of yacc.c  */
-#line 166 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 166 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_lookup_expression((yyvsp[(1) - (4)].var),(yyvsp[(3) - (4)].exn)) ; }
     break;
 
   case 51:
 /* Line 1792 of yacc.c  */
-#line 167 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 167 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('(',(yyvsp[(2) - (3)].exn),'\0') ; }
     break;
 
   case 52:
 /* Line 1792 of yacc.c  */
-#line 168 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 168 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_function_expression((yyvsp[(1) - (4)].fnc),(yyvsp[(3) - (4)].exl)) ;}
     break;
 
   case 53:
 /* Line 1792 of yacc.c  */
-#line 169 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 169 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[(1) - (3)].exn),(yyvsp[(3) - (3)].exn)) ; }
     break;
 
   case 54:
 /* Line 1792 of yacc.c  */
-#line 170 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 170 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[(1) - (3)].exn),(yyvsp[(3) - (3)].exn)) ; }
     break;
 
   case 55:
 /* Line 1792 of yacc.c  */
-#line 171 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 171 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('*',(yyvsp[(1) - (3)].exn),(yyvsp[(3) - (3)].exn)) ; }
     break;
 
   case 56:
 /* Line 1792 of yacc.c  */
-#line 172 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 172 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('/',(yyvsp[(1) - (3)].exn),(yyvsp[(3) - (3)].exn)) ; }
     break;
 
   case 57:
 /* Line 1792 of yacc.c  */
-#line 173 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 173 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[(2) - (2)].exn),'\0') ; }
     break;
 
   case 58:
 /* Line 1792 of yacc.c  */
-#line 174 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 174 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[(2) - (2)].exn),'\0') ; }
     break;
 
   case 59:
 /* Line 1792 of yacc.c  */
-#line 175 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 175 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.exn) = vpyy_operator_expression('^',(yyvsp[(1) - (3)].exn),(yyvsp[(3) - (3)].exn)) ; }
     break;
 
   case 60:
 /* Line 1792 of yacc.c  */
-#line 179 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 179 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tbl) = (yyvsp[(1) - (1)].tbl) ; }
     break;
 
   case 61:
 /* Line 1792 of yacc.c  */
-#line 181 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 181 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tbl) = vpyy_tablerange((yyvsp[(15) - (15)].tbl),(yyvsp[(3) - (15)].num),(yyvsp[(5) - (15)].num),(yyvsp[(9) - (15)].num),(yyvsp[(11) - (15)].num)) ; }
     break;
 
   case 62:
 /* Line 1792 of yacc.c  */
-#line 186 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 186 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     { (yyval.tbl) = vpyy_tablepair('\0',(yyvsp[(2) - (5)].num),(yyvsp[(4) - (5)].num)) ;}
     break;
 
   case 63:
 /* Line 1792 of yacc.c  */
-#line 187 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 187 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"
     {(yyval.tbl) = vpyy_tablepair((yyvsp[(1) - (7)].tbl),(yyvsp[(4) - (7)].num),(yyvsp[(6) - (7)].num)) ;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1859 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.tab.c"
+#line 1859 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2087,4 +2087,4 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 193 "C:\\Users\\bob\\Dropbox\\sdev\\XMUtil\\Vensim\\VYacc.y"
+#line 193 "C:\\Users\\bschoenberg\\code\\xmutil\\Vensim\\VYacc.y"

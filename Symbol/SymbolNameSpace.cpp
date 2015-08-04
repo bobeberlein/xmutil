@@ -107,7 +107,7 @@ std::string *SymbolNameSpace::ToLowerSpace(const std::string &sin)
          break ;
    }
    ws[j] = '\0' ;
-   ucasemap_utf8ToLower(GlobalUCaseMap,ws2,n+1,ws,j,&ec) ;
+   ucasemap_utf8ToLower(GlobalUCaseMap, ws2, n + 1, ws, j, &ec);
    if(ec != U_ZERO_ERROR) {
       delete ws ;
       throw "Bad unicode string" ;

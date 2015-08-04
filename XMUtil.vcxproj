@@ -43,9 +43,11 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>c:\tools\icu\include;c:\tools\boost;$(IncludePath)</IncludePath>
     <LibraryPath>C:\tools\boost\stage\lib;$(LibraryPath)</LibraryPath>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -54,12 +56,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)third_party\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>c:\tools\icu\lib\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)third_party\lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y /d  "$(ProjectDir)third_party\lib32\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -70,24 +77,31 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)third_party\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)third_party\lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y /d  "$(ProjectDir)third_party\lib32\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Function\Function.cpp" />
     <ClCompile Include="Function\Level.cpp" />
-    <ClCompile Include="function\State.cpp" />
+    <ClCompile Include="Function\State.cpp" />
     <ClCompile Include="Function\TableFunction.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Symbol\Equation.cpp" />
     <ClCompile Include="Symbol\Expression.cpp" />
     <ClCompile Include="Symbol\EXpressionList.cpp" />
     <ClCompile Include="Symbol\LeftHandSide.cpp" />
+    <ClCompile Include="Symbol\NotUsed_SymAllocList.cpp" />
     <ClCompile Include="Symbol\Symbol.cpp" />
     <ClCompile Include="Symbol\SymbolList.cpp" />
     <ClCompile Include="Symbol\SymbolListList.cpp" />
@@ -104,14 +118,39 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ContextInfo.h" />
+    <ClInclude Include="Function\Function.h" />
+    <ClInclude Include="Function\Level.h" />
+    <ClInclude Include="Function\State.h" />
     <ClInclude Include="Function\TableFunction.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Symbol\Equation.h" />
+    <ClInclude Include="Symbol\Expression.h" />
+    <ClInclude Include="Symbol\ExpressionList.h" />
+    <ClInclude Include="Symbol\LeftHandSide.h" />
+    <ClInclude Include="Symbol\NotUsed_SymAllocList.h" />
+    <ClInclude Include="Symbol\Parse.h" />
+    <ClInclude Include="Symbol\Symbol.h" />
+    <ClInclude Include="Symbol\SymbolList.h" />
+    <ClInclude Include="Symbol\SymbolListList.h" />
+    <ClInclude Include="Symbol\SymbolNameSpace.h" />
+    <ClInclude Include="Symbol\SymbolTableBase.h" />
+    <ClInclude Include="Symbol\UnitExpression.h" />
+    <ClInclude Include="Symbol\Units.h" />
+    <ClInclude Include="Symbol\Variable.h" />
+    <ClInclude Include="Vensim\VYacc.tab.h" />
+    <ClInclude Include="XMUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Vensim\VYacc.y">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">c:\tools\bison\bin\win_bison -o $(ProjectDir)Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)Vensim\VYacc.y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)third_party\bison\win_bison.exe -o $(ProjectDir)Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)Vensim\VYacc.y</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)Vensim\VYacc.tab.c;$(ProjectDir)Vensim\VYacc.tab.h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)third_party\bison\win_bison.exe -o $(ProjectDir)Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)Vensim\VYacc.y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)Vensim\VYacc.tab.c;$(ProjectDir)Vensim\VYacc.tab.h</Outputs>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Vensim\VLex.y" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

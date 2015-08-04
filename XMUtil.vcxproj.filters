@@ -1,98 +1,156 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Vensim">
+      <UniqueIdentifier>{4c31675c-8a59-4c6e-9191-a55824399789}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="Function">
+      <UniqueIdentifier>{a8edeb68-8017-401d-8287-9d1b38ba2ea3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Symbol">
+      <UniqueIdentifier>{ebe30c2b-296f-4767-b503-4b5c62a7dec7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{5ff78ed6-4222-4456-8740-79ef2ac507eb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="XMUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vensim\VensimParse.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\Symbol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\SymbolTableBase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\Expression.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\LeftHandSide.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\Equation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\Units.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\SymbolListList.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vensim\VYacc.tab.c">
+      <Filter>Vensim</Filter>
     </ClCompile>
     <ClCompile Include="Vensim\VensimParseFunctions.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Vensim</Filter>
     </ClCompile>
-    <ClCompile Include="Vensim\VYacc.tab.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vensim\VensimParse.cpp">
+      <Filter>Vensim</Filter>
     </ClCompile>
     <ClCompile Include="Vensim\VensimLex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\Variable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\UnitExpression.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\SymbolNameSpace.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Vensim</Filter>
     </ClCompile>
     <ClCompile Include="Function\Function.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Function</Filter>
     </ClCompile>
     <ClCompile Include="Function\Level.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Function</Filter>
     </ClCompile>
-    <ClCompile Include="function\State.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\EXpressionList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Function\State.cpp">
+      <Filter>Function</Filter>
     </ClCompile>
     <ClCompile Include="Function\TableFunction.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Function</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\Equation.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\Expression.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\EXpressionList.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\LeftHandSide.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\NotUsed_SymAllocList.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\Symbol.cpp">
+      <Filter>Symbol</Filter>
     </ClCompile>
     <ClCompile Include="Symbol\SymbolList.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Symbol</Filter>
     </ClCompile>
+    <ClCompile Include="Symbol\SymbolListList.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\SymbolNameSpace.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\SymbolTableBase.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\UnitExpression.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\Units.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\Variable.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="XMUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ContextInfo.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vensim\VYacc.tab.h">
+      <Filter>Vensim</Filter>
+    </ClInclude>
+    <ClInclude Include="Function\Function.h">
+      <Filter>Function</Filter>
+    </ClInclude>
+    <ClInclude Include="Function\Level.h">
+      <Filter>Function</Filter>
+    </ClInclude>
+    <ClInclude Include="Function\State.h">
+      <Filter>Function</Filter>
     </ClInclude>
     <ClInclude Include="Function\TableFunction.h">
-      <Filter>Header Files</Filter>
+      <Filter>Function</Filter>
     </ClInclude>
+    <ClInclude Include="Symbol\Equation.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\Expression.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\ExpressionList.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\LeftHandSide.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\NotUsed_SymAllocList.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\Parse.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\Symbol.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\SymbolList.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\SymbolListList.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\SymbolNameSpace.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\SymbolTableBase.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\UnitExpression.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\Units.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbol\Variable.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="ContextInfo.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="XMUtil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Vensim\VLex.y">
+      <Filter>Vensim</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Vensim\VYacc.y">
-      <Filter>Source Files</Filter>
+      <Filter>Vensim</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
