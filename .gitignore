@@ -3,6 +3,7 @@ ipch/
 *.user
 *.sdf
 *.suo
+*.opensdf
 third_party/include/
 third_party/lib64/
 third_party/lib32/
