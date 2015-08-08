@@ -11,7 +11,7 @@
 extern "C" {
 /* VYacc.tab.h is C and - most importantly vpyyparse appears
   without extern "C" so by prefacing everything we can include
-  it hear and not cause linke issues */
+  it here and not cause link issues */
 #define YYSTYPE VensimParse
 #include "VYacc.tab.h"
 }
@@ -23,7 +23,9 @@ VensimParse *VPObject = '\0' ;
 
 VensimParse::VensimParse(SymbolNameSpace *sns)
 {
+#if YYDEBUG
 	vpyydebug = 1;
+#endif
    assert(!VPObject) ;
    VPObject = this ;
    pSymbolNameSpace = sns ;
@@ -48,6 +50,9 @@ void VensimParse::ReadyFunctions()
 		new FunctionIfThenElse(pSymbolNameSpace);
 		new FunctionStep(pSymbolNameSpace);
 		new FunctionTabbedArray(pSymbolNameSpace);
+		new FunctionRamp(pSymbolNameSpace);
+		new FunctionLn(pSymbolNameSpace);
+
 		pSymbolNameSpace->ConfirmAllAllocations();
 	}
 	catch (...) {

@@ -183,6 +183,7 @@ exprlist :
     
 exp:
       VPTT_number         { $$ = vpyy_num_expression($1) ; } /* since we allow unary - number not used here */
+	 | VPTT_na			  { $$ = vpyy_num_expression(-1E38);}
      | var                { $$ = (Expression *)$1 ; } /* ExpressionVariable is subclassed from Expression */
 	 | var '(' exp ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
 	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,'\0') ; }
