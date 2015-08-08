@@ -32,6 +32,8 @@ extern void vpyyerror (char const *);
 %token <tok> VPTT_test_input
 %token <tok> VPTT_the_condition
 %token <tok> VPTT_implies
+%token <tok> VPTT_ge
+%token <tok> VPTT_le
 %token <exn> VPTT_tabbed_array
 %token <tol> VPTT_eqend /* the end of equations  */
 
@@ -67,6 +69,9 @@ extern void vpyyerror (char const *);
 /* precedence - low to high */     
 %nonassoc '='
 %left '-' '+'
+%left VPTT_or
+%left '<' '>' VPTT_le VPTT_ge
+%left VPTT_and
 %left '*' '/'
 %right '^'      /* exponentiation */
 
@@ -187,8 +192,15 @@ exp:
      | exp '-' exp        { $$ = vpyy_operator_expression('-',$1,$3) ; }
      | exp '*' exp        { $$ = vpyy_operator_expression('*',$1,$3) ; }
      | exp '/' exp        { $$ = vpyy_operator_expression('/',$1,$3) ; }
+     | exp '<' exp        { $$ = vpyy_operator_expression('<',$1,$3) ; }
+     | exp VPTT_le exp    { $$ = vpyy_operator_expression(VPTT_le,$1,$3) ; }
+     | exp '>' exp        { $$ = vpyy_operator_expression('>',$1,$3) ; }
+     | exp VPTT_ge exp    { $$ = vpyy_operator_expression(VPTT_ge,$1,$3) ; }
+     | exp VPTT_or exp    { $$ = vpyy_operator_expression(VPTT_or,$1,$3) ; }
+     | exp VPTT_and exp    { $$ = vpyy_operator_expression(VPTT_and,$1,$3) ; }
+     | exp '=' exp    { $$ = vpyy_operator_expression('=',$1,$3) ; }
      | '-' exp            { $$ = vpyy_operator_expression('-',$2,'\0') ; } /* unary plus - might be used by numbers */
-     | '+' exp            { $$ = vpyy_operator_expression('-',$2,'\0') ; } /* unary plus - might be used by numbers */
+     | '+' exp            { $$ = vpyy_operator_expression('+',$2,'\0') ; } /* unary plus - might be used by numbers */
      | exp '^' exp        { $$ = vpyy_operator_expression('^',$1,$3) ; }
      ;
 

@@ -315,6 +315,12 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
    case '(' :
       assert(!exp2) ;
       return new ExpressionParen(pSymbolNameSpace,exp1,'\0') ;
+   case '<':
+   case '>':
+   case VPTT_le:
+   case VPTT_ge:
+   case '=':
+	   return new ExpressionLogical(pSymbolNameSpace,exp1,exp2,oper);
    default :
      mSyntaxError.str = "Unknown operator internal error "  ;
      throw mSyntaxError ;

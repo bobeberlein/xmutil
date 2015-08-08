@@ -44,7 +44,7 @@ public:
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) = 0 ;// generally do nothing, but big error to skip
    virtual bool CheckComputed(ContextInfo *info) { return true ; }
    virtual void RemoveFunctionArgs(void) {} // only 1 subclass does anything
-   virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip
+   virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip - todo modify this to make dumping equations easy - possibly returning std::string
 
 };
 
@@ -220,6 +220,22 @@ EO2SubClass(ExpressionSubtract,pE1->Eval(info)-pE2->Eval(info),"-")
 EO2SubClass(ExpressionPower,exp(log(pE1->Eval(info))*pE2->Eval(info)),"^")
 EO2SubClassRaw(ExpressionParen,pE1->Eval(info),"(","",")")
 EO2SubClassRaw(ExpressionUnaryMinus,(-pE1->Eval(info)),"-","","")
+
+class ExpressionLogical :
+	public Expression
+{
+public:
+	ExpressionLogical(SymbolNameSpace *sns, Expression *exp1, Expression *exp2, int oper) : Expression(sns) { pE1 = exp1; pE2 = exp2; mOper = oper; }
+	~ExpressionLogical(void) { if (HasGoodAlloc()){ delete pE1; delete pE2; } }
+	inline double Eval(ContextInfo *info) { return 0; }
+	void CheckPlaceholderVars(Model *m, bool isfirst) { if (pE1) pE1->CheckPlaceholderVars(m, false); if (pE2)pE2->CheckPlaceholderVars(m, false); }
+	void OutputComputable(ContextInfo *info) { }
+private:
+	Expression *pE1;
+	Expression *pE2;
+	int mOper;
+};
+
 
 /*
 {

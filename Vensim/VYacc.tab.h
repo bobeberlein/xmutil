@@ -64,13 +64,15 @@ extern int vpyydebug;
      VPTT_test_input = 273,
      VPTT_the_condition = 274,
      VPTT_implies = 275,
-     VPTT_tabbed_array = 276,
-     VPTT_eqend = 277,
-     VPTT_number = 278,
-     VPTT_symbol = 279,
-     VPTT_units_symbol = 280,
-     VPTT_function = 281,
-     VPTT_groupname = 282
+     VPTT_ge = 276,
+     VPTT_le = 277,
+     VPTT_tabbed_array = 278,
+     VPTT_eqend = 279,
+     VPTT_number = 280,
+     VPTT_symbol = 281,
+     VPTT_units_symbol = 282,
+     VPTT_function = 283,
+     VPTT_groupname = 284
    };
 #endif
 

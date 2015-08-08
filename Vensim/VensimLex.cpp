@@ -169,7 +169,9 @@ int VensimLex::NextToken() // also sets token type
       case ',' :
       case '+' :
       case '>' :
-         break ;
+		  if (TestTokenMatch("=", true))
+			  return VPTT_ge;
+		  break;
       case '-' :
          if(TestTokenMatch(">",true)) 
             return VPTT_map ;
@@ -177,7 +179,9 @@ int VensimLex::NextToken() // also sets token type
       case '<' :
          if(TestTokenMatch("->",true)) 
             return VPTT_equiv ;
-         break ;
+		 if (TestTokenMatch("=", true))
+			 return VPTT_le;
+		 break;
       case '1' :
          if(iInUnitsComment==1) 
             return VPTT_units_symbol ;
