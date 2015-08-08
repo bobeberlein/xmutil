@@ -10,7 +10,6 @@ dependencies: VYacc.tab.c VYacc.tab.h
 extern int vpyylex (void);
 extern void vpyyerror (char const *);
 #define YYSTYPE ParseUnion
-#define YYDEBUG 1
 %}
      
 /* tokens returned by the tokenizer (in addition to single char tokens) */

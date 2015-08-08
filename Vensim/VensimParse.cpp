@@ -18,12 +18,12 @@ extern "C" {
 #include "../XMUtil.h"
 
 
-
 VensimParse *VPObject = '\0' ;
 
 
 VensimParse::VensimParse(SymbolNameSpace *sns)
 {
+	vpyydebug = 1;
    assert(!VPObject) ;
    VPObject = this ;
    pSymbolNameSpace = sns ;
@@ -319,6 +319,8 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
    case '>':
    case VPTT_le:
    case VPTT_ge:
+   case VPTT_and:
+   case VPTT_or:
    case '=':
 	   return new ExpressionLogical(pSymbolNameSpace,exp1,exp2,oper);
    default :
