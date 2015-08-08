@@ -3,8 +3,6 @@
 #include "../Symbol/Parse.h"
 #include "../XMUtil.h"
 
-#define VPYY_TRASLATE(type,name) \
-   extern "C" type vpyy_ ## name (
 
 extern "C" void vpyy_addfulleq(Equation *eq,UnitExpression *un) 
 { return  VPObject->AddFullEq(eq,un) ; }
@@ -40,6 +38,12 @@ extern "C" ExpressionTable *vpyy_tablepair(ExpressionTable *table,double x,doubl
 { return VPObject->TablePairs(table,x,y) ; }
 extern "C" ExpressionTable *vpyy_tablerange(ExpressionTable *table,double x1,double y1,double x2,double y2)
 { return VPObject->TableRange(table,x1,y1,x2,y2) ; }
+extern "C" void vpyy_macro_start() 
+{ VPObject->MacroStart(); }
+extern "C" void vpyy_macro_expression(Variable *name, ExpressionList *margs)
+{ VPObject->MacroExpression(name, margs);}
+extern "C" void vpyy_macro_end() 
+{ VPObject->MacroEnd(); }
 
 /* the default functions called by parser */
 extern "C" int vpyylex(void) 

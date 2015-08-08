@@ -17,6 +17,12 @@ Function::~Function(void)
 {
 }
 
+MacroFunction::MacroFunction(SymbolNameSpace *sns, SymbolNameSpace* local, const std::string& name, ExpressionList *margs) : 
+	mArgs(margs), pSymbolNameSpace(local), Function(sns, name, margs->Length())
+{
+}
+
+
 bool Function::CheckComputed(ContextInfo *info,ExpressionList *arg) 
 { 
     return arg->CheckComputed(info,0xffffffff) ;
@@ -60,7 +66,7 @@ unsigned  FunctionMemoryBase::BitFlip(unsigned bits)
 }
 
 
-
+#ifdef WANT_EVAL_STUFF
 double FunctionMax::Eval(Expression *from,ExpressionList *arg,ContextInfo *info) 
 {
    double a1 = arg->GetExp(0)->Eval(info) ;
@@ -92,3 +98,4 @@ double FunctionPulse::Eval(Expression *from,ExpressionList *arg,ContextInfo *inf
       return 1.0 ;
    return 0 ;
 }
+#endif

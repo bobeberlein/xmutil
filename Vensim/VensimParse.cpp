@@ -28,26 +28,33 @@ VensimParse::VensimParse(SymbolNameSpace *sns)
    VPObject = this ;
    pSymbolNameSpace = sns ;
 
+   ReadyFunctions();
 
-   // initialize functions - actually need to split this up for common functions
-   // and those specific to Vensim - later
-   try {
-      new FunctionMin(pSymbolNameSpace) ;
-      new FunctionMax(pSymbolNameSpace) ;
-      new FunctionInteg(pSymbolNameSpace) ;
-      new FunctionPulse(pSymbolNameSpace) ;
-      new FunctionTabbedArray(pSymbolNameSpace) ;
-      pSymbolNameSpace->ConfirmAllAllocations() ;
-   }
-   catch(...) {
-      std::cout << "Failed to initialize symbol table" << std::endl ;
-   }
 }
 VensimParse:: ~VensimParse(void)
 {
    VPObject = '\0' ;
 }
 
+void VensimParse::ReadyFunctions()
+{
+	// initialize functions - actually need to split this up for common functions
+	// and those specific to Vensim - later
+	try {
+		new FunctionMin(pSymbolNameSpace);
+		new FunctionMax(pSymbolNameSpace);
+		new FunctionInteg(pSymbolNameSpace);
+		new FunctionPulse(pSymbolNameSpace);
+		new FunctionIfThenElse(pSymbolNameSpace);
+		new FunctionStep(pSymbolNameSpace);
+		new FunctionTabbedArray(pSymbolNameSpace);
+		pSymbolNameSpace->ConfirmAllAllocations();
+	}
+	catch (...) {
+		std::cout << "Failed to initialize symbol table" << std::endl;
+	}
+
+}
 Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int tok) 
  { 
     if(exl) {
@@ -79,6 +86,10 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
   also assigns the equation to the Variable */
 void VensimParse::AddFullEq(Equation *eq,UnitExpression *un)
 {
+	if (mInMacro) {
+		mMacroFunctions.back()->AddEq(eq, un);
+		return;
+	}
    pSymbolNameSpace->ConfirmAllAllocations() ; // now independently allocated
    pActiveVar = eq->GetVariable() ;
    pActiveVar->AddEq(eq) ;
@@ -177,7 +188,7 @@ Variable *VensimParse::InsertVariable(const std::string &name)
 Units *VensimParse::InsertUnits(const std::string &name)
 {
    Units *u =  static_cast<Units *>(pSymbolNameSpace->Find(name)) ;
-   if(u && u->isType() != Symtype_Units) {
+   if(u && u->isType() != Symtype_Units && ( !mInMacro || u->isType() != Symtype_Variable)) {
       mSyntaxError.str = "Type meaning mismatch for " + name ;
       throw mSyntaxError ;
    }
@@ -337,4 +348,23 @@ ExpressionTable *VensimParse::TableRange(ExpressionTable *table,double x1,double
 {
    table->AddRange(x1,y1,x2,y2) ;
    return table ;
+}
+
+void VensimParse::MacroStart()
+{
+	mInMacro = true;
+	pMainSymbolNameSpace = pSymbolNameSpace;
+	pSymbolNameSpace = new SymbolNameSpace(); // local name space for macro variables and macro name - macro name will go into the main name space on close
+	ReadyFunctions(); // against this new name space - somewhat duplicative
+}
+
+void VensimParse::MacroExpression(Variable* name, ExpressionList *margs)
+{
+	// the macro functiongoes against the main name space - everything else is local
+	mMacroFunctions.push_back(new MacroFunction(pMainSymbolNameSpace, pSymbolNameSpace, name->GetName(), margs));
+}
+void VensimParse::MacroEnd()
+{
+	pSymbolNameSpace = pMainSymbolNameSpace;
+	mInMacro = false;
 }

@@ -19,6 +19,8 @@ extern void vpyyerror (char const *);
 %token <tok> VPTT_equiv
 %token <tok> VPTT_groupstar
 %token <tok> VPTT_and
+%token <tok> VPTT_macro
+%token <tok> VPTT_end_of_macro
 %token <tok> VPTT_or
 %token <tok> VPTT_not
 %token <tok> VPTT_hold_backward
@@ -59,6 +61,7 @@ extern void vpyyerror (char const *);
 %type <sll> exceptlist
 %type <tok> '%' '|' interpmode
 %type <num> number urangenum
+%type <tok> macrostart macroend /* not really used - just sets/unsets a flag */
 
 
 /* precedence - low to high */     
@@ -69,14 +72,28 @@ extern void vpyyerror (char const *);
 
 %% /* The grammar follows.  */
 
+
 fulleq :
 	VPTT_eqend { return VPTT_eqend ; } /* finished no more to do */
 	| VPTT_groupstar { return VPTT_groupstar ; } /* process the group name elsewhere */
+	| macrostart		  { return '|'; } /* sets the context for equations that follow */
+	| macroend			  {return '|'; } /* back to regular equations */
 	| eqn '~' unitsrange '~' /* comment follows */{vpyy_addfulleq($1,$3) ; return '~' ; }
 	| eqn '~' unitsrange '|' /* comment skipped */ {vpyy_addfulleq($1,$3) ; return '|' ; }
 	| eqn '~' '~' /* units skipped */{vpyy_addfulleq($1,'\0') ; return '~' ;}
 	| eqn '~' '|' /* units, comment skipped */ {vpyy_addfulleq($1,'\0') ; return '|' ;}
 	;
+
+macrostart:
+	VPTT_macro { vpyy_macro_start(); } VPTT_symbol '(' exprlist ')'   { vpyy_macro_expression($3,$5) ;}
+	;
+
+macroend:
+   VPTT_end_of_macro { $$ = $1; vpyy_macro_end(); }
+   ;
+
+
+
 
 eqn : 
    lhs '=' exprlist {$$ = vpyy_addeq($1,'\0',$3,'=') ; }

@@ -24,5 +24,8 @@ extern CNF Expression *vpyy_function_expression(Function *func,ExpressionList *a
 extern CNF Expression *vpyy_lookup_expression(ExpressionVariable *var,Expression *exp) ;
 extern CNF ExpressionTable *vpyy_tablepair(ExpressionTable *table,double x,double y) ;
 extern CNF ExpressionTable *vpyy_tablerange(ExpressionTable *table,double x1,double y1,double x2,double y2) ;
+extern CNF void vpyy_macro_start();
+extern CNF void vpyy_macro_expression(Variable *name, ExpressionList *margs);
+extern CNF void vpyy_macro_end();
 
 #endif

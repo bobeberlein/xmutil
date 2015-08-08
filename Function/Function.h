@@ -6,6 +6,7 @@
 
 class Expression ; /* forward declaration */
 class ExpressionList ; // forward
+class UnitExpression;
 
 /* abstract class - every function has its own subclass
    defined here with bodies in Function.cpp or in their own 
@@ -21,7 +22,7 @@ public:
    virtual bool AsKeyword(void) { return false ; } // for the parser - treats name as keyword not function
    virtual bool IsMemoryless(void) { return true ; }
    virtual bool IsTimeDependent(void) { return false ; }
-   virtual double Eval(Expression *ex,ExpressionList *arg,ContextInfo *info) = 0 ;
+   virtual double Eval(Expression *ex, ExpressionList *arg, ContextInfo *info) { return 0; } // make this pure virtual if finishing engine is required
    virtual bool CheckComputed(ContextInfo *info,ExpressionList *arg) ;
    virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
    virtual const char *ComputableName(void) { return "" ; }
@@ -45,12 +46,29 @@ private :
    unsigned iActiveArgMark ;
 } ;
 
+class MacroFunction : public Function {
+public:
+	class EqUnitPair {
+	public:
+		EqUnitPair(Equation* eq, UnitExpression* un) : equation(eq), units(un) {}
+		Equation* equation;
+		UnitExpression* units;
+	};
+	MacroFunction(SymbolNameSpace *sns, SymbolNameSpace* local, const std::string& name, ExpressionList *margs);
+	~MacroFunction() { delete pSymbolNameSpace; }
+	void AddEq(Equation* equation, UnitExpression* units) { mEquations.push_back(EqUnitPair(equation, units)); }
+private:
+	SymbolNameSpace *pSymbolNameSpace; // local
+	MacroFunction(const MacroFunction& other);
+	ExpressionList* mArgs;
+	std::vector<EqUnitPair> mEquations;
+};
+
 #define FSubclassKeyword(name,xname,narg) \
 class name : public Function {\
 public :\
    name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
    ~name(void) {}\
-   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) {return -FLT_MAX ; }\
     const char *ComputableName(void) { return " ?? " ; }\
     bool AsKeyword(void) { return true ; } \
 } ;
@@ -63,7 +81,6 @@ class name : public Function {\
 public :\
    name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
    ~name(void) {}\
-   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) ;\
     const char *ComputableName(void) { return cname ; }\
 private :
 
@@ -77,7 +94,6 @@ class name : public FunctionMemoryBase {\
 public :\
    name(SymbolNameSpace *sns) : FunctionMemoryBase(sns,xname,narg,actarg,iniarg) { }\
    ~name(void) {}\
-   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) ;\
    const char *ComputableName(void) { return cnamea ; }\
    const char *ComputableNameInit(void) { return cnamei ; }\
 private :
@@ -91,7 +107,6 @@ public :\
    name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
    ~name(void) {}\
    bool IsTimeDependent(void) { return true ; }\
-   double Eval(Expression *,ExpressionList *arg,ContextInfo *info) ;\
    const char *ComputableName(void) { return cname ; }\
 private :
 
@@ -99,9 +114,11 @@ private :
 
 FSubclass(FunctionMax,"MAX",2,"max")
 FSubclass(FunctionMin,"MIN",2,"min")
+FSubclass(FunctionIfThenElse,"IF THEN ELSE", 3, "IF THEN ELSE")
 FSubclassMemory(FunctionInteg,"INTEG",2,BOOST_BINARY(10),BOOST_BINARY(01),"integ_active","integ_init")
 FSubclassTime(FunctionPulse,"PULSE",2,"pulse") 
-FSubclassKeyword(FunctionTabbedArray,"TABBED ARRAY",1)
+FSubclassTime(FunctionStep, "STEP", 2, "step")
+FSubclassKeyword(FunctionTabbedArray, "TABBED ARRAY", 1)
 
 /*
 class FunctionMin :

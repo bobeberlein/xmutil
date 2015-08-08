@@ -147,6 +147,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)Vensim\VYacc.tab.c;$(ProjectDir)Vensim\VYacc.tab.h</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)third_party\bison\win_bison.exe -o $(ProjectDir)Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)Vensim\VYacc.y</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)Vensim\VYacc.tab.c;$(ProjectDir)Vensim\VYacc.tab.h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Running Bison to generay VYacc.tab.c, h</Message>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

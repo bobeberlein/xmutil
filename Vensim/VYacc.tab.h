@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
-# define YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
+#ifndef YY_VPYY_C_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
+# define YY_VPYY_C_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -51,24 +51,26 @@ extern int vpyydebug;
      VPTT_equiv = 260,
      VPTT_groupstar = 261,
      VPTT_and = 262,
-     VPTT_or = 263,
-     VPTT_not = 264,
-     VPTT_hold_backward = 265,
-     VPTT_look_forward = 266,
-     VPTT_except = 267,
-     VPTT_na = 268,
-     VPTT_interpolate = 269,
-     VPTT_raw = 270,
-     VPTT_test_input = 271,
-     VPTT_the_condition = 272,
-     VPTT_implies = 273,
-     VPTT_tabbed_array = 274,
-     VPTT_eqend = 275,
-     VPTT_number = 276,
-     VPTT_symbol = 277,
-     VPTT_units_symbol = 278,
-     VPTT_function = 279,
-     VPTT_groupname = 280
+     VPTT_macro = 263,
+     VPTT_end_of_macro = 264,
+     VPTT_or = 265,
+     VPTT_not = 266,
+     VPTT_hold_backward = 267,
+     VPTT_look_forward = 268,
+     VPTT_except = 269,
+     VPTT_na = 270,
+     VPTT_interpolate = 271,
+     VPTT_raw = 272,
+     VPTT_test_input = 273,
+     VPTT_the_condition = 274,
+     VPTT_implies = 275,
+     VPTT_tabbed_array = 276,
+     VPTT_eqend = 277,
+     VPTT_number = 278,
+     VPTT_symbol = 279,
+     VPTT_units_symbol = 280,
+     VPTT_function = 281,
+     VPTT_groupname = 282
    };
 #endif
 
@@ -95,4 +97,4 @@ int vpyyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED  */
+#endif /* !YY_VPYY_C_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED  */

@@ -21,6 +21,7 @@ class VensimParse
 public:
    VensimParse(SymbolNameSpace *sns);
    ~VensimParse(void);
+   void ReadyFunctions();
    bool ProcessFile(const std::string &filename) ;
    inline int yylex(void) { return mVensimLex.yylex() ; }
    int yyerror(const char *str) ;
@@ -45,6 +46,9 @@ public:
    Expression *LookupExpression(ExpressionVariable *var,Expression *exp) ;
    ExpressionTable *TablePairs(ExpressionTable *table,double x,double y) ;
    ExpressionTable *TableRange(ExpressionTable *table,double x1,double y1,double x2,double y2) ;
+   void MacroStart();
+   void MacroExpression(Variable *macro, ExpressionList *margs);
+   void MacroEnd();
 
 private :
    std::string sFilename ;
@@ -53,7 +57,10 @@ private :
    VensimLex mVensimLex ;
    VensimParseSyntaxError mSyntaxError ;
    SymbolNameSpace *pSymbolNameSpace ;
+   SymbolNameSpace* pMainSymbolNameSpace;
    Variable *pActiveVar ;
+   bool mInMacro;
+   std::vector<MacroFunction*> mMacroFunctions;
 };
 
 extern VensimParse *VPObject ;
