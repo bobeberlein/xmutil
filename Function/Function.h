@@ -112,15 +112,18 @@ private :
 
 #define FSubclassTime(name,xname,narg,cname) FSubclassTimeStart(name,xname,narg,cname) };
 
-FSubclass(FunctionMax,"MAX",2,"max")
-FSubclass(FunctionMin,"MIN",2,"min")
-FSubclass(FunctionIfThenElse,"IF THEN ELSE", 3, "IF THEN ELSE")
+FSubclass(FunctionMax, "MAX", 2, "max")
+FSubclass(FunctionMin, "MIN", 2, "min")
+FSubclass(FunctionIfThenElse, "IF THEN ELSE", 3, "IF THEN ELSE")
 FSubclass(FunctionZidz, "ZIDZ", 2, "ZIDZ")
 FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
+FSubclass(FunctionSum, "SUM", 1, "SUM");
+FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
 
 // actually memory but no init
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
+FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH1")
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")

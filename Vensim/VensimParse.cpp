@@ -58,6 +58,9 @@ void VensimParse::ReadyFunctions()
 		new FunctionRamp(pSymbolNameSpace);
 		new FunctionLn(pSymbolNameSpace);
 		new FunctionSmooth(pSymbolNameSpace);
+		new FunctionSmooth3(pSymbolNameSpace);
+		new FunctionSum(pSymbolNameSpace);
+		new FunctionVectorSelect(pSymbolNameSpace);
 
 
 		pSymbolNameSpace->ConfirmAllAllocations();
@@ -207,13 +210,14 @@ Variable *VensimParse::InsertVariable(const std::string &name)
 }
 Units *VensimParse::InsertUnits(const std::string &name)
 {
-   Units *u =  static_cast<Units *>(pSymbolNameSpace->Find(name)) ;
-   if(u && u->isType() != Symtype_Units && ( !mInMacro || u->isType() != Symtype_Variable)) {
+	std::string uname = ">" + name; // an illegal variable name since we allow the same names to be used for vars and units - could use a separate namespace
+   Units *u =  static_cast<Units *>(pSymbolNameSpace->Find(uname)) ;
+   if(u && u->isType() != Symtype_Units) {
       mSyntaxError.str = "Type meaning mismatch for " + name ;
       throw mSyntaxError ;
    }
    if(!u) {
-      u = new Units(pSymbolNameSpace,name) ;
+      u = new Units(pSymbolNameSpace,uname) ;
    }
    return u ;
 }
