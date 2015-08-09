@@ -115,9 +115,13 @@ private :
 FSubclass(FunctionMax,"MAX",2,"max")
 FSubclass(FunctionMin,"MIN",2,"min")
 FSubclass(FunctionIfThenElse,"IF THEN ELSE", 3, "IF THEN ELSE")
+FSubclass(FunctionZidz, "ZIDZ", 2, "ZIDZ")
+FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
+FSubclassMemory(FunctionSampleIfTrue, "SAMPLE IF TRUE", 3, BOOST_BINARY(110), BOOST_BINARY(001), "sample_active", "sample_init")
+
 FSubclass(FunctionLn, "LN", 1, "LN")
 FSubclassTime(FunctionPulse, "PULSE", 2, "pulse")
 FSubclassTime(FunctionStep, "STEP", 2, "step")

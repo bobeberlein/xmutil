@@ -46,8 +46,11 @@ void VensimParse::ReadyFunctions()
 		new FunctionMin(pSymbolNameSpace);
 		new FunctionMax(pSymbolNameSpace);
 		new FunctionInteg(pSymbolNameSpace);
+		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
+		new FunctionZidz(pSymbolNameSpace);
+		new FunctionXidz(pSymbolNameSpace);
 		new FunctionWithLookup(pSymbolNameSpace); // but WITH_LOOKUP is treated specially by parser
 		new FunctionStep(pSymbolNameSpace);
 		new FunctionTabbedArray(pSymbolNameSpace);
