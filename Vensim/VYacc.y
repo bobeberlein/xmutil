@@ -67,10 +67,9 @@ extern void vpyyerror (char const *);
 
 
 /* precedence - low to high */     
-%nonassoc '='
 %left '-' '+'
 %left VPTT_or
-%left '<' '>' VPTT_le VPTT_ge
+%left '=' '<' '>' VPTT_le VPTT_ge
 %left VPTT_and
 %left '*' '/'
 %right '^'      /* exponentiation */
