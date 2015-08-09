@@ -41,6 +41,7 @@ private :
    bool bInGroup ;
    int TestColonKeyword(void) ;
    int ReadTabbedArray(void) ;
+   bool bInUnits;
 
 
 };

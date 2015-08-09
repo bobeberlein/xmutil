@@ -24,7 +24,7 @@ VensimParse *VPObject = '\0' ;
 VensimParse::VensimParse(SymbolNameSpace *sns)
 {
 #if YYDEBUG
-	vpyydebug = 1;
+	vpyydebug = 0;
 #endif
    assert(!VPObject) ;
    VPObject = this ;
@@ -276,9 +276,9 @@ UnitExpression *VensimParse::UnitsMult(UnitExpression *f,UnitExpression *s)
 { 
    return f->Multiply(s) ;
 }
-UnitExpression *VensimParse::UnitsRange(UnitExpression *e,double minval,double maxval) 
+UnitExpression *VensimParse::UnitsRange(UnitExpression *e,double minval,double maxval,double increment) 
 { 
-   e->SetRange(minval,maxval) ;
+   e->SetRange(minval,maxval,increment) ;
    return e ;
 }
 

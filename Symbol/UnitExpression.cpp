@@ -7,7 +7,7 @@ UnitExpression::UnitExpression(SymbolNameSpace *sns,Units *num)
   : SymbolTableBase(sns) 
 {
    vNumerator.push_back(num) ;
-   dMinVal = dMaxVal = -1e30 ; // later
+   dMinVal = dMaxVal = dIncrement = -1e30 ; // later
 }
 
 

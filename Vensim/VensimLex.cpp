@@ -38,6 +38,7 @@ void VensimLex::GetReady(void)
 {
    bInGroup = false ;
    iInUnitsComment = 0 ;
+   bInUnits = false;
 }
 std::string *VensimLex::CurToken()
 {
@@ -52,7 +53,7 @@ int VensimLex::yylex()
          vpyylval.num = atof(sToken.c_str()) ;
          break ;
       case VPTT_symbol :
-		  if (iInUnitsComment == 1)
+		  if (bInUnits)
 		  {
 			  vpyylval.uni = VPObject->InsertUnitExpression(VPObject->InsertUnits(sToken));
 			  toktype = VPTT_units_symbol;
@@ -176,19 +177,34 @@ int VensimLex::NextToken() // also sets token type
          break ; 
       // single character tokens
       case '~' :
+		  if (iInUnitsComment == 0)
+			  bInUnits = true;
          iInUnitsComment++ ;
+		 break;
       case '=' : // := is handled by :
-      case '/' :
-      case '^' :
-      case '!' :
-      case '(' :
-      case ')' :
-      case '}' :
+		  break;
+	  case '/':
+		  break;
+	  case '^':
+		  break;
+	  case '!':
+		  break;
+	  case '(':
+		  break;
+	  case ')':
+		  break;
+	  case '}':
+		  break;
       case '[' :
+		  if (iInUnitsComment)
+			  bInUnits = false;
       case ']' :
-      case '|' :
-      case ',' :
-      case '+' :
+		  break;
+	  case '|':
+		  break;
+	  case ',':
+		  break;
+	  case '+':
 		  break;
       case '>' :
 		  if (TestTokenMatch("=", true))
@@ -205,7 +221,7 @@ int VensimLex::NextToken() // also sets token type
 			 return VPTT_le;
 		 break;
       case '1' :
-		  if (iInUnitsComment == 1)
+		  if (bInUnits)
 		  {
 			  vpyylval.uni = VPObject->InsertUnitExpression(VPObject->InsertUnits("1"));
 			  return VPTT_units_symbol;

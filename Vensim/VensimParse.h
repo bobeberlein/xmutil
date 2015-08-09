@@ -36,7 +36,7 @@ public:
    SymbolList *SymList(SymbolList *in,Variable *add,int bang,Variable *end) ;
    UnitExpression *UnitsDiv(UnitExpression *num,UnitExpression *denom) ;
    UnitExpression *UnitsMult(UnitExpression *f,UnitExpression *s) ;
-   UnitExpression *UnitsRange(UnitExpression *e,double minval,double maxval) ;
+   UnitExpression *UnitsRange(UnitExpression *e,double minval,double maxval,double increment) ;
    SymbolListList *ChainSublist(SymbolListList *sll,SymbolList *nsl) ;
    ExpressionList *ChainExpressionList(ExpressionList *el,Expression *e) ;
    Expression *NumExpression(double num) ;

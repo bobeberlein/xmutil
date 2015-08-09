@@ -18,8 +18,8 @@ extern "C" UnitExpression *vpyy_unitsdiv(UnitExpression *num,UnitExpression *den
 { return VPObject->UnitsDiv(num,denom) ; }
 extern "C" UnitExpression *vpyy_unitsmult(UnitExpression *f,UnitExpression *s) 
 { return VPObject->UnitsMult(f,s) ; }
-extern "C" UnitExpression *vpyy_unitsrange(UnitExpression *f,double minval,double maxval) 
-{ return VPObject->UnitsRange(f,minval,maxval) ; }
+extern "C" UnitExpression *vpyy_unitsrange(UnitExpression *f,double minval,double maxval,double increment) 
+{ return VPObject->UnitsRange(f,minval,maxval,increment) ; }
 extern "C" SymbolListList *vpyy_chain_sublist(SymbolListList *sll,SymbolList *nsl) 
 { return VPObject->ChainSublist(sll,nsl) ; }
 extern "C" ExpressionList *vpyy_chain_exprlist(ExpressionList *el,Expression *e) 

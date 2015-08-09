@@ -4,7 +4,7 @@ REM http://site.icu-project.org/download
 
 SET "ICU_PATH=C:\tools\icu"
 SET "BOOST_PATH=C:\Program Files\boost\boost_1_58_0"
-SET "BISON_PATH=C:\tools\bison"
+SET "BISON_PATH=C:\tools\bison\bin"
 
  IF NOT EXIST ".\include" GOTO NOINCLUDE
    rmdir  /s /q ".\include"

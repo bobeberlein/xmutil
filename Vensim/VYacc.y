@@ -140,7 +140,8 @@ subdef :
 
 unitsrange : 
 	units { $$ = $1 ; }
-	| units '[' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange($1,$3,$5) ; }
+	| units '[' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange($1,$3,$5,-1) ; }
+	| units '[' urangenum ',' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange($1,$3,$5,$7) ; }
 	;
 
 urangenum :
