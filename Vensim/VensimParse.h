@@ -33,8 +33,9 @@ public:
    UnitExpression *InsertUnitExpression(Units *u) ;
    void AddFullEq(Equation *eq,UnitExpression *un) ;
    LeftHandSide *AddExceptInterp(ExpressionVariable *var,SymbolListList *except,int interpmode) ;
-   SymbolList *SymList(SymbolList *in,Variable *add,int bang,Variable *end) ;
-   UnitExpression *UnitsDiv(UnitExpression *num,UnitExpression *denom) ;
+   SymbolList *SymList(SymbolList *in,Variable *add,bool bang,Variable *end) ;
+   SymbolList *MapSymList(SymbolList* in, Variable* range,SymbolList *list);
+   UnitExpression *UnitsDiv(UnitExpression *num, UnitExpression *denom);
    UnitExpression *UnitsMult(UnitExpression *f,UnitExpression *s) ;
    UnitExpression *UnitsRange(UnitExpression *e,double minval,double maxval,double increment) ;
    SymbolListList *ChainSublist(SymbolListList *sll,SymbolList *nsl) ;

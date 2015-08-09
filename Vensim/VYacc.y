@@ -59,7 +59,7 @@ extern void vpyyerror (char const *);
 %type <uni> units unitsrange
 %type <fqn> fulleq
 %type <var> var
-%type <sml> symlist sublist subdef maplist
+%type <sml> symlist mapsymlist sublist subdef maplist
 %type <sll> exceptlist
 %type <tok> '%' '|' interpmode
 %type <num> number urangenum
@@ -72,6 +72,7 @@ extern void vpyyerror (char const *);
 %left '=' '<' '>' VPTT_le VPTT_ge
 %left VPTT_and
 %left '*' '/'
+%left VPTT_not
 %right '^'      /* exponentiation */
 
 %% /* The grammar follows.  */
@@ -173,9 +174,17 @@ exceptlist :
 	| exceptlist ',' sublist { vpyy_chain_sublist($1,$3) ; $$ = $1 ; }
 	;
 
+mapsymlist :
+	VPTT_symbol { $$ = vpyy_symlist('\0',$1,0,'\0') ; }
+	| '(' VPTT_symbol ':' symlist ')' { $$ = vpyy_mapsymlist('\0', $2, $4); }
+	| mapsymlist ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,'\0') ;}
+	| mapsymlist ',' '(' VPTT_symbol ':' symlist ')' { $$ = vpyy_mapsymlist($1, $4, $6);}
+	;
+
+
 maplist :
     { $$ = '\0' ; }
-	| VPTT_map symlist { $$ =  $2 ; }
+	| VPTT_map mapsymlist { $$ =  $2 ; }
 	;
 
 exprlist :
@@ -200,6 +209,7 @@ exp:
      | exp VPTT_ge exp    { $$ = vpyy_operator_expression(VPTT_ge,$1,$3) ; }
      | exp VPTT_or exp    { $$ = vpyy_operator_expression(VPTT_or,$1,$3) ; }
      | exp VPTT_and exp    { $$ = vpyy_operator_expression(VPTT_and,$1,$3) ; }
+	 | VPTT_not exp		  { $$ = vpyy_operator_expression(VPTT_not,$2,'\0') ; }
      | exp '=' exp    { $$ = vpyy_operator_expression('=',$1,$3) ; }
      | '-' exp            { $$ = vpyy_operator_expression('-',$2,'\0') ; } /* unary plus - might be used by numbers */
      | '+' exp            { $$ = vpyy_operator_expression('+',$2,'\0') ; } /* unary plus - might be used by numbers */

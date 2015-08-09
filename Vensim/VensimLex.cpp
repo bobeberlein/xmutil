@@ -385,6 +385,7 @@ bool VensimLex::KeywordMatch(const char *target)
          buffer.push_back(c) ;
    }
    if(target[i]) { // not a match 
+	   PushBack(c, true); //  last one taken should be sent back
       while(buffer.length()) {
          PushBack(buffer.back(),true) ;
          buffer.pop_back() ;

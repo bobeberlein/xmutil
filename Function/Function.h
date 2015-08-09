@@ -120,10 +120,13 @@ FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionSum, "SUM", 1, "SUM");
 FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
+FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
+FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
 
 // actually memory but no init
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
 FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH1")
+FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")

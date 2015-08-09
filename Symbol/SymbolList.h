@@ -11,14 +11,30 @@ class SymbolList
    : public SymbolTableBase
 {
 public:
-   SymbolList(SymbolNameSpace *sns,Symbol *first,int bang) ;
+	enum EntryType { EntryType_SYMBOL, EntryType_BANG_SYMBOL, EntryType_LIST};
+	class SymbolListEntry {
+	public:
+		SymbolListEntry(Symbol *s, bool bang) { u.pSymbol = s; eType = bang ? EntryType_BANG_SYMBOL : EntryType_SYMBOL; }
+		SymbolListEntry(SymbolList* s) { u.pSymbolList = s; eType = EntryType_LIST; }
+		union {
+			Symbol* pSymbol;
+			SymbolList* pSymbolList;
+		} u;
+		EntryType eType;
+	} ;
+   SymbolList(SymbolNameSpace *sns,Symbol *first,bool bang);
+   SymbolList(SymbolNameSpace *sns, SymbolList *first);
    ~SymbolList(void);
-   SymbolList *Append(Symbol *last,int bang) { vSymbols.push_back(last) ; vMarked.push_back(bang); return this ;}
-   int Length(void) { return vSymbols.size() ; }
-   const Symbol* operator[]( int pos ) const {return vSymbols[pos] ; }
+   SymbolList *Append(Symbol *last, bool bang) { vSymbols.push_back(SymbolListEntry(last, bang)); return this; }
+   SymbolList *Append(SymbolList *next) { vSymbols.push_back(SymbolListEntry(next)); return this; }
+   int Length(void) { return vSymbols.size(); }
+   const SymbolListEntry operator[]( int pos ) const {return vSymbols[pos] ; }
+   bool IsMapList() { return pMapRange != '\0'; }
+   Symbol* MapRange() { return pMapRange; }
+   void SetMapRange(Symbol *range) { assert(!pMapRange); pMapRange = range; }
 private :
-   std::vector<Symbol*>vSymbols ;
-   std::vector<char>vMarked ;
+	std::vector<SymbolListEntry> vSymbols;
+   Symbol* pMapRange;
 };
 
 

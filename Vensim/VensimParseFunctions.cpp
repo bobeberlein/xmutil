@@ -13,7 +13,9 @@ extern "C" Equation *vpyy_add_lookup(LeftHandSide *lhs,Expression *ex,Expression
 extern "C" LeftHandSide *vpyy_addexceptinterp(ExpressionVariable *var,SymbolListList *except,int interpmode) 
 { return VPObject->AddExceptInterp(var,except,interpmode) ;  }
 extern "C" SymbolList *vpyy_symlist(SymbolList *in,Variable *add,int bang,Variable *end) 
-{ return VPObject->SymList(in,add,bang,end) ; }
+{ return VPObject->SymList(in,add,!!bang,end) ; }
+extern "C" SymbolList *vpyy_mapsymlist(SymbolList*in, Variable *maprange,SymbolList *list) 
+{ return VPObject->MapSymList(in,maprange,list) ; }
 extern "C" UnitExpression *vpyy_unitsdiv(UnitExpression *num,UnitExpression *denom) 
 { return VPObject->UnitsDiv(num,denom) ; }
 extern "C" UnitExpression *vpyy_unitsmult(UnitExpression *f,UnitExpression *s) 

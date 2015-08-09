@@ -12,7 +12,8 @@ extern CNF Equation *vpyy_addeq(LeftHandSide *lhs,Expression *ex,ExpressionList 
 extern CNF Equation *vpyy_add_lookup(LeftHandSide *lhs, Expression *ex, ExpressionTable *tvl);
 extern CNF LeftHandSide *vpyy_addexceptinterp(ExpressionVariable *var, SymbolListList *except, int interpmode);
 extern CNF SymbolList *vpyy_symlist(SymbolList *in,Variable *add,int bang,Variable *end) ;
-extern CNF UnitExpression *vpyy_unitsdiv(UnitExpression *num,UnitExpression *denom) ;
+extern CNF SymbolList *vpyy_mapsymlist(SymbolList* in,Variable *maprange, SymbolList *list);
+extern CNF UnitExpression *vpyy_unitsdiv(UnitExpression *num, UnitExpression *denom);
 extern CNF UnitExpression *vpyy_unitsmult(UnitExpression *f,UnitExpression *s) ;
 extern CNF UnitExpression *vpyy_unitsrange(UnitExpression *f,double minval,double maxval,double increment) ;
 extern CNF SymbolListList *vpyy_chain_sublist(SymbolListList *sll,SymbolList *nsl) ;

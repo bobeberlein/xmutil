@@ -59,8 +59,11 @@ void VensimParse::ReadyFunctions()
 		new FunctionLn(pSymbolNameSpace);
 		new FunctionSmooth(pSymbolNameSpace);
 		new FunctionSmooth3(pSymbolNameSpace);
+		new FunctionDelay3(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);
 		new FunctionVectorSelect(pSymbolNameSpace);
+		new FunctionVectorElmMap(pSymbolNameSpace);
+		new FunctionVectorSortOrder(pSymbolNameSpace);
 
 
 		pSymbolNameSpace->ConfirmAllAllocations();
@@ -240,7 +243,7 @@ LeftHandSide *VensimParse::AddExceptInterp(ExpressionVariable *var,SymbolListLis
 { 
    return new LeftHandSide(pSymbolNameSpace,var,except,interpmode) ;
 }
-SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,int bang,Variable *end) 
+SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,bool bang,Variable *end) 
 {
    SymbolList *sl ;
    if(in)
@@ -277,6 +280,16 @@ SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,int bang,Variable 
       sl->Append(end,bang) ;
    }
    return sl ;
+}
+
+SymbolList *VensimParse::MapSymList(SymbolList* in, Variable* range, SymbolList *list)
+{
+	list->SetMapRange(range);
+	if (in) {
+		in->Append(list);
+		return in;
+	}
+	return list;
 }
 UnitExpression *VensimParse::UnitsDiv(UnitExpression *num,UnitExpression *denom) 
 {
@@ -346,7 +359,8 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
    case VPTT_and:
    case VPTT_or:
    case '=':
-	   return new ExpressionLogical(pSymbolNameSpace,exp1,exp2,oper);
+   case VPTT_not:
+	   return new ExpressionLogical(pSymbolNameSpace, exp1, exp2, oper);
    default :
      mSyntaxError.str = "Unknown operator internal error "  ;
      throw mSyntaxError ;

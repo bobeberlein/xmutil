@@ -2,11 +2,18 @@
 #include "../XMUtil.h"
 
 
-SymbolList::SymbolList(SymbolNameSpace *sns,Symbol *first,int bang) : SymbolTableBase(sns)
+SymbolList::SymbolList(SymbolNameSpace *sns,Symbol *first,bool bang) : SymbolTableBase(sns)
 {
-   vSymbols.push_back(first) ;
-   vMarked.push_back(bang) ;
+	vSymbols.push_back(SymbolListEntry(first, bang));
+   pMapRange = '\0';
 }
+
+SymbolList::SymbolList(SymbolNameSpace *sns, SymbolList *first) : SymbolTableBase(sns)
+{
+	vSymbols.push_back(SymbolListEntry(first));
+	pMapRange = '\0';
+}
+
 
 
 SymbolList::~SymbolList(void)
