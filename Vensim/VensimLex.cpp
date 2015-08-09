@@ -189,6 +189,7 @@ int VensimLex::NextToken() // also sets token type
       case '|' :
       case ',' :
       case '+' :
+		  break;
       case '>' :
 		  if (TestTokenMatch("=", true))
 			  return VPTT_ge;

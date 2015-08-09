@@ -24,7 +24,7 @@ VensimParse *VPObject = '\0' ;
 VensimParse::VensimParse(SymbolNameSpace *sns)
 {
 #if YYDEBUG
-	vpyydebug = 0;
+	vpyydebug = 1;
 #endif
    assert(!VPObject) ;
    VPObject = this ;
