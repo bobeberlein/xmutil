@@ -24,7 +24,7 @@ VensimParse *VPObject = '\0' ;
 VensimParse::VensimParse(SymbolNameSpace *sns)
 {
 #if YYDEBUG
-	vpyydebug = 1;
+	vpyydebug = 0;
 #endif
    assert(!VPObject) ;
    VPObject = this ;
@@ -48,6 +48,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionInteg(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
+		new FunctionWithLookup(pSymbolNameSpace); // but WITH_LOOKUP is treated specially by parser
 		new FunctionStep(pSymbolNameSpace);
 		new FunctionTabbedArray(pSymbolNameSpace);
 		new FunctionRamp(pSymbolNameSpace);
@@ -86,15 +87,23 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
 
     return new Equation(pSymbolNameSpace,lhs,ex,tok) ; 
 }
+Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl)
+{
+	if (!ex)
+		return new Equation(pSymbolNameSpace, lhs, tbl, '(');
+	Function* wl = static_cast<Function*>(pSymbolNameSpace->Find("WITH LOOKUP"));
+	ExpressionList* el = ChainExpressionList('\0', tbl);
+	Expression* rhs =  new ExpressionFunction(pSymbolNameSpace, wl, el);
+	return new Equation(pSymbolNameSpace, lhs, rhs, '=');
+
+}
 
 /* a full eq cleans up the temporary memory space and 
-  also assigns the equation to the Variable */
+  also assigns the equation to the Variable  - not that inside
+  of macros there is a separate symbol space this is going
+  against */
 void VensimParse::AddFullEq(Equation *eq,UnitExpression *un)
 {
-	if (mInMacro) {
-		mMacroFunctions.back()->AddEq(eq, un);
-		return;
-	}
    pSymbolNameSpace->ConfirmAllAllocations() ; // now independently allocated
    pActiveVar = eq->GetVariable() ;
    pActiveVar->AddEq(eq) ;

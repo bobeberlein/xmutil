@@ -26,6 +26,7 @@ public:
    inline int yylex(void) { return mVensimLex.yylex() ; }
    int yyerror(const char *str) ;
    Equation *AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int tok) ;
+   Equation *AddTable(LeftHandSide* lhs, Expression *ex, ExpressionTable* table);
    inline SymbolNameSpace *GetSymbolNameSpace(void) { return pSymbolNameSpace ; }
    Variable *InsertVariable(const std::string &name) ;
    Units *InsertUnits(const std::string &name) ;

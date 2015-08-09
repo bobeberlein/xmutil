@@ -115,6 +115,7 @@ private :
 FSubclass(FunctionMax,"MAX",2,"max")
 FSubclass(FunctionMin,"MIN",2,"min")
 FSubclass(FunctionIfThenElse,"IF THEN ELSE", 3, "IF THEN ELSE")
+FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclass(FunctionLn, "LN", 1, "LN")

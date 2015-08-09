@@ -8,6 +8,8 @@ extern "C" void vpyy_addfulleq(Equation *eq,UnitExpression *un)
 { return  VPObject->AddFullEq(eq,un) ; }
 extern "C" Equation *vpyy_addeq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int token) 
 { return VPObject->AddEq(lhs,ex,exl,token) ; }
+extern "C" Equation *vpyy_add_lookup(LeftHandSide *lhs,Expression *ex,ExpressionTable *tvl) 
+{ return VPObject->AddTable(lhs,ex,tvl) ; }
 extern "C" LeftHandSide *vpyy_addexceptinterp(ExpressionVariable *var,SymbolListList *except,int interpmode) 
 { return VPObject->AddExceptInterp(var,except,interpmode) ;  }
 extern "C" SymbolList *vpyy_symlist(SymbolList *in,Variable *add,int bang,Variable *end) 

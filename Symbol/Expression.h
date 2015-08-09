@@ -159,7 +159,7 @@ public:
    double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable,pExpression,info)  ; } 
    void OutputComputable(ContextInfo *info) { *info << "fLookup(" << pExpressionVariable->GetVariable()->GetAlternateName() << "," ; pExpression->OutputComputable(info);*info<<")";}
 private:
-   ExpressionVariable *pExpressionVariable ;
+   ExpressionVariable *pExpressionVariable ; // null for with_lookup
    Expression *pExpression ;
 } ;
 

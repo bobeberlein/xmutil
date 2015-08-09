@@ -14,6 +14,7 @@ extern void vpyyerror (char const *);
      
 /* tokens returned by the tokenizer (in addition to single char tokens) */
 %token <tok> VPTT_dataequals
+%token <tok> VPTT_with_lookup
 %token <tok> VPTT_map
 %token <tok> VPTT_equiv
 %token <tok> VPTT_groupstar
@@ -101,7 +102,8 @@ macroend:
 
 eqn : 
    lhs '=' exprlist {$$ = vpyy_addeq($1,'\0',$3,'=') ; }
-   | lhs '(' tablevals ')' { $$ = vpyy_addeq($1,(Expression *)$3,'\0','(') ; }
+   | lhs '(' tablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3) ; }
+   | lhs '=' VPTT_with_lookup '(' exp ',' '(' tablevals ')' ')' { $$ = vpyy_add_lookup($1,$5,$8) ; }
    | lhs VPTT_dataequals exp {$$ = vpyy_addeq($1,$3,'\0',VPTT_dataequals) ; }
    | VPTT_symbol ':' subdef maplist {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,'\0'),'\0','\0'),(Expression *)vpyy_symlist_expression($3,$4),'\0',':') ; }
    | lhs '=' VPTT_tabbed_array { $$ = vpyy_addeq($1,$3,'\0','=') ; }

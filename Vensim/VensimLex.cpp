@@ -52,19 +52,40 @@ int VensimLex::yylex()
          vpyylval.num = atof(sToken.c_str()) ;
          break ;
       case VPTT_symbol :
-         vpyylval.sym =   VPObject->InsertVariable(sToken) ;
-         if(vpyylval.sym->isType() == Symtype_Function) {
-            Function *f = static_cast<Function *>(static_cast<Symbol *>(vpyylval.sym)) ;
-            if(f->AsKeyword()) {
-               return ReadTabbedArray() ;// todo other keywords - this will return an ExpressionNumberTable
-            }
-            else
-               toktype = VPTT_function ;
-         }
+		  if (iInUnitsComment == 1)
+		  {
+			  vpyylval.uni = VPObject->InsertUnitExpression(VPObject->InsertUnits(sToken));
+			  toktype = VPTT_units_symbol;
+			  break;
+		  }
+		  // special things here - try to do almost everything (including INTEG) as a function but some need to call out to different toktypes
+		  if ((sToken[0] == 'w' || sToken[0] == 'W') &&
+			  (sToken[1] == 'i' || sToken[1] == 'I') &&
+			  (sToken[2] == 't' || sToken[2] == 'T') &&
+			  (sToken[3] == 'h' || sToken[3] == 'H') &&
+			  (sToken[4] == ' ' || sToken[4] == ' ') &&
+			  (sToken[5] == 'l' || sToken[5] == 'L') &&
+			  (sToken[6] == 'o' || sToken[6] == 'O') &&
+			  (sToken[7] == 'o' || sToken[7] == 'O') &&
+			  (sToken[8] == 'k' || sToken[8] == 'K') &&
+			  (sToken[9] == 'u' || sToken[9] == 'U') &&
+			  (sToken[10] == 'p' || sToken[10] == 'P')
+			  ) {
+			  toktype = VPTT_with_lookup;
+		  }
+		  else
+		  {
+			  vpyylval.sym = VPObject->InsertVariable(sToken);
+			  if (vpyylval.sym->isType() == Symtype_Function) {
+				  Function *f = static_cast<Function *>(static_cast<Symbol *>(vpyylval.sym));
+				  if (f->AsKeyword()) {
+					  return ReadTabbedArray();// todo other keywords - this will return an ExpressionNumberTable
+				  }
+				  else
+					  toktype = VPTT_function;
+			  }
+		  }
 
-         break ;
-      case VPTT_units_symbol :
-         vpyylval.uni =  VPObject->InsertUnitExpression(VPObject->InsertUnits(sToken)) ;
          break ;
       default :
          break ;
@@ -183,8 +204,11 @@ int VensimLex::NextToken() // also sets token type
 			 return VPTT_le;
 		 break;
       case '1' :
-         if(iInUnitsComment==1) 
-            return VPTT_units_symbol ;
+		  if (iInUnitsComment == 1)
+		  {
+			  vpyylval.uni = VPObject->InsertUnitExpression(VPObject->InsertUnits("1"));
+			  return VPTT_units_symbol;
+		  }
       case '.' : // maybe a number check next digit
       case '0' :
 
@@ -264,8 +288,7 @@ int VensimLex::NextToken() // also sets token type
             MarkPosition() ;
             for(len=1;c = GetNextChar(true);len++) {
                if(c == '\"') {
-                  toktype = iInUnitsComment==1?VPTT_units_symbol:VPTT_symbol ;
-                  return toktype ;// the returned token includes both the opening and closing quote
+                  return VPTT_symbol ;// the returned token includes both the opening and closing quote
                }
                else if(c == '\\') { // skip what follows in case it is a " or \  
                   GetNextChar(true) ;
@@ -292,8 +315,7 @@ int VensimLex::NextToken() // also sets token type
                   break ;
                }
             }
-            toktype = iInUnitsComment==1?VPTT_units_symbol:VPTT_symbol ;
-            return toktype ;
+            return VPTT_symbol ;
          }
    }
    return toktype ;
