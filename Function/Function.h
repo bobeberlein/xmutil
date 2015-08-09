@@ -118,13 +118,19 @@ FSubclass(FunctionIfThenElse,"IF THEN ELSE", 3, "IF THEN ELSE")
 FSubclass(FunctionZidz, "ZIDZ", 2, "ZIDZ")
 FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
-FSubclass(FunctionRamp, "RAMP", 3, "RAMP")
+
+// actually memory but no init
+FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
+
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
+FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
 FSubclassMemory(FunctionSampleIfTrue, "SAMPLE IF TRUE", 3, BOOST_BINARY(110), BOOST_BINARY(001), "sample_active", "sample_init")
 
+FSubclassTime(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclass(FunctionLn, "LN", 1, "LN")
 FSubclassTime(FunctionPulse, "PULSE", 2, "pulse")
 FSubclassTime(FunctionStep, "STEP", 2, "step")
+
 FSubclassKeyword(FunctionTabbedArray, "TABBED ARRAY", 1)
 
 /*

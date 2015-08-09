@@ -46,6 +46,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionMin(pSymbolNameSpace);
 		new FunctionMax(pSymbolNameSpace);
 		new FunctionInteg(pSymbolNameSpace);
+		new FunctionActiveInitial(pSymbolNameSpace);
 		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
@@ -56,6 +57,8 @@ void VensimParse::ReadyFunctions()
 		new FunctionTabbedArray(pSymbolNameSpace);
 		new FunctionRamp(pSymbolNameSpace);
 		new FunctionLn(pSymbolNameSpace);
+		new FunctionSmooth(pSymbolNameSpace);
+
 
 		pSymbolNameSpace->ConfirmAllAllocations();
 	}

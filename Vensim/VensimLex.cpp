@@ -182,6 +182,8 @@ int VensimLex::NextToken() // also sets token type
          iInUnitsComment++ ;
 		 break;
       case '=' : // := is handled by :
+		  if (TestTokenMatch("=", true))
+			  return '='; // we ignore the invariant == that Vensim supports
 		  break;
 	  case '/':
 		  break;
