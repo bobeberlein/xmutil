@@ -102,7 +102,7 @@ public:
    bool CheckComputed(ContextInfo *info,bool first) {if(pVariableContent)return pVariableContent->CheckComputed(this,info,first) ; return false ; }  
    void CheckPlaceholderVars(Model *m) {if(pVariableContent)pVariableContent->CheckPlaceholderVars(m) ;}
    void SetupState(ContextInfo *info) {if(pVariableContent)pVariableContent->SetupState(info) ;} 
-   int SubscriptCount(std::vector<Symbol *> &elmlist) { return pVariableContent->SubscriptCount(elmlist) ; }
+   int SubscriptCount(std::vector<Symbol *> &elmlist) { return pVariableContent?pVariableContent->SubscriptCount(elmlist):0; }
    // passthrough calls - many of these are virtual in VariableContent or passed through to yet another class
    void AddEq(Equation *eq) ;
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
