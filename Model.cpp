@@ -6,6 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <vector>
 #include "XMUtil.h"
+#include "Xmile/XMILEGenerator.h"
 
 Model::Model(void)
 {
@@ -436,4 +437,14 @@ void Model::GenerateShortNames(void)
       i++;
       v->SetAlternateName(s) ;
    }
+}
+
+bool Model::WriteToXMILE(const std::string& path, std::vector<std::string>& errs)
+{
+	bool success = true;
+
+	XMILEGenerator generator(this);
+	success = generator.Generate(path, errs);
+
+	return success;
 }

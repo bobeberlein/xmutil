@@ -17,6 +17,8 @@ public:
    void GenerateCanonicalNames(void) ;
    void GenerateShortNames(void) ;
    bool OutputComputable(bool wantshort) ;
+   bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
+
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
    bool SetupVariableStates(int pass) ;

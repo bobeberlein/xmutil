@@ -57,11 +57,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;xxYYDEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)third_party\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>icuuc.lib;tinyxml2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)third_party\lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -78,13 +79,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)third_party\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>icuuc.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)third_party\lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -99,7 +101,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Symbol\Equation.cpp" />
     <ClCompile Include="Symbol\Expression.cpp" />
-    <ClCompile Include="Symbol\EXpressionList.cpp" />
+    <ClCompile Include="Symbol\ExpressionList.cpp" />
     <ClCompile Include="Symbol\LeftHandSide.cpp" />
     <ClCompile Include="Symbol\NotUsed_SymAllocList.cpp" />
     <ClCompile Include="Symbol\Symbol.cpp" />
@@ -114,6 +116,7 @@
     <ClCompile Include="Vensim\VensimParse.cpp" />
     <ClCompile Include="Vensim\VensimParseFunctions.cpp" />
     <ClCompile Include="Vensim\VYacc.tab.c" />
+    <ClCompile Include="Xmile\XMILEGenerator.cpp" />
     <ClCompile Include="XMUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -138,6 +141,7 @@
     <ClInclude Include="Symbol\Units.h" />
     <ClInclude Include="Symbol\Variable.h" />
     <ClInclude Include="Vensim\VYacc.tab.h" />
+    <ClInclude Include="Xmile\XMILEGenerator.h" />
     <ClInclude Include="XMUtil.h" />
   </ItemGroup>
   <ItemGroup>

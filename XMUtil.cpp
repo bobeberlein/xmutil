@@ -1,5 +1,7 @@
 // XMUtil.cpp : Defines the entry point for the console application.
 //
+#include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 
 #include "Vensim/VensimParse.h"
 #include "unicode/utypes.h"
@@ -24,11 +26,8 @@ void CloseUCaseMap(void)
    ucasemap_close(GlobalUCaseMap) ;
 }
 
-
-
 bool ParseVensimModel(int argc, char* argv[],Model *m)
 {
-
    if(argc < 2)
       return false ;
    VensimParse vp(m->GetNameSpace()) ;
@@ -36,21 +35,33 @@ bool ParseVensimModel(int argc, char* argv[],Model *m)
       return false ;
 	return true ;
 }
+
 #ifdef _DEBUG
 void CheckMemoryTrack(int clear) ;
 #endif
 
 int main(int argc, char* argv[])
 {
-
    if(!OpenUCaseMap())
       return -1 ;
+
    Model *m = new Model() ;
    if(ParseVensimModel(argc,argv,m)) {
-      if(m->AnalyzeEquations()) {
+      /*if(m->AnalyzeEquations()) {
          m->Simulate() ;
-         m->OutputComputable(true) ;
-      }
+         m->OutputComputable(true);
+      }*/
+
+	   boost::filesystem::path p(argv[1]);
+	   p.replace_extension(".xmile");
+
+	   std::vector<std::string> errs;
+	   m->WriteToXMILE(p.string(), errs);
+
+	   BOOST_FOREACH(const std::string& err, errs)
+	   {
+		   std::cout << err << std::endl;
+	   }
    }
    delete m ;
    CloseUCaseMap() ;

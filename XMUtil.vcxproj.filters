@@ -13,6 +13,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{5ff78ed6-4222-4456-8740-79ef2ac507eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Xmile">
+      <UniqueIdentifier>{7f269fda-16f2-4089-8fc3-b78ec904230d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vensim\VYacc.tab.c">
@@ -43,9 +46,6 @@
       <Filter>Symbol</Filter>
     </ClCompile>
     <ClCompile Include="Symbol\Expression.cpp">
-      <Filter>Symbol</Filter>
-    </ClCompile>
-    <ClCompile Include="Symbol\EXpressionList.cpp">
       <Filter>Symbol</Filter>
     </ClCompile>
     <ClCompile Include="Symbol\LeftHandSide.cpp">
@@ -80,6 +80,12 @@
     </ClCompile>
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="XMUtil.cpp" />
+    <ClCompile Include="Xmile\XMILEGenerator.cpp">
+      <Filter>Xmile</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbol\ExpressionList.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vensim\VYacc.tab.h">
@@ -142,6 +148,9 @@
     <ClInclude Include="ContextInfo.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="XMUtil.h" />
+    <ClInclude Include="Xmile\XMILEGenerator.h">
+      <Filter>Xmile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Vensim\VLex.y">

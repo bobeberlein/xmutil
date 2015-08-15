@@ -5,6 +5,7 @@ REM http://site.icu-project.org/download
 SET "ICU_PATH=C:\tools\icu"
 SET "BOOST_PATH=C:\Program Files\boost\boost_1_58_0"
 SET "BISON_PATH=C:\tools\bison\bin"
+SET "TINY_XML_PATH=C:\tools\tinyxml2"
 
  IF NOT EXIST ".\include" GOTO NOINCLUDE
    rmdir  /s /q ".\include"
@@ -43,6 +44,14 @@ FOR %%G IN ("%BOOST_PATH%\boost\*") DO (
 )
 
 FOR %%G IN ("%BOOST_PATH%\lib32\*") DO (
+    mklink /H  ".\lib32\%%~nxG" "%%G"
+)
+
+FOR %%G IN ("%TINY_XML_PATH%\include\*") DO (
+    mklink /H  ".\include\%%~nxG" "%%G"
+)
+
+FOR %%G IN ("%TINY_XML_PATH%\lib32\*") DO (
     mklink /H  ".\lib32\%%~nxG" "%%G"
 )
 
