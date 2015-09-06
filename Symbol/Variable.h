@@ -17,6 +17,7 @@
 
   VariableContent is an abstract class 
   */
+enum XMILE_Type { XMILE_Type_UNKNOWN, XMILE_Type_AUX, XMILE_Type_STOCK, XMILE_Type_FLOW, XMILE_Type_ARRAY, XMILE_Type_ARRAY_ELM };
 class VariableContent
 {
 public :
@@ -32,13 +33,15 @@ public :
    virtual void Clear(void) ;
    virtual void AddEq(Equation *eq) { }
    virtual Equation *GetEquation(int pos) { return '\0' ; }
-   virtual bool AddUnits(UnitExpression *un) { return false ; }
+   virtual std::vector<Equation*> GetAllEquations() { return std::vector<Equation*>(); }
+   virtual bool AddUnits(UnitExpression *un) { return false; }
    virtual void OutputComputable(ContextInfo *info) { assert(0) ; }
    virtual void CheckPlaceholderVars(Model *m) {}
    virtual void SetupState(ContextInfo *info) {} // returns number of entries in state vector required (states can also claim thier own storage)
    virtual void SetAlternateName(const std::string &altname) { }
    virtual const std::string &GetAlternateName(void) { assert(0); std::string *s = new std::string;return *s; }
    virtual int SubscriptCount(std::vector<Symbol *> &elmlist) { return 0 ; }
+   virtual XMILE_Type MarkFlows(SymbolNameSpace* sns, Variable *parent, XMILE_Type intype) { return XMILE_Type_UNKNOWN; }
 
 protected :
    State *pState ; // different kinds of states, also compute flags are here along with var type
@@ -49,7 +52,7 @@ class VariableContentSub : public VariableContent
 public :
    VariableContentSub(Variable *v)  {pFamily = v ; }
    ~VariableContentSub(void) {}
-private :
+private:
    Variable *pFamily ;
    std::vector<Variable *>vElements ; // includes count 
 } ;
@@ -58,7 +61,7 @@ class VariableContentElm : public VariableContent
 public :
    VariableContentElm(Variable *v)  {pFamily = v ; }
    ~VariableContentElm(void) {}
-private :
+private:
    Variable *pFamily ;
    int iValue ; /* 1 based value */
 } ;
@@ -74,7 +77,8 @@ public :
    bool CheckComputed(Symbol *parent,ContextInfo *info,bool first) ;
    void Clear(void) ;
    void AddEq(Equation *eq) { vEquations.push_back(eq) ; }
-   Equation *GetEquation(int pos) { return vEquations[pos] ; }
+   virtual Equation *GetEquation(int pos) { return vEquations[pos] ; }
+   virtual std::vector<Equation*> GetAllEquations() { return vEquations; }
    bool AddUnits(UnitExpression *un) {if(!pUnits) { pUnits=un;return true;} return false ; }
    void OutputComputable(ContextInfo *info) { *info << sAlternateName ; }
    void CheckPlaceholderVars(Model *m) ;
@@ -83,6 +87,7 @@ public :
    const std::string &GetAlternateName(void) { return sAlternateName ; }
    int SubscriptCount(std::vector<Symbol *> &elmlist) ;
 
+
 protected :
    std::vector<Variable*>vSubscripts ; // for regular variables the family's for subscripts the family (possibly self) follwed by elements
    std::vector<Equation*>vEquations ;
@@ -90,6 +95,7 @@ protected :
    std::string sAlternateName ; // for writing out equations as computer code
    UnitExpression *pUnits ; // units could be attached to equations
 };
+
 class Variable :
    public Symbol
 {
@@ -106,7 +112,8 @@ public:
    // passthrough calls - many of these are virtual in VariableContent or passed through to yet another class
    void AddEq(Equation *eq) ;
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
-   inline bool AddUnits(UnitExpression *un) {return pVariableContent->AddUnits(un) ;}
+   std::vector<Equation*> GetAllEquations() { return pVariableContent->GetAllEquations(); }
+   inline bool AddUnits(UnitExpression *un) { return pVariableContent->AddUnits(un); }
    inline void OutputComputable(ContextInfo *info) { pVariableContent->OutputComputable(info) ; }
    inline double Eval(ContextInfo *info) { return pVariableContent->Eval(info) ;  }
    inline void SetInitialValue(int off,double val) { pVariableContent->SetInitialValue(off,val) ; }
@@ -114,12 +121,17 @@ public:
    inline void SetAlternateName(const std::string &altname) { pVariableContent->SetAlternateName(altname) ; }
    inline const std::string &GetAlternateName(void) { return pVariableContent->GetAlternateName() ; }
 
+   XMILE_Type MarkFlows(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
+   XMILE_Type VariableType() { return mVariableType; }
+   void SetVariableType(XMILE_Type t) { mVariableType = t; }
+
    // for other function calles
    inline VariableContent *Content(void) { return pVariableContent ; }
    void SetContent(VariableContent *v) { pVariableContent = v ; } 
    // virtual 
 private :
    VariableContent *pVariableContent ; // dependent on variable type which is not known on instantiation
+   XMILE_Type mVariableType;
 } ;
 
 

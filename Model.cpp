@@ -397,6 +397,49 @@ bool Model::OutputComputable(bool wantshort)
    return true ;
 }
 
+bool Model::MarkVariableTypes()
+{
+	try {
+		SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();
+		std::vector<Variable*> vars;
+		BOOST_FOREACH(const SymbolNameSpace::iterator it, *ht) {
+			Symbol* sym = SNSitToSymbol(it);
+
+			if (sym->isType() == Symtype_Variable)
+				vars.push_back(static_cast<Variable*>(sym));
+		}
+		// 
+		BOOST_FOREACH(Variable* var, vars)
+		{
+			var->MarkFlows(&mSymbolNameSpace); // may change number of entries so can't be in above loop
+		}
+		mSymbolNameSpace.ConfirmAllAllocations();
+	}
+	catch (...) {
+		mSymbolNameSpace.DeleteAllUnconfirmedAllocations();
+		return false;
+	}
+	ContextInfo info;
+	SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();
+	BOOST_FOREACH(const SymbolNameSpace::iterator it, *ht) {
+		Symbol* sym = SNSitToSymbol(it);
+
+		if (sym->isType() == Symtype_Variable)
+		{
+			Variable*var = static_cast<Variable*>(sym);
+			VariableContent* content = var->Content();
+			BOOST_FOREACH(Equation* eq, content->GetAllEquations())
+			{
+				eq->OutputComputable(&info);
+			}
+		}
+	}
+
+	return true;
+}
+
+
+
 bool Model::RenameVariable(Variable *v,const std::string &newname)
 {
    assert(!newname.empty()) ;

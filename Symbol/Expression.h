@@ -14,7 +14,7 @@
 
 class ExpressionList ; // forward declaration
 class Model ;
-
+class FlowList;
 
 // probably don't need these after all
 enum EXPTYPE {
@@ -41,11 +41,14 @@ public:
    virtual double Eval(ContextInfo *info) = 0 ;
    virtual void FlipSign(void) {}
    virtual Function *GetFunction(void) { return '\0' ; }
+   virtual const char* GetOperator() { return '\0'; }
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) = 0 ;// generally do nothing, but big error to skip
    virtual bool CheckComputed(ContextInfo *info) { return true ; }
    virtual void RemoveFunctionArgs(void) {} // only 1 subclass does anything
    virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip - todo modify this to make dumping equations easy - possibly returning std::string
-
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) = 0; // but will also create a flow when the INTEG equation has other stuff
+   virtual void MarkType(XMILE_Type type) = 0; // only called with flow after test returns true
+   virtual Expression* GetArg(int pos) { return '\0'; }
 };
 
 class ExpressionVariable :
@@ -53,14 +56,17 @@ class ExpressionVariable :
 {
 public :
    inline ExpressionVariable(SymbolNameSpace *sns,Variable *var,SymbolList *subs) : Expression(sns) {pVariable = var;pSubList = subs;}
-   inline ~ExpressionVariable(void) {if(HasGoodAlloc()) {if(pSubList) delete pSubList ;/* leave pVariable alone */}}
+   inline ~ExpressionVariable(void) { if (HasGoodAlloc()) { if (pSubList) delete pSubList;/* leave pVariable alone */ } }
    inline EXPTYPE GetType(void) { return EXPTYPE_Variable ; }
    inline Variable *GetVariable(void) { return pVariable ; }
+   inline SymbolList *GetSubs() { return pSubList; }
    inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
    bool CheckComputed(ContextInfo *info) { return pVariable->CheckComputed(info,false) ; }
    double Eval(ContextInfo *info) { return pVariable->Eval(info) ; } 
-   void OutputComputable(ContextInfo *info) { *info << pVariable->GetAlternateName() ; }
-private :
+   virtual void OutputComputable(ContextInfo *info) { *info << pVariable->GetAlternateName() ; }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; } // but will also create a flow when the INTEG equation has other stuff
+   virtual void MarkType(XMILE_Type type) { pVariable->SetVariableType(type); } // only called with flow after test returns true
+private:
    Variable *pVariable ; // pointer back to the model variable - not allocated by this object
    SymbolList *pSubList ; // subscripts - allocated by this object
 } ;
@@ -75,8 +81,10 @@ public :
    inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
    bool CheckComputed(ContextInfo *info) { return true ; }
    double Eval(ContextInfo *info) { return -FLT_MAX ; } 
-   void OutputComputable(ContextInfo *info) { assert(0) ; }
-private :
+   virtual void OutputComputable(ContextInfo *info) { assert(0) ; }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void MarkType(XMILE_Type type) { assert(false); } 
+private:
    SymbolList *pSymList ; // subscript elements - should be deleted by this object
    SymbolList *pMap ; // 
 } ;
@@ -91,8 +99,10 @@ public :
    void FlipSign(void) { value = -value ; }
    inline double Eval(ContextInfo *info) { return value ; }
    inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
-   void OutputComputable(ContextInfo *info) { *info << value ; }
-private :
+   virtual void OutputComputable(ContextInfo *info) { *info << value ; }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void MarkType(XMILE_Type type) {}
+private:
    double value ;
 } ;
 class ExpressionNumberTable :
@@ -104,11 +114,13 @@ public :
    inline EXPTYPE GetType(void) { return EXPTYPE_NumberTable ; }
    inline double Eval(ContextInfo *info) { return -FLT_MAX ; }
    inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
-   void OutputComputable(ContextInfo *info) { *info << " ??? " ; }
+   virtual void OutputComputable(ContextInfo *info) { *info << " ??? " ; }
    void AddValue(unsigned row,double num) {if(row+1 > vRow.size()) vRow.resize(row+1) ; vRow[row].push_back(num) ; }
    int Count(unsigned row) { if(row < vRow.size()) return 0 ; return vRow[row].size() ; }
    typedef  std::vector<double> ColVals ;
-private :
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void MarkType(XMILE_Type type) {}
+private:
    std::vector<ColVals> vRow ;
 } ;
 
@@ -125,7 +137,9 @@ public :
    void CheckPlaceholderVars(Model *m,bool isfirst) ;
    bool CheckComputed(ContextInfo *info) { return pFunction->CheckComputed(info,pArgs) ; }
    void RemoveFunctionArgs(void) { pArgs = '\0' ; }
-   void OutputComputable(ContextInfo *info)  { pFunction->OutputComputable(info,pArgs) ; }
+   virtual void OutputComputable(ContextInfo *info)  { pFunction->OutputComputable(info, pArgs); }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void MarkType(XMILE_Type type) {}
 
 private :
    Function *pFunction ; // not allocated here
@@ -141,8 +155,10 @@ public :
    inline double Eval(ContextInfo *info) {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->Eval(info);return ExpressionFunction::Eval(info) ; }
    void CheckPlaceholderVars(Model *m,bool isfirst) ;
    bool CheckComputed(ContextInfo *info) {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->CheckComputed(info,false);return ExpressionFunction::CheckComputed(info) ; }
-   void OutputComputable(ContextInfo *info)  {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->OutputComputable(info);return ExpressionFunction::OutputComputable(info) ; }
-private :
+   virtual void OutputComputable(ContextInfo *info)  {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->OutputComputable(info);return ExpressionFunction::OutputComputable(info) ; }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq);
+   virtual void MarkType(XMILE_Type type) {}
+private:
    Equation *pPlacholderEquation ; // used in computation (null if function defines LHS)
 } ;
 
@@ -157,7 +173,9 @@ public:
    void CheckPlaceholderVars(Model *m,bool isfirst) { pExpression->CheckPlaceholderVars(m,false) ; }
    bool CheckComputed(ContextInfo *info) { return pExpression->CheckComputed(info) ; }
    double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable,pExpression,info)  ; } 
-   void OutputComputable(ContextInfo *info) { *info << "fLookup(" << pExpressionVariable->GetVariable()->GetAlternateName() << "," ; pExpression->OutputComputable(info);*info<<")";}
+   virtual void OutputComputable(ContextInfo *info) { *info << "fLookup(" << pExpressionVariable->GetVariable()->GetAlternateName() << ","; pExpression->OutputComputable(info); *info << ")"; }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void MarkType(XMILE_Type type) {}
 private:
    ExpressionVariable *pExpressionVariable ; // null for with_lookup
    Expression *pExpression ;
@@ -176,8 +194,9 @@ public :
    double Eval(ContextInfo *info) { assert(0) ; return FLT_MAX ; } 
    std::vector<double>*GetXVals(void) { return &vXVals ; }
    std::vector<double>*GetYVals(void) { return &vYVals ; }
-   void OutputComputable(ContextInfo *info) { *info << "??" ; }
-
+   virtual void OutputComputable(ContextInfo *info) { *info << "??"; }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void MarkType(XMILE_Type type) {}
 
 private :
    std::vector<double> vXVals ;
@@ -197,8 +216,13 @@ public :
    inline EXPTYPE GetType(void) { return EXPTYPE_Operator ; }
    void CheckPlaceholderVars(Model *m,bool isfirst) { if(pE1) pE1->CheckPlaceholderVars(m,false);if(pE2)pE2->CheckPlaceholderVars(m,false);}
    bool CheckComputed(ContextInfo *info) { if(pE1 && !pE1->CheckComputed(info))return false ;if(pE2 && !pE2->CheckComputed(info)) return false; return true ; }
-   void OutputComputable(ContextInfo *info) { }
-protected :
+   virtual void OutputComputable(ContextInfo *info) { }
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
+	   if (pE1 && pE1->TestMarkFlows(sns, fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns, fl, eq); return false;
+   }
+   virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
+   virtual Expression* GetArg(int pos) { return pos == 0 ? pE1 : pos == 1 ? pE1 : '\0'; }
+protected:
    Expression *pE1 ;
    Expression *pE2 ;
 } ;
@@ -209,7 +233,8 @@ public : \
    name(SymbolNameSpace *sns,Expression *e1,Expression *e2) : ExpressionOperator2(sns,e1,e2) {}\
    ~name(void) {}\
    inline double Eval(ContextInfo *info) { return (evaleq); }\
-   void OutputComputable(ContextInfo *info) { *info << before;if(pE1)pE1->OutputComputable(info);*info<<middle;if(pE2)pE2->OutputComputable(info);*info<<after; }\
+   virtual const char* GetOperator() { return middle; }\
+   virtual void OutputComputable(ContextInfo *info) { *info << before;if(pE1)pE1->OutputComputable(info);*info<<middle;if(pE2)pE2->OutputComputable(info);*info<<after; }\
 } ;
 #define EO2SubClass(name,evaleq,compsym) EO2SubClassRaw(name,evaleq,"",compsym,"") ;
 
@@ -230,12 +255,42 @@ public:
 	inline double Eval(ContextInfo *info) { return 0; }
 	void CheckPlaceholderVars(Model *m, bool isfirst) { if (pE1) pE1->CheckPlaceholderVars(m, false); if (pE2)pE2->CheckPlaceholderVars(m, false); }
 	void OutputComputable(ContextInfo *info) { }
+	virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
+		if (pE1 && pE1->TestMarkFlows(sns,fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns,fl, eq); return false;
+	}
+	virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
 private:
 	Expression *pE1;
 	Expression *pE2;
 	int mOper;
 };
 
+
+/* helper class for grabbing flows from an INTEG eqution */
+class FlowList
+{
+public:
+	FlowList()  { bValid = true; pActiveExpression = '\0';  pNewVariable = '\0'; }
+	bool Valid() { return bValid; }
+	void SetValid(bool set) { bValid = set; }
+	bool Empty() { return vInflows.empty() && vOutflows.empty(); }
+	std::vector<Variable*>& Inflows() { return vInflows; }
+	std::vector<Variable*>& Outflows() { return vInflows; }
+	void AddInflow(Variable* in);
+	void AddOutflow(Variable* out);
+	void SetActiveExpression(Expression* expression) { pActiveExpression = expression; }
+	Expression* ActiveExpression() { return pActiveExpression; }
+	void SetNewVariable(Variable* var) { pNewVariable = var; }
+	Variable* NewVariable() { return pNewVariable; }
+	bool operator ==(const FlowList& rhs);
+
+private:
+	std::vector<Variable*> vInflows;
+	std::vector<Variable*> vOutflows;
+	Expression* pActiveExpression;
+	Variable* pNewVariable;
+	bool bValid;
+};
 
 /*
 {

@@ -2,7 +2,9 @@
 #include <boost/foreach.hpp>
 #include <assert.h>
 #include "../Symbol/Expression.h"
+#include "../Symbol/LeftHandSide.h"
 #include "../XMUtil.h"
+#include "boost/lexical_cast.hpp"
 
 // model Variable - this has subscript (families) units
 // and the comment attached to it - inside of expressions
@@ -10,9 +12,10 @@
 // to this
 
 Variable::Variable(SymbolNameSpace *sns,const std::string &name) 
-   : Symbol(sns,name)
+	: Symbol(sns, name)
 {
    pVariableContent = '\0' ;
+   mVariableType = XMILE_Type_UNKNOWN; // till typed
 
 }
 
@@ -25,6 +28,99 @@ Variable::~Variable(void)
       delete pVariableContent ;
       pVariableContent = '\0' ;
    }
+}
+
+XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
+{
+	if (!pVariableContent)
+		return mVariableType;
+
+	std::vector<Equation*>equations = pVariableContent->GetAllEquations();
+
+	if (equations.empty())
+	{
+		// todo data variables have empty equations  - could fill something in here???
+		return mVariableType;
+	}
+
+	/* if the equations are INTEG this is a stock and we need to validate flows - if we need to make
+	   up flows it has to be done here so that all the equations get the same net flow name
+       we make up flows if the active part of INTEG uses something other then +/- of flows or 
+	   if there are multiple equations that don't match (even if they all use +/- of flows)
+
+	   */
+	//first pass - just figure out if there is anything to do - 
+	bool gotone = false;
+	BOOST_FOREACH(Equation* eq, equations)
+	{
+		Expression* exp = eq->GetExpression();
+		if (exp->TestMarkFlows(sns, '\0', '\0'))
+		{
+			gotone = true;
+			break; // one is all that is needed
+		}
+	}
+	if (!gotone)
+		return mVariableType;
+	mVariableType = XMILE_Type_STOCK;
+
+	// second pass, get the flow lists for everyone -- NOTE there is a bug in this code
+	// because we don't check subscripts on the flows list so they may match even though
+	// they shouldn't eg STOCK[A]=INTEG(FLOW[B],0) STOCK[B]=INTEG(FLOW[A],0) 
+	std::vector<FlowList> flow_lists;
+	flow_lists.resize(equations.size());
+	size_t i = 0;
+	bool match = true;
+	BOOST_FOREACH(Equation* eq, equations)
+	{
+		Expression* exp = eq->GetExpression();
+		if (!exp->TestMarkFlows(sns, &flow_lists[i], '\0') || !flow_lists[i].Valid())
+		{
+			match = false;
+			break;
+		}
+		if (i > 0 && !(flow_lists[i] == flow_lists[i - 1])) {
+			match = false;
+			break; // all must be the same
+		}
+		i++;
+	}
+	if (match)
+	{
+		BOOST_FOREACH(Variable* v, flow_lists[0].Inflows())
+			v->SetVariableType(XMILE_Type_FLOW);
+		BOOST_FOREACH(Variable* v, flow_lists[0].Outflows())
+			v->SetVariableType(XMILE_Type_FLOW);
+		return mVariableType; // done
+	}
+
+	// mismatched for invalid flow equations - create a flow variable and add it to the model
+	std::string basename = this->GetName() + " net flow";
+	std::string name = basename;
+	i = 0;
+	while (sns->Find(name))
+	{
+		++i;
+		name = basename + "_" + boost::lexical_cast<std::string>(i);
+	}
+	Variable* v = new Variable(sns, name);
+
+	// now we swap the active part of the INTEG equation for v and set v's equation to
+	// the active part - this is equation by equation 
+	i = 0;
+	BOOST_FOREACH(Equation* eq, equations)
+	{
+		// left hand side for this variable
+		LeftHandSide *lhs = new LeftHandSide(sns, *eq->GetLeft(),v); // replace var in lhs equation
+		Equation *neweq = new Equation(sns, lhs, flow_lists[i].ActiveExpression(), '=');
+		v->AddEq(neweq);
+		flow_lists[i].SetNewVariable(v);
+		eq->GetExpression()->TestMarkFlows(sns, &flow_lists[i], eq);
+		i++;
+	}
+	// don't do this - we get some memory leakage but risk a crash otherwise v->MarkGoodAlloc();
+
+	return mVariableType;
 }
 
 void VariableContent::Clear(void)
@@ -225,3 +321,4 @@ int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
    }
    return 0 ;
 }
+

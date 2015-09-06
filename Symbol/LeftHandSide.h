@@ -15,9 +15,12 @@ class LeftHandSide :
 {
 public:
    LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var,SymbolListList *exceptlist,int interpmode) ;
+   LeftHandSide(SymbolNameSpace *sns, const LeftHandSide& base, Variable *newvar); // copy but put new variable in place
    ~LeftHandSide(void) ;
    Variable *GetVariable(void) {return pExpressionVariable->GetVariable() ; }
-private :
+   SymbolList *GetSubs() { return pExpressionVariable->GetSubs(); }
+private:
+	LeftHandSide(const LeftHandSide& base);
    ExpressionVariable *pExpressionVariable ;
    SymbolListList *pExceptList ; 
    int iInterpMode ; // nonstandard - Vensim for data equations what else?

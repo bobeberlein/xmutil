@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
-# define YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
+#ifndef YY_VPYY_C_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
+# define YY_VPYY_C_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -100,4 +100,4 @@ int vpyyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_VPYY_C_USERS_BSCHOENBERG_CODE_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED  */
+#endif /* !YY_VPYY_C_SDEV_XMUTIL_VENSIM_VYACC_TAB_H_INCLUDED  */

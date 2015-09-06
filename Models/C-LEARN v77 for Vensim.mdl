@@ -52937,6 +52937,7 @@ Stacked_Cumulative_Emissions_history
 :VAR Semi Agg Cumulative CO2[Other Developing]|Other Developing
 :Y-MAX 1500
 :L<%^E!@
+1:Ref.vdf
 9:Ref
 22:$,Dollar,Dollars,$s
 22:Day,Days
@@ -52971,7 +52972,6 @@ Stacked_Cumulative_Emissions_history
 39:1
 40:2
 41:0
-42:0
 24:1850
 25:2100
 26:2100

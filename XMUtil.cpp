@@ -52,6 +52,12 @@ int main(int argc, char* argv[])
          m->OutputComputable(true);
       }*/
 
+	   // mark variable types and potentially convert INTEG equations involving expressions
+	   // into flows (a single net flow on the first pass though this)
+	   m->MarkVariableTypes();
+
+
+
 	   boost::filesystem::path p(argv[1]);
 	   p.replace_extension(".xmile");
 

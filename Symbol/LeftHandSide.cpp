@@ -10,6 +10,16 @@ LeftHandSide::LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var,SymbolLi
    iInterpMode = interpmode ;
 }
 
+LeftHandSide::LeftHandSide(SymbolNameSpace* sns, const LeftHandSide& base, Variable *var)
+	: SymbolTableBase(sns)
+{
+	pExpressionVariable = new ExpressionVariable(sns, var, base.pExpressionVariable->GetSubs());
+	if (base.pExceptList)
+		pExceptList = new SymbolListList(sns, base.pExceptList);
+	else
+		pExceptList = '\0';
+	iInterpMode = base.iInterpMode;
+}
 
 LeftHandSide::~LeftHandSide(void)
 {
