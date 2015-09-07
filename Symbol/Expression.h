@@ -55,15 +55,15 @@ class ExpressionVariable :
    public Expression 
 {
 public :
-   inline ExpressionVariable(SymbolNameSpace *sns,Variable *var,SymbolList *subs) : Expression(sns) {pVariable = var;pSubList = subs;}
-   inline ~ExpressionVariable(void) { if (HasGoodAlloc()) { if (pSubList) delete pSubList;/* leave pVariable alone */ } }
-   inline EXPTYPE GetType(void) { return EXPTYPE_Variable ; }
-   inline Variable *GetVariable(void) { return pVariable ; }
-   inline SymbolList *GetSubs() { return pSubList; }
-   inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
+   ExpressionVariable(SymbolNameSpace *sns,Variable *var,SymbolList *subs) : Expression(sns) {pVariable = var;pSubList = subs;}
+   virtual ~ExpressionVariable(void) { if (HasGoodAlloc()) { if (pSubList) delete pSubList;/* leave pVariable alone */ } }
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Variable; }
+   virtual Variable *GetVariable(void) { return pVariable ; }
+   virtual SymbolList *GetSubs() { return pSubList; }
+   virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    bool CheckComputed(ContextInfo *info) { return pVariable->CheckComputed(info,false) ; }
    double Eval(ContextInfo *info) { return pVariable->Eval(info) ; } 
-   virtual void OutputComputable(ContextInfo *info) { *info << pVariable->GetAlternateName() ; }
+   virtual void OutputComputable(ContextInfo *info) { *info << pVariable->GetAlternateName(); if (pSubList) pSubList->OutputComputable(info); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; } // but will also create a flow when the INTEG equation has other stuff
    virtual void MarkType(XMILE_Type type) { pVariable->SetVariableType(type); } // only called with flow after test returns true
 private:
@@ -75,13 +75,13 @@ class ExpressionSymbolList :
    public Expression 
 {
 public :
-   inline ExpressionSymbolList(SymbolNameSpace *sns,SymbolList *subs,SymbolList *map) : Expression(sns) {pSymList = subs;pMap = map ;}
-   inline ~ExpressionSymbolList(void) {if(HasGoodAlloc()) {if(pSymList) delete pSymList ; if(pMap) delete pMap ;}}
-   inline EXPTYPE GetType(void) { return EXPTYPE_Symlist ; }
-   inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
+   ExpressionSymbolList(SymbolNameSpace *sns,SymbolList *subs,SymbolList *map) : Expression(sns) {pSymList = subs;pMap = map ;}
+   virtual ~ExpressionSymbolList(void) {if(HasGoodAlloc()) {if(pSymList) delete pSymList ; if(pMap) delete pMap ;}}
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Symlist ; }
+   virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    bool CheckComputed(ContextInfo *info) { return true ; }
    double Eval(ContextInfo *info) { return -FLT_MAX ; } 
-   virtual void OutputComputable(ContextInfo *info) { assert(0) ; }
+   virtual void OutputComputable(ContextInfo *info) { pSymList->OutputComputable(info); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void MarkType(XMILE_Type type) { assert(false); } 
 private:
@@ -93,12 +93,12 @@ class ExpressionNumber :
    public Expression
 {
 public :
-   inline ExpressionNumber(SymbolNameSpace *sns,double num) : Expression(sns) {value = num ;}
-   inline ~ExpressionNumber(void) {}
-   inline EXPTYPE GetType(void) { return EXPTYPE_Number ; }
+   ExpressionNumber(SymbolNameSpace *sns,double num) : Expression(sns) {value = num ;}
+   virtual ~ExpressionNumber(void) {}
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Number ; }
    void FlipSign(void) { value = -value ; }
-   inline double Eval(ContextInfo *info) { return value ; }
-   inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
+   virtual double Eval(ContextInfo *info) { return value ; }
+   virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    virtual void OutputComputable(ContextInfo *info) { *info << value ; }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void MarkType(XMILE_Type type) {}
@@ -109,11 +109,11 @@ class ExpressionNumberTable :
    public Expression
 {
 public :
-   inline ExpressionNumberTable(SymbolNameSpace *sns) : Expression(sns) {}
-   inline ~ExpressionNumberTable(void) {}
-   inline EXPTYPE GetType(void) { return EXPTYPE_NumberTable ; }
-   inline double Eval(ContextInfo *info) { return -FLT_MAX ; }
-   inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
+   ExpressionNumberTable(SymbolNameSpace *sns) : Expression(sns) {}
+   virtual ~ExpressionNumberTable(void) {}
+   virtual EXPTYPE GetType(void) { return EXPTYPE_NumberTable ; }
+   virtual double Eval(ContextInfo *info) { return -FLT_MAX ; }
+   virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    virtual void OutputComputable(ContextInfo *info) { *info << " ??? " ; }
    void AddValue(unsigned row,double num) {if(row+1 > vRow.size()) vRow.resize(row+1) ; vRow[row].push_back(num) ; }
    int Count(unsigned row) { if(row < vRow.size()) return 0 ; return vRow[row].size() ; }
@@ -130,10 +130,10 @@ class ExpressionFunction :
 public :
    ExpressionFunction(SymbolNameSpace *sns,Function *f,ExpressionList *args) : Expression(sns) {pFunction =f;pArgs = args;}
    ~ExpressionFunction(void) ;
-   inline EXPTYPE GetType(void) { return EXPTYPE_Function ; }
-   inline double Eval(ContextInfo *info) { return pFunction->Eval(this,pArgs,info) ; }
-   inline Function *GetFunction(void) { return pFunction ; }
-   inline ExpressionList *GetArgs(void) { return pArgs ; }
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Function ; }
+   virtual double Eval(ContextInfo *info) { return pFunction->Eval(this,pArgs,info) ; }
+   virtual Function *GetFunction(void) { return pFunction ; }
+   virtual ExpressionList *GetArgs(void) { return pArgs ; }
    void CheckPlaceholderVars(Model *m,bool isfirst) ;
    bool CheckComputed(ContextInfo *info) { return pFunction->CheckComputed(info,pArgs) ; }
    void RemoveFunctionArgs(void) { pArgs = '\0' ; }
@@ -151,8 +151,8 @@ class ExpressionFunctionMemory :
 public :
    ExpressionFunctionMemory(SymbolNameSpace *sns,Function *f,ExpressionList *args) : ExpressionFunction(sns,f,args) {pPlacholderEquation = '\0' ;}
    ~ExpressionFunctionMemory(void) { }
-   inline EXPTYPE GetType(void) { return EXPTYPE_FunctionMemory ; }
-   inline double Eval(ContextInfo *info) {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->Eval(info);return ExpressionFunction::Eval(info) ; }
+   virtual EXPTYPE GetType(void) { return EXPTYPE_FunctionMemory; }
+   virtual double Eval(ContextInfo *info) {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->Eval(info);return ExpressionFunction::Eval(info) ; }
    void CheckPlaceholderVars(Model *m,bool isfirst) ;
    bool CheckComputed(ContextInfo *info) {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->CheckComputed(info,false);return ExpressionFunction::CheckComputed(info) ; }
    virtual void OutputComputable(ContextInfo *info)  {if(pPlacholderEquation) return pPlacholderEquation->GetVariable()->OutputComputable(info);return ExpressionFunction::OutputComputable(info) ; }
@@ -169,7 +169,7 @@ class ExpressionLookup :
 public:
    ExpressionLookup(SymbolNameSpace *sns,ExpressionVariable *var,Expression *e) : Expression(sns) {pExpressionVariable =var;pExpression = e ; }
    ~ExpressionLookup(void) {if(HasGoodAlloc()) { delete pExpressionVariable;delete pExpression;}}
-   inline EXPTYPE GetType(void) { return EXPTYPE_Lookup ; }
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Lookup ; }
    void CheckPlaceholderVars(Model *m,bool isfirst) { pExpression->CheckPlaceholderVars(m,false) ; }
    bool CheckComputed(ContextInfo *info) { return pExpression->CheckComputed(info) ; }
    double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable,pExpression,info)  ; } 
@@ -187,10 +187,10 @@ class ExpressionTable :
 public :
    ExpressionTable(SymbolNameSpace *sns) : Expression(sns) { bHasRange=false;}
    ~ExpressionTable(void) {/* vector destructors only*/ }
-   inline EXPTYPE GetType(void) { return EXPTYPE_Table ; }
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Table; }
    void AddPair(double x,double y) { vXVals.push_back(x);vYVals.push_back(y);}
    void AddRange(double x1,double y1,double x2,double y2) { bHasRange=true;dX2=x2;dY1=y1;dX2=x2;dY2=y2;}
-   inline void CheckPlaceholderVars(Model *m,bool isfirst) {}
+   virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    double Eval(ContextInfo *info) { assert(0) ; return FLT_MAX ; } 
    std::vector<double>*GetXVals(void) { return &vXVals ; }
    std::vector<double>*GetYVals(void) { return &vYVals ; }
@@ -213,7 +213,7 @@ class ExpressionOperator2 :
 public :
    ExpressionOperator2(SymbolNameSpace *sns,Expression *e1,Expression *e2) : Expression(sns) {pE1=e1;pE2=e2;}
    ~ExpressionOperator2(void) {if(HasGoodAlloc()){if(pE1) delete pE1;if(pE2) delete pE2;}}
-   inline EXPTYPE GetType(void) { return EXPTYPE_Operator ; }
+   virtual EXPTYPE GetType(void) { return EXPTYPE_Operator; }
    void CheckPlaceholderVars(Model *m,bool isfirst) { if(pE1) pE1->CheckPlaceholderVars(m,false);if(pE2)pE2->CheckPlaceholderVars(m,false);}
    bool CheckComputed(ContextInfo *info) { if(pE1 && !pE1->CheckComputed(info))return false ;if(pE2 && !pE2->CheckComputed(info)) return false; return true ; }
    virtual void OutputComputable(ContextInfo *info) { }
@@ -221,7 +221,7 @@ public :
 	   if (pE1 && pE1->TestMarkFlows(sns, fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns, fl, eq); return false;
    }
    virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
-   virtual Expression* GetArg(int pos) { return pos == 0 ? pE1 : pos == 1 ? pE1 : '\0'; }
+   virtual Expression* GetArg(int pos) { return pos == 0 ? pE1 : pos == 1 ? pE2 : '\0'; }
 protected:
    Expression *pE1 ;
    Expression *pE2 ;
@@ -232,7 +232,7 @@ class name : public ExpressionOperator2{\
 public : \
    name(SymbolNameSpace *sns,Expression *e1,Expression *e2) : ExpressionOperator2(sns,e1,e2) {}\
    ~name(void) {}\
-   inline double Eval(ContextInfo *info) { return (evaleq); }\
+   virtual double Eval(ContextInfo *info) { return (evaleq); }\
    virtual const char* GetOperator() { return middle; }\
    virtual void OutputComputable(ContextInfo *info) { *info << before;if(pE1)pE1->OutputComputable(info);*info<<middle;if(pE2)pE2->OutputComputable(info);*info<<after; }\
 } ;
@@ -252,9 +252,9 @@ class ExpressionLogical :
 public:
 	ExpressionLogical(SymbolNameSpace *sns, Expression *exp1, Expression *exp2, int oper) : Expression(sns) { pE1 = exp1; pE2 = exp2; mOper = oper; }
 	~ExpressionLogical(void) { if (HasGoodAlloc()){ delete pE1; delete pE2; } }
-	inline double Eval(ContextInfo *info) { return 0; }
+	virtual double Eval(ContextInfo *info) { return 0; }
 	void CheckPlaceholderVars(Model *m, bool isfirst) { if (pE1) pE1->CheckPlaceholderVars(m, false); if (pE2)pE2->CheckPlaceholderVars(m, false); }
-	void OutputComputable(ContextInfo *info) { }
+	void OutputComputable(ContextInfo *info) { if (pE1)pE1->OutputComputable(info); *info << (char)mOper; if (pE2)pE2->OutputComputable(info); }
 	virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
 		if (pE1 && pE1->TestMarkFlows(sns,fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns,fl, eq); return false;
 	}
@@ -301,7 +301,7 @@ class ExpressionMultiply :
 public :
    ExpressionMultiply(SymbolNameSpace *sns,Expression *exp1,Expression *exp2) : Expression(sal) {pE1 = exp1;pE2=exp2;}
    ~ExpressionMultiply(void) {if(HasGoodAlloc()){delete pE1;delete pE2;}}
-   inline double Eval(void) { return pE1->Eval() * pE2->Eval() ; }
+   virtual double Eval(void) { return pE1->Eval() * pE2->Eval() ; }
 private :
    Expression *pE1 ;
    Expression *pE2 ;

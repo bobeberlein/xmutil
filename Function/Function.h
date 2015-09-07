@@ -130,6 +130,7 @@ FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
+FSubclassMemory(FunctionInitial, "INITIAL", 1, BOOST_BINARY(0), BOOST_BINARY(1), "no active equation only init", "INITIAL")
 FSubclassMemory(FunctionSampleIfTrue, "SAMPLE IF TRUE", 3, BOOST_BINARY(110), BOOST_BINARY(001), "sample_active", "sample_init")
 
 FSubclassTime(FunctionRamp, "RAMP", 3, "RAMP")

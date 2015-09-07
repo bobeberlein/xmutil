@@ -71,6 +71,8 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 		else
 			fl->SetValid(false);
 	}
+	else
+		fl->SetValid(false);
 }
 
 bool ExpressionFunctionMemory::TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq)

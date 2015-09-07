@@ -20,3 +20,21 @@ SymbolList::~SymbolList(void)
 {
 // do nothing symbols in one hash table or another
 }
+
+
+void SymbolList::OutputComputable(ContextInfo *info)
+{
+	if (vSymbols.empty())
+		return;
+	*info << "[";
+	for (size_t i = 0; i < vSymbols.size(); i++)
+	{
+		if (vSymbols[i].eType == EntryType_SYMBOL)
+		{
+			if (i)
+				*info << ",";
+			*info << vSymbols[i].u.pSymbol->GetName();
+		}
+	}
+	*info << "]";
+}

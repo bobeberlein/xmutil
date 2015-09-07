@@ -75,14 +75,9 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	{
 		Expression* exp = eq->GetExpression();
 		if (!exp->TestMarkFlows(sns, &flow_lists[i], '\0') || !flow_lists[i].Valid())
-		{
 			match = false;
-			break;
-		}
-		if (i > 0 && !(flow_lists[i] == flow_lists[i - 1])) {
-			match = false;
-			break; // all must be the same
-		}
+		else if (i > 0 && !(flow_lists[i] == flow_lists[i - 1])) 
+			match = false; // all must be the same
 		i++;
 	}
 	if (match)
@@ -152,6 +147,7 @@ void Variable::AddEq(Equation *eq)
    if(!pVariableContent) {
       try {
          pVariableContent = new VariableContentVar ;
+		 pVariableContent->SetAlternateName(this->GetName()); // until overidden
       }
       catch(...) {
          throw "Memory failure adding equations" ;

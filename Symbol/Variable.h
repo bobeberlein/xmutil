@@ -119,7 +119,7 @@ public:
    inline void SetInitialValue(int off,double val) { pVariableContent->SetInitialValue(off,val) ; }
    inline void SetActiveValue(int off,double val) { pVariableContent->SetActiveValue(off,val) ; }
    inline void SetAlternateName(const std::string &altname) { pVariableContent->SetAlternateName(altname) ; }
-   inline const std::string &GetAlternateName(void) { return pVariableContent->GetAlternateName() ; }
+   inline const std::string &GetAlternateName(void) { return pVariableContent ? pVariableContent->GetAlternateName():GetName(); }
 
    XMILE_Type MarkFlows(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
    XMILE_Type VariableType() { return mVariableType; }

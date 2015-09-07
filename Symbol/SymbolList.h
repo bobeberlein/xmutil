@@ -32,6 +32,8 @@ public:
    bool IsMapList() { return pMapRange != '\0'; }
    Symbol* MapRange() { return pMapRange; }
    void SetMapRange(Symbol *range) { assert(!pMapRange); pMapRange = range; }
+   virtual void OutputComputable(ContextInfo *info);
+
 private :
 	std::vector<SymbolListEntry> vSymbols;
    Symbol* pMapRange;

@@ -2,6 +2,7 @@
 #define _XMUTIL_CONTEXTINFO_H
 #include <vector>
 #include <iostream>
+#include <fstream>
 /* a utility class helpfu in sorting and evaluating equations 
 */
 
@@ -27,15 +28,15 @@ class Model ;
 class SymbolNameSpace ;
 class Equation ; // forward
 
-class ContextInfo
+class ContextInfo :  public std::ofstream
 {
 public:
    ContextInfo(void) { iComputeType = 0 ;pEquations = '\0' ; }
    ~ContextInfo(void) { }
    friend class Model ;
-   ContextInfo& operator << (const char *s) { std::cout << s ; return *this; }
-   ContextInfo& operator << (const std::string& s) {std::cout << s.c_str(); return *this; }
-   ContextInfo& operator << (const double num) { std::cout << num ; return *this ;}
+  // ContextInfo& operator << (const char *s) { std::cout << s ; return *this; }
+   //ContextInfo& operator << (const std::string& s) {std::cout << s.c_str(); return *this; }
+   //ContextInfo& operator << (const double num) { std::cout << num ; return *this ;}
    inline int GetComputeType(void) { return iComputeType ; } 
    inline void SetComputType(int type) { iComputeType = type  ; } 
    inline double *GetLevelP(int count) { double *r = pCurLevel ;pCurLevel += count ; return r ;}

@@ -16,9 +16,9 @@ SymbolNameSpace::SymbolNameSpace(void)
 SymbolNameSpace::~SymbolNameSpace(void)
 {
    /* delete the symbols which will in turn delete equations etc */
-   BOOST_FOREACH(iterator node,mHashTable) {
-      delete SNSitToSymbol(node) ;
-   }
+  // BOOST_FOREACH(iterator node,mHashTable) {
+  //    delete SNSitToSymbol(node) ;
+  // }
 
 }
 

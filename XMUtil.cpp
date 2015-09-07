@@ -74,9 +74,9 @@ int main(int argc, char* argv[])
    //CheckMemoryTrack(1) ;
 
 
-   printf("Size of symbol is %d",sizeof(Symbol)) ;
-   printf("Size of variable is %d",sizeof(Variable)) ;
-   _CrtDumpMemoryLeaks() ;
+   printf("Size of symbol is %d\n",sizeof(Symbol)) ;
+   printf("Size of variable is %d\n",sizeof(Variable)) ;
+  // _CrtDumpMemoryLeaks() ;
 
    std::cin.get() ;
    return 0 ;

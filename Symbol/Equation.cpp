@@ -44,6 +44,8 @@ void Equation::OutputComputable(ContextInfo *info)
 {
    *info << pLeftHandSide->GetVariable()->GetAlternateName() ;
    // subscripts
+   if (pLeftHandSide->GetSubs())
+	   pLeftHandSide->GetSubs()->OutputComputable(info);
    *info << "=" ;
    if(info->GetComputeType() == CF_rate) 
       *info << pLeftHandSide->GetVariable()->GetAlternateName() <<  "+dt*("  ;

@@ -16,7 +16,7 @@ Model::Model(void)
 
 Model::~Model(void)
 {
-   ClearCompEquations() ;
+  // allocation is no longer clean ClearCompEquations() ;
 }
 
 Equation *Model::AddUnnamedVariable(ExpressionFunctionMemory *e) 
@@ -413,13 +413,17 @@ bool Model::MarkVariableTypes()
 		{
 			var->MarkFlows(&mSymbolNameSpace); // may change number of entries so can't be in above loop
 		}
-		mSymbolNameSpace.ConfirmAllAllocations();
+		// don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();
 	}
 	catch (...) {
 		mSymbolNameSpace.DeleteAllUnconfirmedAllocations();
 		return false;
 	}
+
+	// - dump eveything - mostly just to see how the translation is going
 	ContextInfo info;
+	info.open("c:\\temp\\temp.txt");
+
 	SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();
 	BOOST_FOREACH(const SymbolNameSpace::iterator it, *ht) {
 		Symbol* sym = SNSitToSymbol(it);
@@ -428,9 +432,11 @@ bool Model::MarkVariableTypes()
 		{
 			Variable*var = static_cast<Variable*>(sym);
 			VariableContent* content = var->Content();
-			BOOST_FOREACH(Equation* eq, content->GetAllEquations())
-			{
-				eq->OutputComputable(&info);
+			if (content) { // array elements don't have
+				BOOST_FOREACH(Equation* eq, content->GetAllEquations())
+				{
+					eq->OutputComputable(&info);
+				}
 			}
 		}
 	}

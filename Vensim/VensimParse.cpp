@@ -47,6 +47,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionMax(pSymbolNameSpace);
 		new FunctionInteg(pSymbolNameSpace);
 		new FunctionActiveInitial(pSymbolNameSpace);
+		new FunctionInitial(pSymbolNameSpace);
 		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
