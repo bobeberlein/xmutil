@@ -57,6 +57,7 @@ public:
 	MacroFunction(SymbolNameSpace *sns, SymbolNameSpace* local, const std::string& name, ExpressionList *margs);
 	~MacroFunction() { delete pSymbolNameSpace; }
 	void AddEq(Equation* equation, UnitExpression* units) { mEquations.push_back(EqUnitPair(equation, units)); }
+	virtual const char *ComputableName(void) { return this->GetName().c_str(); }
 private:
 	SymbolNameSpace *pSymbolNameSpace; // local
 	MacroFunction(const MacroFunction& other);
@@ -114,7 +115,6 @@ private :
 
 FSubclass(FunctionMax, "MAX", 2, "max")
 FSubclass(FunctionMin, "MIN", 2, "min")
-FSubclass(FunctionIfThenElse, "IF THEN ELSE", 3, "IF THEN ELSE")
 FSubclass(FunctionZidz, "ZIDZ", 2, "ZIDZ")
 FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
@@ -123,9 +123,10 @@ FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
 FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
 
-// actually memory but no init
+// actually memory but no init - or init - does not matter for translation
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
-FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH1")
+FSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
+FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH3")
 FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
@@ -152,4 +153,23 @@ public :
 
 */
 
+class FunctionIfThenElse : public Function
+{
+public:
+	FunctionIfThenElse(SymbolNameSpace *sns) : Function(sns, "IF THEN ELSE", 3) { ; }\
+		~FunctionIfThenElse(void) {}
+	const char *ComputableName(void) { return "IF"; }
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+private:
+};
+
+class FunctionLog : public Function
+{
+public:
+	FunctionLog(SymbolNameSpace *sns) : Function(sns, "LOG", 2) { ; }\
+		~FunctionLog(void) {}
+	const char *ComputableName(void) { return "LOG10"; }
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+private:
+};
 #endif

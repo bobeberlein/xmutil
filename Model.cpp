@@ -7,6 +7,7 @@
 #include <vector>
 #include "XMUtil.h"
 #include "Xmile/XMILEGenerator.h"
+#include <iostream>
 
 Model::Model(void)
 {
@@ -420,9 +421,9 @@ bool Model::MarkVariableTypes()
 		return false;
 	}
 
+#ifdef dodump
 	// - dump eveything - mostly just to see how the translation is going
 	ContextInfo info;
-	info.open("c:\\temp\\temp.txt");
 
 	SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();
 	BOOST_FOREACH(const SymbolNameSpace::iterator it, *ht) {
@@ -440,6 +441,7 @@ bool Model::MarkVariableTypes()
 			}
 		}
 	}
+#endif
 
 	return true;
 }
@@ -486,6 +488,36 @@ void Model::GenerateShortNames(void)
       i++;
       v->SetAlternateName(s) ;
    }
+}
+
+double Model::GetConstanValue(const char *str, double val)
+{
+	Symbol* s = mSymbolNameSpace.Find(str);
+	if (s && s->isType() == Symtype_Variable)
+	{
+		Variable* v = static_cast<Variable*>(s);
+		Equation* eq = v->GetEquation(0);
+		if (eq)
+		{
+			Expression* exp = eq->GetExpression();
+			if (exp && exp->GetType() == EXPTYPE_Number)
+				val = exp->Eval(NULL);
+		}
+	}
+	return val;
+}
+
+std::vector<Variable*> Model::GetVariables()
+{
+	std::vector<Variable*> vars;
+	SymbolNameSpace::HashTable* ht = mSymbolNameSpace.GetHashTable();
+	for (auto it = ht->begin(); it != ht->end(); it++)
+	{
+		Symbol* s = it->second;
+		if (s->isType() == Symtype_Variable)
+			vars.push_back(static_cast<Variable*>(s));
+	}
+	return vars;
 }
 
 bool Model::WriteToXMILE(const std::string& path, std::vector<std::string>& errs)

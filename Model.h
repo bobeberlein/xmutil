@@ -20,6 +20,9 @@ public:
    bool MarkVariableTypes();
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 
+   double GetConstanValue(const char *var, double defval);
+   std::vector<Variable*> GetVariables();
+
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
    bool SetupVariableStates(int pass) ;

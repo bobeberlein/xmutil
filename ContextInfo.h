@@ -1,13 +1,13 @@
 #ifndef _XMUTIL_CONTEXTINFO_H
 #define _XMUTIL_CONTEXTINFO_H
 #include <vector>
-#include <iostream>
-#include <fstream>
+#include <sstream>
 /* a utility class helpfu in sorting and evaluating equations 
 */
 
 /* computing flags - note that the incomp version must be the 
   flag << 1 */
+#define CF_xmile_output 0
 #define CF_active 1 // int testing most the work is done here
 #define CF_active_incomp 2
 #define CF_unchanging 4 // subset of active not changing over time
@@ -28,7 +28,7 @@ class Model ;
 class SymbolNameSpace ;
 class Equation ; // forward
 
-class ContextInfo :  public std::ofstream
+class ContextInfo :  public std::ostringstream
 {
 public:
    ContextInfo(void) { iComputeType = 0 ;pEquations = '\0' ; }

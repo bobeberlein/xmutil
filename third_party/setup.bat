@@ -2,10 +2,12 @@ REM @echo off
 REM http://sourceforge.net/projects/winflexbison/
 REM http://site.icu-project.org/download
 
-SET "ICU_PATH=C:\tools\icu"
-SET "BOOST_PATH=C:\Program Files\boost\boost_1_58_0"
-SET "BISON_PATH=C:\tools\bison\bin"
-SET "TINY_XML_PATH=C:\tools\tinyxml2"
+REM - must be run as administrator
+
+SET "ICU_PATH=D:\tools\icu"
+SET "BOOST_PATH=D:\tools\boost"
+SET "BISON_PATH=D:\tools\bison\bin"
+SET "TINY_XML_PATH=D:\tools\tinyxml2"
 
  IF NOT EXIST ".\include" GOTO NOINCLUDE
    rmdir  /s /q ".\include"
@@ -28,11 +30,11 @@ FOR /D %%G IN ("%ICU_PATH%\include\*") DO (
 )
 
 FOR %%G IN ("%ICU_PATH%\bin\*.dll") DO (
-    mklink /H  ".\lib32\%%~nxG" "%%G"
+    mklink  ".\lib32\%%~nxG" "%%G"
 )
 
 FOR %%G IN ("%ICU_PATH%\lib\*") DO (
-    mklink /H  ".\lib32\%%~nxG" "%%G"
+    mklink  ".\lib32\%%~nxG" "%%G"
 )
 
 FOR /D %%G IN ("%BOOST_PATH%\boost\*") DO (
@@ -40,19 +42,24 @@ FOR /D %%G IN ("%BOOST_PATH%\boost\*") DO (
 )
 
 FOR %%G IN ("%BOOST_PATH%\boost\*") DO (
-    mklink /H  ".\include\boost\%%~nxG" "%%G"
+    mklink  ".\include\boost\%%~nxG" "%%G"
 )
 
-FOR %%G IN ("%BOOST_PATH%\lib32\*") DO (
-    mklink /H  ".\lib32\%%~nxG" "%%G"
+FOR %%G IN ("%BOOST_PATH%\lib32-msvc-12.0\*") DO (
+    mklink  ".\lib32\%%~nxG" "%%G"
 )
 
-FOR %%G IN ("%TINY_XML_PATH%\include\*") DO (
-    mklink /H  ".\include\%%~nxG" "%%G"
+FOR %%G IN ("%TINY_XML_PATH%\*.h") DO (
+    mklink  ".\include\%%~nxG" "%%G"
 )
+
+FOR %%G IN ("%TINY_XML_PATH%\*.c*") DO (
+    mklink  ".\include\%%~nxG" "%%G"
+)
+
 
 FOR %%G IN ("%TINY_XML_PATH%\lib32\*") DO (
-    mklink /H  ".\lib32\%%~nxG" "%%G"
+    mklink  ".\lib32\%%~nxG" "%%G"
 )
 
 mklink /D ".\bison" "%BISON_PATH%"

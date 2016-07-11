@@ -43,6 +43,21 @@ bool FunctionMemoryBase::CheckComputed(ContextInfo *info,ExpressionList *arg)
 }
 void FunctionMemoryBase::OutputComputable(ContextInfo *info,ExpressionList *arg) 
 { 
+	if (info->GetComputeType() == CF_xmile_output) {
+		const std::string& fname = this->GetName();
+		if (fname == "INITIAL")
+		{
+			*info << "INIT(";
+			arg->OutputComputable(info, iInitArgMark);
+			*info << ")";
+		}
+		else if (fname == "INTEG")
+			arg->OutputComputable(info, iInitArgMark);
+		else
+			arg->OutputComputable(info, iActiveArgMark);
+		return;
+	}
+		
    if(info->GetComputeType() == CF_initial)  {
       *info << ComputableNameInit() << "(" ;
       arg->OutputComputable(info,iInitArgMark) ;
@@ -64,6 +79,37 @@ unsigned  FunctionMemoryBase::BitFlip(unsigned bits)
    }
    return newbits ;
 }
+
+void FunctionIfThenElse::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 3)
+	{
+		*info << "IF ";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << " THEN ";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << " ELSE ";
+		const_cast<Expression*>((*arg)[2])->OutputComputable(info); // OutputComputable should really be const
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
+void FunctionLog::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 2)
+	{
+		*info << "(LN(";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") / LN(";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << "))";
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
+
 
 
 #ifdef WANT_EVAL_STUFF

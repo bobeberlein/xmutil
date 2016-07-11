@@ -4,6 +4,9 @@
 #include "../XMUtil.h"
 #include "Equation.h"
 #include "LeftHandSide.h"
+#include "../Symbol/Parse.h"
+#define YYSTYPE  "C" ParseUnion
+#include "../Vensim/VYacc.tab.h"
 
 
 Expression::Expression(SymbolNameSpace *sns)
@@ -61,12 +64,24 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 	else if (e->GetType() == EXPTYPE_Operator)
 	{
 		const char *op = e->GetOperator();
-		if (op && (*op == '-' || *op == '+') && op[1] == '\0')
+		if (op)
 		{
-			is_all_plus_minus(e->GetArg(0), fl, neg);
-			if (*op == '-')
-				neg = !neg;
-			is_all_plus_minus(e->GetArg(1), fl, neg);
+			if (*op == '\0') // could be () or unary +/- if - we need to flip neg
+			{
+				const char *before = e->GetBefore();
+				if (before && *before == '-')
+					neg = !neg;
+				is_all_plus_minus(e->GetArg(0), fl, neg);
+			}
+			else if ((*op == '-' || *op == '+') && op[1] == '\0')
+			{
+				is_all_plus_minus(e->GetArg(0), fl, neg);
+				if (*op == '-')
+					neg = !neg;
+				is_all_plus_minus(e->GetArg(1), fl, neg);
+			}
+			else
+				fl->SetValid(false);
 		}
 		else
 			fl->SetValid(false);
@@ -132,4 +147,38 @@ bool FlowList::operator == (const FlowList& rhs)
 			return false;
 	}
 	return true;
+}
+
+
+void ExpressionLogical::OutputComputable(ContextInfo *info)
+{
+	if (pE1)
+		pE1->OutputComputable(info);
+	switch (mOper)
+	{
+	case VPTT_le:
+		*info << " <= ";
+		break;
+	case VPTT_ge:
+		*info << " >= ";
+		break;
+	case VPTT_and:
+		*info << " and ";
+		break;
+	case VPTT_or:
+		*info << " or ";
+		break;
+	case VPTT_not:
+		*info << " not ";
+		break;
+
+	default:
+		assert(mOper < 128);
+		*info << ' ';
+		*info << (char)mOper;
+		*info << ' ';
+		break;
+	}
+	if (pE2)
+		pE2->OutputComputable(info);
 }

@@ -19,6 +19,7 @@ public:
    void Execute(ContextInfo *info) ;
    void OutputComputable(ContextInfo *info) ;
    void CheckPlaceholderVars(Model *m) ;
+   std::string RHSFormattedXMILE(); // need a_b*c
 private :
    LeftHandSide *pLeftHandSide ;
    Expression *pExpression ;

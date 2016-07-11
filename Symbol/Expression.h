@@ -42,13 +42,15 @@ public:
    virtual void FlipSign(void) {}
    virtual Function *GetFunction(void) { return '\0' ; }
    virtual const char* GetOperator() { return '\0'; }
-   virtual void CheckPlaceholderVars(Model *m,bool isfirst) = 0 ;// generally do nothing, but big error to skip
+   virtual const char* GetBefore() { return '\0'; }
+   virtual void CheckPlaceholderVars(Model *m, bool isfirst) = 0;// generally do nothing, but big error to skip
    virtual bool CheckComputed(ContextInfo *info) { return true ; }
    virtual void RemoveFunctionArgs(void) {} // only 1 subclass does anything
    virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip - todo modify this to make dumping equations easy - possibly returning std::string
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) = 0; // but will also create a flow when the INTEG equation has other stuff
    virtual void MarkType(XMILE_Type type) = 0; // only called with flow after test returns true
    virtual Expression* GetArg(int pos) { return '\0'; }
+
 };
 
 class ExpressionVariable :
@@ -63,7 +65,7 @@ public :
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    bool CheckComputed(ContextInfo *info) { return pVariable->CheckComputed(info,false) ; }
    double Eval(ContextInfo *info) { return pVariable->Eval(info) ; } 
-   virtual void OutputComputable(ContextInfo *info) { *info << pVariable->GetAlternateName(); if (pSubList) pSubList->OutputComputable(info); }
+   virtual void OutputComputable(ContextInfo *info) { assert(pVariable);  pVariable->OutputComputable(info); if (pSubList) pSubList->OutputComputable(info); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; } // but will also create a flow when the INTEG equation has other stuff
    virtual void MarkType(XMILE_Type type) { pVariable->SetVariableType(type); } // only called with flow after test returns true
 private:
@@ -173,7 +175,7 @@ public:
    void CheckPlaceholderVars(Model *m,bool isfirst) { pExpression->CheckPlaceholderVars(m,false) ; }
    bool CheckComputed(ContextInfo *info) { return pExpression->CheckComputed(info) ; }
    double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable,pExpression,info)  ; } 
-   virtual void OutputComputable(ContextInfo *info) { *info << "fLookup(" << pExpressionVariable->GetVariable()->GetAlternateName() << ","; pExpression->OutputComputable(info); *info << ")"; }
+   virtual void OutputComputable(ContextInfo *info) { *info << "LOOKUP("; pExpressionVariable->OutputComputable(info); *info << ", "; pExpression->OutputComputable(info); *info << ")"; }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void MarkType(XMILE_Type type) {}
 private:
@@ -194,7 +196,7 @@ public :
    double Eval(ContextInfo *info) { assert(0) ; return FLT_MAX ; } 
    std::vector<double>*GetXVals(void) { return &vXVals ; }
    std::vector<double>*GetYVals(void) { return &vYVals ; }
-   virtual void OutputComputable(ContextInfo *info) { *info << "??"; }
+   virtual void OutputComputable(ContextInfo *info) { *info << "0"; } // unattached table give it a 0 equation - points dealt with separately
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void MarkType(XMILE_Type type) {}
 
@@ -234,7 +236,8 @@ public : \
    ~name(void) {}\
    virtual double Eval(ContextInfo *info) { return (evaleq); }\
    virtual const char* GetOperator() { return middle; }\
-   virtual void OutputComputable(ContextInfo *info) { *info << before;if(pE1)pE1->OutputComputable(info);*info<<middle;if(pE2)pE2->OutputComputable(info);*info<<after; }\
+   virtual const char* GetBefore() { return before; }\
+   virtual void OutputComputable(ContextInfo *info) { *info << before; if (pE1)pE1->OutputComputable(info); *info << middle; if (pE2)pE2->OutputComputable(info); *info << after; }\
 } ;
 #define EO2SubClass(name,evaleq,compsym) EO2SubClassRaw(name,evaleq,"",compsym,"") ;
 
@@ -254,7 +257,7 @@ public:
 	~ExpressionLogical(void) { if (HasGoodAlloc()){ delete pE1; delete pE2; } }
 	virtual double Eval(ContextInfo *info) { return 0; }
 	void CheckPlaceholderVars(Model *m, bool isfirst) { if (pE1) pE1->CheckPlaceholderVars(m, false); if (pE2)pE2->CheckPlaceholderVars(m, false); }
-	void OutputComputable(ContextInfo *info) { if (pE1)pE1->OutputComputable(info); *info << (char)mOper; if (pE2)pE2->OutputComputable(info); }
+	void OutputComputable(ContextInfo *info);
 	virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
 		if (pE1 && pE1->TestMarkFlows(sns,fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns,fl, eq); return false;
 	}
@@ -275,7 +278,7 @@ public:
 	void SetValid(bool set) { bValid = set; }
 	bool Empty() { return vInflows.empty() && vOutflows.empty(); }
 	std::vector<Variable*>& Inflows() { return vInflows; }
-	std::vector<Variable*>& Outflows() { return vInflows; }
+	std::vector<Variable*>& Outflows() { return vOutflows; }
 	void AddInflow(Variable* in);
 	void AddOutflow(Variable* out);
 	void SetActiveExpression(Expression* expression) { pActiveExpression = expression; }

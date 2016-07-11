@@ -5,6 +5,7 @@
 #include "UnitExpression.h"
 #include "../Function/State.h"
 #include "../Function/Function.h"
+#include "../XMUtil.h"
 #include <vector>
 
 /* varibale content - the true stuff for variables without the associated symbol
@@ -80,7 +81,7 @@ public :
    virtual Equation *GetEquation(int pos) { return vEquations[pos] ; }
    virtual std::vector<Equation*> GetAllEquations() { return vEquations; }
    bool AddUnits(UnitExpression *un) {if(!pUnits) { pUnits=un;return true;} return false ; }
-   void OutputComputable(ContextInfo *info) { *info << sAlternateName ; }
+   void OutputComputable(ContextInfo *info) { *info << SpaceToUnderBar(sAlternateName) ; }
    void CheckPlaceholderVars(Model *m) ;
    void SetupState(ContextInfo *info) ; // returns number of entries in state vector required (states can also claim thier own storage)
    void SetAlternateName(const std::string &altname) { sAlternateName = altname ; }
@@ -114,7 +115,7 @@ public:
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
    std::vector<Equation*> GetAllEquations() { return pVariableContent->GetAllEquations(); }
    inline bool AddUnits(UnitExpression *un) { return pVariableContent->AddUnits(un); }
-   inline void OutputComputable(ContextInfo *info) { pVariableContent->OutputComputable(info) ; }
+   inline void OutputComputable(ContextInfo *info) { if (pVariableContent)pVariableContent->OutputComputable(info); else *info << SpaceToUnderBar(GetName()); }
    inline double Eval(ContextInfo *info) { return pVariableContent->Eval(info) ;  }
    inline void SetInitialValue(int off,double val) { pVariableContent->SetInitialValue(off,val) ; }
    inline void SetActiveValue(int off,double val) { pVariableContent->SetActiveValue(off,val) ; }
@@ -128,8 +129,12 @@ public:
    // for other function calles
    inline VariableContent *Content(void) { return pVariableContent ; }
    void SetContent(VariableContent *v) { pVariableContent = v ; } 
+   std::vector<Variable*>& Inflows() { return mInflows; }
+   std::vector<Variable*>& Outflows() { return mOutflows; }
    // virtual 
 private :
+	std::vector<Variable*> mInflows; // only ued for stocks
+	std::vector<Variable*> mOutflows;
    VariableContent *pVariableContent ; // dependent on variable type which is not known on instantiation
    XMILE_Type mVariableType;
 } ;

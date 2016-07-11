@@ -31,6 +31,14 @@ void Equation::CheckPlaceholderVars(Model *m)
    pExpression->CheckPlaceholderVars(m,true) ;
 }
 
+std::string Equation::RHSFormattedXMILE()
+{
+	ContextInfo info;
+	pExpression->OutputComputable(&info);
+	return info.str();
+}
+
+
 
 void Equation::Execute(ContextInfo *info) 
 {

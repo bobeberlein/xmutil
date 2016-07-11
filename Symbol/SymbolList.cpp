@@ -32,8 +32,8 @@ void SymbolList::OutputComputable(ContextInfo *info)
 		if (vSymbols[i].eType == EntryType_SYMBOL)
 		{
 			if (i)
-				*info << ",";
-			*info << vSymbols[i].u.pSymbol->GetName();
+				*info << ", ";
+			*info << SpaceToUnderBar(vSymbols[i].u.pSymbol->GetName());
 		}
 	}
 	*info << "]";

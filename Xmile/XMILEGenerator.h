@@ -21,6 +21,8 @@ public:
 protected:
 	void generateHeader(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateSimSpecs(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
+	void generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
+	void generateModel(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 
 private:
 	Model* _model;

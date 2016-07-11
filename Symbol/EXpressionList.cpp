@@ -46,7 +46,7 @@ void ExpressionList::OutputComputable(ContextInfo *info,unsigned wantargs)
    BOOST_FOREACH(Expression *e,vExpressions) {
       if(i&wantargs) {
          if(j++)
-            *info << "," ;
+            *info << ", " ;
          e->OutputComputable(info) ;
       }
       i = i << 1 ;

@@ -51,6 +51,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
+		new FunctionLog(pSymbolNameSpace);
 		new FunctionZidz(pSymbolNameSpace);
 		new FunctionXidz(pSymbolNameSpace);
 		new FunctionWithLookup(pSymbolNameSpace); // but WITH_LOOKUP is treated specially by parser
@@ -59,6 +60,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionRamp(pSymbolNameSpace);
 		new FunctionLn(pSymbolNameSpace);
 		new FunctionSmooth(pSymbolNameSpace);
+		new FunctionSmoothI(pSymbolNameSpace);
 		new FunctionSmooth3(pSymbolNameSpace);
 		new FunctionDelay3(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);

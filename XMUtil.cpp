@@ -6,7 +6,6 @@
 #include "Vensim/VensimParse.h"
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
-#include "unicode/localpointer.h"
 #include "unicode/ucasemap.h"
 #include "Model.h"
 #include "XMUtil.h"
@@ -25,6 +24,27 @@ void CloseUCaseMap(void)
 {
    ucasemap_close(GlobalUCaseMap) ;
 }
+
+std::string StringFromDouble(double val)
+{
+	char buf[128];
+	sprintf(buf, "%g", val);
+	return std::string(buf);
+}
+
+std::string SpaceToUnderBar(const std::string& s)
+{
+	std::string rval;
+	for (const char *tv = s.c_str(); *tv; tv++)
+	{
+		if (*tv == ' ')
+			rval.push_back('_');
+		else
+			rval.push_back(*tv);
+	}
+	return rval;
+}
+
 
 bool ParseVensimModel(int argc, char* argv[],Model *m)
 {
@@ -74,11 +94,11 @@ int main(int argc, char* argv[])
    //CheckMemoryTrack(1) ;
 
 
-   printf("Size of symbol is %d\n",sizeof(Symbol)) ;
-   printf("Size of variable is %d\n",sizeof(Variable)) ;
+   //printf("Size of symbol is %d\n",sizeof(Symbol)) ;
+   //printf("Size of variable is %d\n",sizeof(Variable)) ;
   // _CrtDumpMemoryLeaks() ;
 
-   std::cin.get() ;
+   // if want to look at terminal std::cin.get() ;
    return 0 ;
 }
 

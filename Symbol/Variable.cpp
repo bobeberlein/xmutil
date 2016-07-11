@@ -5,6 +5,7 @@
 #include "../Symbol/LeftHandSide.h"
 #include "../XMUtil.h"
 #include "boost/lexical_cast.hpp"
+#include <iostream>
 
 // model Variable - this has subscript (families) units
 // and the comment attached to it - inside of expressions
@@ -61,7 +62,11 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		}
 	}
 	if (!gotone)
+	{
+		if (mVariableType == XMILE_Type_UNKNOWN)
+			mVariableType = XMILE_Type_AUX;
 		return mVariableType;
+	}
 	mVariableType = XMILE_Type_STOCK;
 
 	// second pass, get the flow lists for everyone -- NOTE there is a bug in this code
@@ -83,9 +88,15 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	if (match)
 	{
 		BOOST_FOREACH(Variable* v, flow_lists[0].Inflows())
+		{
 			v->SetVariableType(XMILE_Type_FLOW);
+			mInflows.push_back(v);
+		}
 		BOOST_FOREACH(Variable* v, flow_lists[0].Outflows())
+		{
 			v->SetVariableType(XMILE_Type_FLOW);
+			mOutflows.push_back(v);
+		}
 		return mVariableType; // done
 	}
 
@@ -99,6 +110,8 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		name = basename + "_" + boost::lexical_cast<std::string>(i);
 	}
 	Variable* v = new Variable(sns, name);
+	v->SetVariableType(XMILE_Type_FLOW);
+	mInflows.push_back(v);
 
 	// now we swap the active part of the INTEG equation for v and set v's equation to
 	// the active part - this is equation by equation 

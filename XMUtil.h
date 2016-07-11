@@ -1,5 +1,6 @@
 #ifndef _XMUTIL_XMUTIL_H
 #define _XMUTIL_XMUTIL_H
+
 // XMUtil.h - globally included - generally for help with 
 // memory leak detection
 //
@@ -58,5 +59,8 @@ inline void __cdecl operator delete[](void *p)
 #define new DBG_NEW
 #endif
 
+// utility functions
+std::string StringFromDouble(double val);
+std::string SpaceToUnderBar(const std::string& s);
 #endif
 

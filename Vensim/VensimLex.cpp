@@ -2,7 +2,7 @@
 */
 #include "VensimLex.h"
 #include "VensimParse.h"
-/* note this is the only file that includes VYacc.tab.h */
+/* try to avoid the tab.h file as it is C  */
 #define YYSTYPE  "C" ParseUnion
 #include "VYacc.tab.h"
 #include "../Symbol/Variable.h"
@@ -334,6 +334,9 @@ int VensimLex::NextToken() // also sets token type
                   break ;
                }
             }
+			// strip any terminal spaces
+			while (sToken.back() == ' ' || sToken.back() == '_')
+				sToken.pop_back();
             return VPTT_symbol ;
          }
    }
