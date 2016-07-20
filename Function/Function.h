@@ -122,6 +122,7 @@ FSubclass(FunctionSum, "SUM", 1, "SUM");
 FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
 FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
+FSubclass(FunctionGame, "GAME", 1, ""); // don't need this 
 
 // actually memory but no init - or init - does not matter for translation
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")

@@ -86,6 +86,9 @@
     <ClCompile Include="Symbol\ExpressionList.cpp">
       <Filter>Symbol</Filter>
     </ClCompile>
+    <ClCompile Include="Vensim\VensimView.cpp">
+      <Filter>Vensim</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vensim\VYacc.tab.h">
@@ -150,6 +153,9 @@
     <ClInclude Include="XMUtil.h" />
     <ClInclude Include="Xmile\XMILEGenerator.h">
       <Filter>Xmile</Filter>
+    </ClInclude>
+    <ClInclude Include="Vensim\VensimView.h">
+      <Filter>Vensim</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

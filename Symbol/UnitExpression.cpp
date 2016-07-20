@@ -62,3 +62,35 @@ void UnitExpression::Simplify()
    }
 }
 
+std::string UnitExpression::GetEquationString()
+{
+	std::string rval;
+	size_t n = vNumerator.size();
+	if (n)
+	{
+		for (size_t i = 0; i < n; i++)
+		{
+			if (i)
+				rval.push_back('*');
+			rval += vNumerator[i]->GetName().substr(1);
+		}
+	}
+	else
+		rval = "1";
+	n = vDenominator.size();
+	if (n)
+	{
+		rval.push_back('/');
+		if (n > 1)
+			rval.push_back('(');
+		for (size_t i = 0; i < n; i++)
+		{
+			if (i)
+				rval.push_back('*');
+			rval += vDenominator[i]->GetName().substr(1);
+		}
+		if (n > 1)
+			rval.push_back(')');
+	}
+	return rval;
+}

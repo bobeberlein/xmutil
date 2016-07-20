@@ -452,6 +452,33 @@ bool VensimLex::TestTokenMatch(const char *tok,bool storeonsuccess)
    return true ;
 }
 
+std::string VensimLex::GetComment(const char *tok)
+{
+	char c;
+	std::string rval;
+	while (c = GetNextChar(false)) {
+		if (c == *tok && TestTokenMatch(tok + 1, true))
+		{
+			PushBack(c, false); // next call to findToken will find this
+			// strip trailing white space
+			while (!rval.empty())
+			{
+				c = rval.back();
+				if (c != ' ' && c != '\t' && c != '\r' && c != '\n')
+					break;
+				rval.pop_back();
+			}
+			return rval;
+		}
+		else if (c == '\\' && TestTokenMatch("\\\\---///", false))  {
+			PushBack(c, false);
+			SyncBuffers();
+			return rval; // an error
+		}
+		rval.push_back(c);
+	}
+	return rval; // this is an error condition
+}
 
 bool VensimLex::FindToken(const char *tok)
 {
@@ -468,6 +495,40 @@ bool VensimLex::FindToken(const char *tok)
    return false ;
 
 }
+bool VensimLex::ReadLine(char *buf,size_t buflen)
+{
+	char c;
+	buflen--; // need \0
+	size_t off = 0;
+	while (iCurPos < iFileLength)
+	{
+		c = ucContent[iCurPos++];
+		if (off >= buflen)
+		{
+			iCurPos--;
+			buf[off] = '\0';
+			return true;
+		}
+		if (c == '\n')
+		{
+			buf[off] = '\0';
+			if (iCurPos < iFileLength && ucContent[iCurPos] == '\r')
+				iCurPos++;
+			return true;
+		}
+		if (c == '\r')
+		{
+			buf[off] = '\0';
+			if (iCurPos < iFileLength && ucContent[iCurPos] == '\n')
+				iCurPos++;
+			return true;
+		}
+		buf[off++] = c;
+	}
+	buf[0] = '\0';
+	return false;
+}
+
 
 void VensimLex::PushBack(char c,bool store)
 {

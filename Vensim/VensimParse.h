@@ -10,6 +10,10 @@
 #include "../Symbol/Equation.h"
 #include "VensimLex.h"
 
+#define BUFLEN 4096 // for reading sketch info
+
+class VensimView;
+
 class VensimParseSyntaxError
 {
 public :
@@ -19,17 +23,18 @@ public :
 class VensimParse
 {
 public:
-   VensimParse(SymbolNameSpace *sns);
+   VensimParse(Model* model);
    ~VensimParse(void);
    void ReadyFunctions();
    bool ProcessFile(const std::string &filename) ;
    inline int yylex(void) { return mVensimLex.yylex() ; }
    int yyerror(const char *str) ;
    Equation *AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int tok) ;
-   Equation *AddTable(LeftHandSide* lhs, Expression *ex, ExpressionTable* table);
+   Equation *AddTable(LeftHandSide* lhs, Expression *ex, ExpressionTable* table, bool legacy);
    inline SymbolNameSpace *GetSymbolNameSpace(void) { return pSymbolNameSpace ; }
    Variable *InsertVariable(const std::string &name) ;
-   Units *InsertUnits(const std::string &name) ;
+   Variable *FindVariable(const std::string &name);
+   Units *InsertUnits(const std::string &name);
    UnitExpression *InsertUnitExpression(Units *u) ;
    void AddFullEq(Equation *eq,UnitExpression *un) ;
    LeftHandSide *AddExceptInterp(ExpressionVariable *var,SymbolListList *except,int interpmode) ;
@@ -47,15 +52,22 @@ public:
    Expression *FunctionExpression(Function *func,ExpressionList *eargs) ;
    Expression *LookupExpression(ExpressionVariable *var,Expression *exp) ;
    ExpressionTable *TablePairs(ExpressionTable *table,double x,double y) ;
-   ExpressionTable *TableRange(ExpressionTable *table,double x1,double y1,double x2,double y2) ;
+   ExpressionTable *XYTableVec(ExpressionTable *table, double val);
+   ExpressionTable *TableRange(ExpressionTable *table, double x1, double y1, double x2, double y2);
    void MacroStart();
    void MacroExpression(Variable *macro, ExpressionList *margs);
    void MacroEnd();
 
+   VensimLex& Lexer() { return mVensimLex; }
+   char *GetInt(char *buf, int& val);
+   char *GetString(char* buf, std::string& s);
+
 private :
-   std::string sFilename ;
-   bool FindNextEq(void) ;
-   boost::iostreams::mapped_file_source mfSource ;
+   bool FindNextEq(bool want_comment) ;
+
+   Model* _model;
+   std::string sFilename;
+   boost::iostreams::mapped_file_source mfSource;
    VensimLex mVensimLex ;
    VensimParseSyntaxError mSyntaxError ;
    SymbolNameSpace *pSymbolNameSpace ;

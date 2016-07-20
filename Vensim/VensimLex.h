@@ -19,7 +19,9 @@ public:
    int GetEndToken(void) ;
    int LineNumber(void) { return iLineNumber ; }
    int Position(void) { return iCurPos - iLineStart ; }
+   std::string GetComment(const char *tok);
    bool FindToken(const char *tok) ;
+   bool ReadLine(char *buf, size_t buflen); // read a line if enough room otherwise part of it
 private :
    char GetNextChar(bool store) ;
    void PushBack(char c,bool store) ;

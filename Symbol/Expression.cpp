@@ -39,6 +39,12 @@ void ExpressionFunction::CheckPlaceholderVars(Model *m,bool isfirst)
     pArgs->CheckPlaceholderVars(m) ; 
 }
 
+void ExpressionFunction::GetVarsUsed(std::vector<Variable*>& vars)
+{
+	int n = pArgs->Length();
+	for (int i = 0; i < n; i++)
+		pArgs->GetExp(i)->GetVarsUsed(vars);
+}
 
 void ExpressionFunctionMemory::CheckPlaceholderVars(Model *m,bool isfirst) 
 {
@@ -89,6 +95,15 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 	else
 		fl->SetValid(false);
 }
+void ExpressionVariable::GetVarsUsed(std::vector<Variable*>& vars)
+{ 
+	BOOST_FOREACH(Variable* var, vars)
+	{
+		if (var == pVariable)
+			return;
+	}
+	vars.push_back(pVariable);
+} // list of variables used
 
 bool ExpressionFunctionMemory::TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq)
 {
@@ -181,4 +196,14 @@ void ExpressionLogical::OutputComputable(ContextInfo *info)
 	}
 	if (pE2)
 		pE2->OutputComputable(info);
+}
+
+void ExpressionTable::TransformLegacy()
+{
+	assert(!(vXVals.size() % 2));
+	size_t n = vXVals.size() / 2;
+	for (size_t i = 0; i < n; i++)
+		vYVals[i] = vXVals[n + i];
+	vXVals.resize(n);
+	vYVals.resize(n);
 }

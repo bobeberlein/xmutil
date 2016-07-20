@@ -12,6 +12,7 @@ public:
    ~UnitExpression(void);
    UnitExpression *Multiply(UnitExpression *mult) ;
    UnitExpression *Divide(UnitExpression *denom) ;
+   std::string GetEquationString();
    inline void SetRange(double minval, double maxval, double increment) { dMinVal = minval; dMaxVal = maxval; dIncrement = increment; }
 private :
    std::vector<Units*>vNumerator ;

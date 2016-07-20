@@ -12,8 +12,7 @@
 // we use an ExpressionVariable which has a pointer back
 // to this
 
-Variable::Variable(SymbolNameSpace *sns,const std::string &name) 
-	: Symbol(sns, name)
+Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, name), _view(NULL)
 {
    pVariableContent = '\0' ;
    mVariableType = XMILE_Type_UNKNOWN; // till typed
@@ -30,6 +29,16 @@ Variable::~Variable(void)
       pVariableContent = '\0' ;
    }
 }
+
+std::string Variable::GetAlternateName(void)
+{ 
+	std::string name =  pVariableContent ? pVariableContent->GetAlternateName() : GetName(); 
+	// strip out surrounding quotes if they exist - we want to deliver the name without them
+	if (name.size() > 2 && name[0] == '\"' && name.back() == '\"')
+		name = name.substr(1, name.size() - 2);
+	return name;
+}
+
 
 XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 {
@@ -153,6 +162,13 @@ void VariableContentVar::Clear(void)
    for(i=0;i<n;i++)
       delete vEquations[i] ;
    // comment takes care of itself 
+}
+std::vector<Variable*> VariableContentVar::GetInputVars()
+{
+	std::vector<Variable*> vars;
+	BOOST_FOREACH(Equation* eq, this->vEquations)
+		eq->GetVarsUsed(vars);
+	return vars;
 }
 
 void Variable::AddEq(Equation *eq) 

@@ -84,12 +84,13 @@ void FunctionIfThenElse::OutputComputable(ContextInfo *info, ExpressionList *arg
 {
 	if (arg->Length() == 3)
 	{
-		*info << "IF ";
+		*info << "( IF ";
 		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
 		*info << " THEN ";
 		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
 		*info << " ELSE ";
 		const_cast<Expression*>((*arg)[2])->OutputComputable(info); // OutputComputable should really be const
+		*info << " )";
 		return;
 	}
 	Function::OutputComputable(info, arg);

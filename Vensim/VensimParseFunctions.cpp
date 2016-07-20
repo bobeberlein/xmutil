@@ -8,8 +8,8 @@ extern "C" void vpyy_addfulleq(Equation *eq,UnitExpression *un)
 { return  VPObject->AddFullEq(eq,un) ; }
 extern "C" Equation *vpyy_addeq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int token) 
 { return VPObject->AddEq(lhs,ex,exl,token) ; }
-extern "C" Equation *vpyy_add_lookup(LeftHandSide *lhs,Expression *ex,ExpressionTable *tvl) 
-{ return VPObject->AddTable(lhs,ex,tvl) ; }
+extern "C" Equation *vpyy_add_lookup(LeftHandSide *lhs,Expression *ex,ExpressionTable *tvl, int legacy) 
+{ return VPObject->AddTable(lhs,ex,tvl,legacy != 0) ; }
 extern "C" LeftHandSide *vpyy_addexceptinterp(ExpressionVariable *var,SymbolListList *except,int interpmode) 
 { return VPObject->AddExceptInterp(var,except,interpmode) ;  }
 extern "C" SymbolList *vpyy_symlist(SymbolList *in,Variable *add,int bang,Variable *end) 
@@ -40,6 +40,8 @@ extern "C" Expression *vpyy_lookup_expression(ExpressionVariable *var,Expression
 { return VPObject->LookupExpression(var,exp) ; }
 extern "C" ExpressionTable *vpyy_tablepair(ExpressionTable *table,double x,double y) 
 { return VPObject->TablePairs(table,x,y) ; }
+extern "C" ExpressionTable *vpyy_tablevec(ExpressionTable *table, double val)
+{ return VPObject->XYTableVec(table,val) ; }
 extern "C" ExpressionTable *vpyy_tablerange(ExpressionTable *table,double x1,double y1,double x2,double y2)
 { return VPObject->TableRange(table,x1,y1,x2,y2) ; }
 extern "C" void vpyy_macro_start() 

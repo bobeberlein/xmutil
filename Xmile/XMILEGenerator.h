@@ -10,6 +10,7 @@ namespace tinyxml2 {
 
 #include <string>
 #include <vector>
+class VensimView;
 
 class XMILEGenerator
 {
@@ -23,6 +24,8 @@ protected:
 	void generateSimSpecs(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateModel(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
+	void generateViews(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
+	void generateView(VensimView* view, tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 
 private:
 	Model* _model;

@@ -62,5 +62,7 @@ inline void __cdecl operator delete[](void *p)
 // utility functions
 std::string StringFromDouble(double val);
 std::string SpaceToUnderBar(const std::string& s);
+bool StringMatch(const std::string& f, const std::string& s); // asciii only;
+double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy);
 #endif
 

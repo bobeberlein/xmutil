@@ -48,6 +48,7 @@ public:
    virtual void RemoveFunctionArgs(void) {} // only 1 subclass does anything
    virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip - todo modify this to make dumping equations easy - possibly returning std::string
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) = 0; // but will also create a flow when the INTEG equation has other stuff
+   virtual void GetVarsUsed(std::vector<Variable*>& vars) = 0; // list of variables used
    virtual void MarkType(XMILE_Type type) = 0; // only called with flow after test returns true
    virtual Expression* GetArg(int pos) { return '\0'; }
 
@@ -67,6 +68,7 @@ public :
    double Eval(ContextInfo *info) { return pVariable->Eval(info) ; } 
    virtual void OutputComputable(ContextInfo *info) { assert(pVariable);  pVariable->OutputComputable(info); if (pSubList) pSubList->OutputComputable(info); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; } // but will also create a flow when the INTEG equation has other stuff
+   virtual void GetVarsUsed(std::vector<Variable*>& vars); // list of variables used
    virtual void MarkType(XMILE_Type type) { pVariable->SetVariableType(type); } // only called with flow after test returns true
 private:
    Variable *pVariable ; // pointer back to the model variable - not allocated by this object
@@ -85,7 +87,8 @@ public :
    double Eval(ContextInfo *info) { return -FLT_MAX ; } 
    virtual void OutputComputable(ContextInfo *info) { pSymList->OutputComputable(info); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
-   virtual void MarkType(XMILE_Type type) { assert(false); } 
+   virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
+   virtual void MarkType(XMILE_Type type) { assert(false); }
 private:
    SymbolList *pSymList ; // subscript elements - should be deleted by this object
    SymbolList *pMap ; // 
@@ -103,6 +106,7 @@ public :
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    virtual void OutputComputable(ContextInfo *info) { *info << value ; }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 private:
    double value ;
@@ -121,6 +125,7 @@ public :
    int Count(unsigned row) { if(row < vRow.size()) return 0 ; return vRow[row].size() ; }
    typedef  std::vector<double> ColVals ;
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 private:
    std::vector<ColVals> vRow ;
@@ -141,6 +146,7 @@ public :
    void RemoveFunctionArgs(void) { pArgs = '\0' ; }
    virtual void OutputComputable(ContextInfo *info)  { pFunction->OutputComputable(info, pArgs); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars); // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 
 private :
@@ -177,6 +183,7 @@ public:
    double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable,pExpression,info)  ; } 
    virtual void OutputComputable(ContextInfo *info) { *info << "LOOKUP("; pExpressionVariable->OutputComputable(info); *info << ", "; pExpression->OutputComputable(info); *info << ")"; }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pExpressionVariable)pExpressionVariable->GetVarsUsed(vars); if (pExpression)pExpression->GetVarsUsed(vars); } // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 private:
    ExpressionVariable *pExpressionVariable ; // null for with_lookup
@@ -194,10 +201,12 @@ public :
    void AddRange(double x1,double y1,double x2,double y2) { bHasRange=true;dX2=x2;dY1=y1;dX2=x2;dY2=y2;}
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    double Eval(ContextInfo *info) { assert(0) ; return FLT_MAX ; } 
+   void TransformLegacy();
    std::vector<double>*GetXVals(void) { return &vXVals ; }
    std::vector<double>*GetYVals(void) { return &vYVals ; }
    virtual void OutputComputable(ContextInfo *info) { *info << "0"; } // unattached table give it a 0 equation - points dealt with separately
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 
 private :
@@ -222,6 +231,7 @@ public :
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
 	   if (pE1 && pE1->TestMarkFlows(sns, fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns, fl, eq); return false;
    }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pE1)pE1->GetVarsUsed(vars); if (pE2)pE2->GetVarsUsed(vars); } // list of variables used
    virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
    virtual Expression* GetArg(int pos) { return pos == 0 ? pE1 : pos == 1 ? pE2 : '\0'; }
 protected:
@@ -261,6 +271,7 @@ public:
 	virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
 		if (pE1 && pE1->TestMarkFlows(sns,fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns,fl, eq); return false;
 	}
+	virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pE1)pE1->GetVarsUsed(vars); if (pE2)pE2->GetVarsUsed(vars); } // list of variables used
 	virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
 private:
 	Expression *pE1;

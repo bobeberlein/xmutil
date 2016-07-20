@@ -45,12 +45,35 @@ std::string SpaceToUnderBar(const std::string& s)
 	return rval;
 }
 
+bool StringMatch(const std::string& f, const std::string& s)
+{
+	if (f.size() != s.size())
+		return false;
+	const char *tv1 = f.c_str();
+	const char *tv2 = s.c_str();
+	char c1, c2;
+	for (; c1 = *tv1; tv1++, tv2++)
+	{
+		c2 = *tv2;
+		if (c1 != c2)
+		{
+			if (c1 >= 'A' && c1 <= 'Z')
+				c1 += ('a' - 'A');
+			if (c2 >= 'A' && c2 <= 'Z')
+				c2 += ('a' - 'A');
+			if (c1 != c2)
+				return false;
+		}
+	}
+	return true;
+}
+
 
 bool ParseVensimModel(int argc, char* argv[],Model *m)
 {
    if(argc < 2)
       return false ;
-   VensimParse vp(m->GetNameSpace()) ;
+   VensimParse vp(m) ;
    if(!vp.ProcessFile(argv[1])) 
       return false ;
 	return true ;
@@ -76,6 +99,11 @@ int main(int argc, char* argv[])
 	   // into flows (a single net flow on the first pass though this)
 	   m->MarkVariableTypes();
 
+	   // if there is a view then try to make sure everything is defined in the views
+	   // put unknowns in a heap in the first view at 20,20 but for things that have
+	   // connections try to put them in the right place
+	   m->AttachStragglers();
+
 
 
 	   boost::filesystem::path p(argv[1]);
@@ -98,10 +126,44 @@ int main(int argc, char* argv[])
    //printf("Size of variable is %d\n",sizeof(Variable)) ;
   // _CrtDumpMemoryLeaks() ;
 
-   // if want to look at terminal std::cin.get() ;
+   // if want to look at terminal 
+   std::cin.get() ;
    return 0 ;
 }
 
+double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy)
+{
+	double thetax;
+	if (endx > startx)
+		thetax = -atan((endy - starty) / (endx - startx)) * 180 / 3.14159265358979;
+	else if (endx < startx)
+		thetax = 180 - atan((starty - endy) / (startx - endx)) * 180 / 3.14159265358979;
+	else if (endy > starty)
+		thetax = 270;
+	else
+		thetax = 90;
+	return thetax;
+
+
+	// below is wrong - we need to triangulate to get the center then pull out the tangent at the start point
+
+	// case point between start and end
+	double a2 = (pointx - startx)*(pointx - startx) + (pointy - starty)*(pointy - starty);
+	double b2 = (pointx - endx)* (pointx - endx) + (pointy - endy)* (pointy - endy);
+	double c2 = (startx - endx)* (startx - endx) + (starty - endy)* (starty - endy);
+	double x = (c2 + (a2 - b2))/(2*sqrt(c2));
+	double y2 = a2 - x*x;
+	double theta = atan(sqrt(y2) / x);
+	if (!std::isnan(theta))
+		return theta*180/3.141592676;
+	theta = atan((endy - starty) / (endx - startx));
+	if (!std::isnan(theta))
+		return theta * 180 / 3.141592676;
+	if (endy < starty)
+		return 90;
+	return 270;
+	return 33;
+}
 
 #if defined(_DEBUG) && defined(wantownmemorytesting)
 #include <boost/unordered_map.hpp>

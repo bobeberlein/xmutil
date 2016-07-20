@@ -115,6 +115,7 @@
     <ClCompile Include="Vensim\VensimLex.cpp" />
     <ClCompile Include="Vensim\VensimParse.cpp" />
     <ClCompile Include="Vensim\VensimParseFunctions.cpp" />
+    <ClCompile Include="Vensim\VensimView.cpp" />
     <ClCompile Include="Vensim\VYacc.tab.c" />
     <ClCompile Include="Xmile\XMILEGenerator.cpp" />
     <ClCompile Include="XMUtil.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="Symbol\UnitExpression.h" />
     <ClInclude Include="Symbol\Units.h" />
     <ClInclude Include="Symbol\Variable.h" />
+    <ClInclude Include="Vensim\VensimView.h" />
     <ClInclude Include="Vensim\VYacc.tab.h" />
     <ClInclude Include="Xmile\XMILEGenerator.h" />
     <ClInclude Include="XMUtil.h" />

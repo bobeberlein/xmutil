@@ -16,19 +16,21 @@ extern "C" {
 #include "VYacc.tab.h"
 }
 #include "../XMUtil.h"
+#include "VensimView.h"
 
 
 VensimParse *VPObject = '\0' ;
 
 
-VensimParse::VensimParse(SymbolNameSpace *sns)
+VensimParse::VensimParse(Model* model)
 {
 #if YYDEBUG
 	vpyydebug = 0;
 #endif
    assert(!VPObject) ;
    VPObject = this ;
-   pSymbolNameSpace = sns ;
+   _model = model;
+   pSymbolNameSpace = model->GetNameSpace() ;
 
    ReadyFunctions();
 
@@ -67,6 +69,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionVectorSelect(pSymbolNameSpace);
 		new FunctionVectorElmMap(pSymbolNameSpace);
 		new FunctionVectorSortOrder(pSymbolNameSpace);
+		new FunctionGame(pSymbolNameSpace);
 
 
 		pSymbolNameSpace->ConfirmAllAllocations();
@@ -102,8 +105,10 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
 
     return new Equation(pSymbolNameSpace,lhs,ex,tok) ; 
 }
-Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl)
+Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl, bool legacy)
 {
+	if (legacy)
+		tbl->TransformLegacy();
 	if (!ex)
 		return new Equation(pSymbolNameSpace, lhs, tbl, '(');
 	Function* wl = static_cast<Function*>(pSymbolNameSpace->Find("WITH LOOKUP"));
@@ -156,7 +161,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
              mVensimLex.GetReady() ;
              rval = vpyyparse() ;
              if(rval == '~') { // comment follows 
-                if(!FindNextEq())
+                if(!FindNextEq(true))
                    break ;
              } 
              else if(rval == '|') {
@@ -164,12 +169,12 @@ bool VensimParse::ProcessFile(const std::string &filename)
              else if(rval == VPTT_groupstar) {
                 if(yylex() == VPTT_groupname) {
                 }
-                if(!FindNextEq())
+                if(!FindNextEq(false))
                    break ;
              }
              else if(rval != endtok) {
                 std::cout << "Unknown terminal token " << rval << std::endl ;
-                if(!FindNextEq())
+                if(!FindNextEq(false))
                    break ;
              }
 
@@ -180,23 +185,104 @@ bool VensimParse::ProcessFile(const std::string &filename)
                 << " in file " << sFilename << std::endl ;
              pSymbolNameSpace->DeleteAllUnconfirmedAllocations() ;
              noerr = false ;
-             if(!FindNextEq()) 
+             if(!FindNextEq(false)) 
                 break ;
 
           }
           catch(...) {
              pSymbolNameSpace->DeleteAllUnconfirmedAllocations() ;
              noerr = false ;
-             if(!FindNextEq())
+             if(!FindNextEq(false))
                 break ;
 
           }
        } while(rval != endtok) ;
+	   char buf[BUFLEN]; // plenty big for sketch info
+	   if (rval == endtok)
+		this->mVensimLex.ReadLine(buf, BUFLEN); // get the marker line
+	   while (rval == endtok)
+	   { // read in the sketch information
+		   this->mVensimLex.ReadLine(buf, BUFLEN); // version line
+		   if (strncmp(buf, "V300 ", 5))
+		   {
+			   printf("Unrecognized version - can't read sketch info\n");
+			   noerr = false;
+			   break;
+		   }
+		   VensimView* view = new VensimView;
+		   VensimViewElements& elements = view->Elements(); // we populate this directly
+		   
+		   _model->AddView(view);
+		   // next the title
+		   this->mVensimLex.ReadLine(buf, BUFLEN); 
+		   view->SetTitle(buf + 1); // skip the star - we can try to name modules with this eventually subject to name collisions
+		   this->mVensimLex.ReadLine(buf, BUFLEN); // default font info - we can try to grab this later
+		   view->ReadView(this, buf); // will return with buf populated at next view
+		   if (strncmp(buf, "\\\\\\---///", 9) == 0)
+			   rval = endtok;
+		   else
+			   rval = 0;
+	   }
        mfSource.close() ;
        return noerr ;
     }
     else
        return false ;
+}
+
+char *VensimParse::GetInt(char *s, int& val)
+{
+	char* tv;
+	for (tv = s; *tv; tv++)
+	{
+		if (*tv == ',')
+		{
+			*tv++ = '\0';
+			break;
+		}
+	}
+	val = atoi(s);
+	return tv;
+}
+char *VensimParse::GetString(char *s, std::string& name)
+{
+	char* tv = s;
+	if (*tv == '\"')
+	{
+		for (tv++; *tv; tv++)
+		{
+			if (*tv == '\"')
+			{
+				tv++;
+				assert(*tv == ','); 
+				*tv++ = '\0';
+				break;
+			}
+			else if (*tv == '\\' && tv[1] == '\"')
+				tv++;
+		}
+	}
+	else
+	{
+		for (tv = s; *tv; tv++)
+		{
+			if (*tv == ',')
+			{
+				*tv++ = '\0';
+				break;
+			}
+		}
+	}
+	name = s;
+	return tv;
+}
+
+Variable *VensimParse::FindVariable(const std::string &name)
+{
+	Variable *var = static_cast<Variable *>(pSymbolNameSpace->Find(name));
+	if (var && var->isType() == Symtype_Variable)
+		return var;
+	return NULL;
 }
 
 
@@ -235,8 +321,14 @@ UnitExpression *VensimParse::InsertUnitExpression(Units *u)
 }
 
 // find the beginning of the next equation - for error recovery
-bool VensimParse::FindNextEq(void)
+bool VensimParse::FindNextEq(bool want_comment)
 {
+	if (want_comment && this->pActiveVar)
+	{
+		std::string comment = mVensimLex.GetComment("|");
+		if (! comment.empty()) // multile appearances okay - take last non empty
+			this->pActiveVar->SetComment(comment);
+	}
    // just zip through to the first | then whatever follows is it
    return mVensimLex.FindToken("|") ;
 }
@@ -391,6 +483,14 @@ ExpressionTable *VensimParse::TablePairs(ExpressionTable *table,double x,double 
       table = new ExpressionTable(pSymbolNameSpace) ;
    table->AddPair(x,y) ;
    return table ;
+}
+
+ExpressionTable *VensimParse::XYTableVec(ExpressionTable *table, double val)
+{
+	if (!table)
+		table = new ExpressionTable(pSymbolNameSpace);
+	table->AddPair(val, 0); // fix these after reducing
+	return table;
 }
 
 ExpressionTable *VensimParse::TableRange(ExpressionTable *table,double x1,double y1,double x2,double y2) 

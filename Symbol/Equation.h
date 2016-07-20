@@ -13,6 +13,7 @@ public:
    ~Equation(void);
    LeftHandSide *GetLeft(void) { return pLeftHandSide ; }
    Variable *GetVariable(void) ; // LeftHandSide forward declared can't put function here
+   void GetVarsUsed(std::vector<Variable*>& vars);
    inline Expression *GetExpression(void)  { return pExpression ; }
    inline bool IsTable(void) { return iEqType == '(' ; }
    inline int SubscriptCount(void) { return 0 ; }

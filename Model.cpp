@@ -446,6 +446,91 @@ bool Model::MarkVariableTypes()
 	return true;
 }
 
+void Model::AttachStragglers()
+{
+	SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();
+	std::vector<Variable*> vars;
+	BOOST_FOREACH(const SymbolNameSpace::iterator it, *ht) {
+		Symbol* sym = SNSitToSymbol(it);
+
+		if (sym->isType() == Symtype_Variable)
+			vars.push_back(static_cast<Variable*>(sym));
+	}
+	// first try - anything that is not defined somewhere see if a ghost appears somewhere
+	// and change that to the definition
+	BOOST_FOREACH(Variable* var, vars)
+	{
+		if (!var->GetView())
+		{
+			BOOST_FOREACH(View* view, vViews)
+			{
+				if (view->UpgradeGhost(var))
+					break;
+			}
+		}
+	}
+	// now try undefined flows - attach to associated stocks
+	BOOST_FOREACH(Variable* var, vars)
+	{
+		if (!var->GetView() && var->VariableType() == XMILE_Type_FLOW)
+		{
+			// we don't know flows uses so just look at all stocks
+			Variable* upstream = NULL;
+			Variable* downstream = NULL;
+			BOOST_FOREACH(Variable* stock, vars)
+			{
+				if (stock->VariableType() == XMILE_Type_STOCK)
+				{
+					BOOST_FOREACH(Variable* in, stock->Inflows())
+					{
+						if (in == var)
+						{
+							downstream = stock;
+							break;
+						}
+					}
+					BOOST_FOREACH(Variable* out, stock->Outflows())
+					{
+						if (out == var)
+						{
+							upstream = stock;
+							break;
+						}
+					}
+					if (upstream && downstream)
+						break;
+				}
+			}
+			if (upstream && upstream->GetView())
+			{
+				upstream->GetView()->AddFlowDefinition(var, upstream, downstream);
+			}
+			else if (downstream && downstream->GetView())
+			{
+				downstream->GetView()->AddFlowDefinition(var, upstream, downstream);
+			}
+		}
+	}
+	// next pass look for inputs - if there are any put the var next to them
+	// next pass look for otuputs - if there are any put the var next to them
+	// finally dump everything remaining at 40,40 on the first view
+	if (!vViews.empty())
+	{
+		View* dump_view = vViews[0];
+		BOOST_FOREACH(Variable* var, vars)
+		{
+			if (!var->GetView())
+				dump_view->AddVarDefinition(var, 200, 200);
+		}
+	}
+
+	// now everything is defined (and only defined once) - we need to make sure there are no missing connectors
+	BOOST_FOREACH(View* view, vViews)
+	{
+		view->CheckLinksIn();
+	}
+
+}
 
 
 bool Model::RenameVariable(Variable *v,const std::string &newname)

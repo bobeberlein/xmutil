@@ -52,7 +52,7 @@ extern void vpyyerror (char const *);
    also delete the component object to cleaning up is done as the 
    parsing progresses */
 %type <exn> exp 
-%type <tbl> tablepairs tablevals
+%type <tbl> tablepairs tablevals xytablevals xytablevec
 %type <exl> exprlist
 %type <lhs> lhs
 %type <eqn> eqn
@@ -102,8 +102,9 @@ macroend:
 
 eqn : 
    lhs '=' exprlist {$$ = vpyy_addeq($1,'\0',$3,'=') ; }
-   | lhs '(' tablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3) ; }
-   | lhs '=' VPTT_with_lookup '(' exp ',' '(' tablevals ')' ')' { $$ = vpyy_add_lookup($1,$5,$8) ; }
+   | lhs '(' tablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3, 0) ; }
+   | lhs '(' xytablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3, 1) ; }
+   | lhs '=' VPTT_with_lookup '(' exp ',' '(' tablevals ')' ')' { $$ = vpyy_add_lookup($1,$5,$8, 0) ; }
    | lhs VPTT_dataequals exp {$$ = vpyy_addeq($1,$3,'\0',VPTT_dataequals) ; }
    | VPTT_symbol ':' subdef maplist {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,'\0'),'\0','\0'),(Expression *)vpyy_symlist_expression($3,$4),'\0',':') ; }
    | lhs '=' VPTT_tabbed_array { $$ = vpyy_addeq($1,$3,'\0','=') ; }
@@ -220,6 +221,17 @@ tablevals :
 	tablepairs { $$ = $1 ; }
 	| '[' '(' number ',' number ')' '-' '(' number ',' number ')' ']' ',' tablepairs 
 	{ $$ = vpyy_tablerange($15,$3,$5,$9,$11) ; }
+	;
+
+	xytablevals :
+	xytablevec { $$ = $1 ; }
+	| '[' '(' number ',' number ')' '-' '(' number ',' number ')' ']' ',' xytablevec 
+	{ $$ = vpyy_tablerange($15,$3,$5,$9,$11) ; }
+	;
+
+	xytablevec :
+	number  { $$ = vpyy_tablevec('\0',$1) ;}
+	| xytablevec ',' number   {$$ = vpyy_tablevec($1,$3) ;}
 	;
 
 	

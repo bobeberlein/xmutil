@@ -7,6 +7,7 @@
 #include "../Function/Function.h"
 #include "../XMUtil.h"
 #include <vector>
+class View;
 
 /* varibale content - the true stuff for variables without the associated symbol
   the indirect subclassing is necessary because the variable type is not necessarily
@@ -35,8 +36,10 @@ public :
    virtual void AddEq(Equation *eq) { }
    virtual Equation *GetEquation(int pos) { return '\0' ; }
    virtual std::vector<Equation*> GetAllEquations() { return std::vector<Equation*>(); }
+   virtual std::vector<Variable*> GetInputVars() { return std::vector<Variable*>(); }
    virtual bool AddUnits(UnitExpression *un) { return false; }
-   virtual void OutputComputable(ContextInfo *info) { assert(0) ; }
+   virtual UnitExpression* Units() { return '\0'; }
+   virtual void OutputComputable(ContextInfo *info) { assert(0); }
    virtual void CheckPlaceholderVars(Model *m) {}
    virtual void SetupState(ContextInfo *info) {} // returns number of entries in state vector required (states can also claim thier own storage)
    virtual void SetAlternateName(const std::string &altname) { }
@@ -80,7 +83,9 @@ public :
    void AddEq(Equation *eq) { vEquations.push_back(eq) ; }
    virtual Equation *GetEquation(int pos) { return vEquations[pos] ; }
    virtual std::vector<Equation*> GetAllEquations() { return vEquations; }
-   bool AddUnits(UnitExpression *un) {if(!pUnits) { pUnits=un;return true;} return false ; }
+   virtual std::vector<Variable*> GetInputVars();
+   bool AddUnits(UnitExpression *un) { if (!pUnits) { pUnits = un; return true; } return false; }
+   UnitExpression* Units() { return pUnits; }
    void OutputComputable(ContextInfo *info) { *info << SpaceToUnderBar(sAlternateName) ; }
    void CheckPlaceholderVars(Model *m) ;
    void SetupState(ContextInfo *info) ; // returns number of entries in state vector required (states can also claim thier own storage)
@@ -105,6 +110,11 @@ public:
    ~Variable(void);
    // virtual functions
    inline SYMTYPE isType(void) {return Symtype_Variable ; }
+   View* GetView() { return _view; }
+   void SetView(View* view) { _view = view; }
+
+   void SetComment(const std::string& com) { _comment = com; }
+   const std::string& Comment() { return _comment; }
    // virtuals passed on to content - need to keep pVariableContent populated before calling
    bool CheckComputed(ContextInfo *info,bool first) {if(pVariableContent)return pVariableContent->CheckComputed(this,info,first) ; return false ; }  
    void CheckPlaceholderVars(Model *m) {if(pVariableContent)pVariableContent->CheckPlaceholderVars(m) ;}
@@ -115,12 +125,14 @@ public:
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
    std::vector<Equation*> GetAllEquations() { return pVariableContent->GetAllEquations(); }
    inline bool AddUnits(UnitExpression *un) { return pVariableContent->AddUnits(un); }
+   UnitExpression* Units() { return pVariableContent->Units(); }
    inline void OutputComputable(ContextInfo *info) { if (pVariableContent)pVariableContent->OutputComputable(info); else *info << SpaceToUnderBar(GetName()); }
    inline double Eval(ContextInfo *info) { return pVariableContent->Eval(info) ;  }
+   inline std::vector<Variable*>GetInputVars() { return pVariableContent ? pVariableContent->GetInputVars() : std::vector<Variable*>(); }
    inline void SetInitialValue(int off,double val) { pVariableContent->SetInitialValue(off,val) ; }
    inline void SetActiveValue(int off,double val) { pVariableContent->SetActiveValue(off,val) ; }
    inline void SetAlternateName(const std::string &altname) { pVariableContent->SetAlternateName(altname) ; }
-   inline const std::string &GetAlternateName(void) { return pVariableContent ? pVariableContent->GetAlternateName():GetName(); }
+   std::string GetAlternateName(void);
 
    XMILE_Type MarkFlows(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
    XMILE_Type VariableType() { return mVariableType; }
@@ -133,10 +145,12 @@ public:
    std::vector<Variable*>& Outflows() { return mOutflows; }
    // virtual 
 private :
-	std::vector<Variable*> mInflows; // only ued for stocks
+	std::string _comment;
+	std::vector<Variable*> mInflows; // only ued for stocks - should push to VariableConent
 	std::vector<Variable*> mOutflows;
    VariableContent *pVariableContent ; // dependent on variable type which is not known on instantiation
    XMILE_Type mVariableType;
+   View* _view; // view defined in
 } ;
 
 

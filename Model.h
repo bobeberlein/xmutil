@@ -3,6 +3,15 @@
 #include "Symbol/Variable.h"
 #include "Symbol/Expression.h"
 #include <vector>
+class View
+{
+public:
+	virtual bool UpgradeGhost(Variable* var) = 0;
+	virtual bool AddFlowDefinition(Variable* var, Variable* in, Variable* out) = 0;
+	virtual bool AddVarDefinition(Variable* var, int x, int y) = 0;
+	virtual void CheckLinksIn() = 0;
+	// just a placeholder to derive from
+};
 class Model
 {
 public:
@@ -18,10 +27,13 @@ public:
    void GenerateShortNames(void) ;
    bool OutputComputable(bool wantshort) ;
    bool MarkVariableTypes();
+   void AttachStragglers(); // try to get diagramatic stuff right
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 
    double GetConstanValue(const char *var, double defval);
    std::vector<Variable*> GetVariables();
+   void AddView(View* view) { vViews.push_back(view); }
+   std::vector<View*>& Views() { return vViews; }
 
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
@@ -29,8 +41,11 @@ private :
    bool ValidatePlaceholderVars(void) ;
    bool OrganizeSubscripts(void) ;
    void ClearCompEquations(void) ;
+
+
    SymbolNameSpace mSymbolNameSpace ;
-   std::vector<Variable *>vUnamedVars ;
+   std::vector<View*> vViews;
+   std::vector<Variable *>vUnamedVars;
    //std::vector<Equation *>vConstantComps ; // actually just assignment
    std::vector<Equation *>vInitialTimeComps ;
    std::vector<Equation *>vInitialComps ;

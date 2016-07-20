@@ -63,6 +63,11 @@ void Equation::OutputComputable(ContextInfo *info)
    *info << "\n" ;
 }
 
+void Equation::GetVarsUsed(std::vector<Variable*>& vars) 
+{ 
+	pExpression->GetVarsUsed(vars); 
+}
+
 #ifdef laksdjlkj
 int Equation::SubscriptCount(void) 
 {

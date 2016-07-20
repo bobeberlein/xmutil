@@ -9,7 +9,7 @@
 
 extern CNF void vpyy_addfulleq(Equation *eq,UnitExpression *un) ;
 extern CNF Equation *vpyy_addeq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int token) ;
-extern CNF Equation *vpyy_add_lookup(LeftHandSide *lhs, Expression *ex, ExpressionTable *tvl);
+extern CNF Equation *vpyy_add_lookup(LeftHandSide *lhs, Expression *ex, ExpressionTable *tvl, int legacy);
 extern CNF LeftHandSide *vpyy_addexceptinterp(ExpressionVariable *var, SymbolListList *except, int interpmode);
 extern CNF SymbolList *vpyy_symlist(SymbolList *in,Variable *add,int bang,Variable *end) ;
 extern CNF SymbolList *vpyy_mapsymlist(SymbolList* in,Variable *maprange, SymbolList *list);
@@ -25,7 +25,8 @@ extern CNF Expression *vpyy_operator_expression(int oper,Expression *exp1,Expres
 extern CNF Expression *vpyy_function_expression(Function *func,ExpressionList *args) ;
 extern CNF Expression *vpyy_lookup_expression(ExpressionVariable *var,Expression *exp) ;
 extern CNF ExpressionTable *vpyy_tablepair(ExpressionTable *table,double x,double y) ;
-extern CNF ExpressionTable *vpyy_tablerange(ExpressionTable *table,double x1,double y1,double x2,double y2) ;
+extern CNF ExpressionTable *vpyy_tablevec(ExpressionTable *table, double val);
+extern CNF ExpressionTable *vpyy_tablerange(ExpressionTable *table, double x1, double y1, double x2, double y2);
 extern CNF void vpyy_macro_start();
 extern CNF void vpyy_macro_expression(Variable *name, ExpressionList *margs);
 extern CNF void vpyy_macro_end();
