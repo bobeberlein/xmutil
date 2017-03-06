@@ -1,12 +1,11 @@
 REM @echo off
-REM http://sourceforge.net/projects/winflexbison/
-REM http://site.icu-project.org/download
+REM See the README.md file for setup instructions before running this setup script.
 
 REM - must be run as administrator
 
 SET "ICU_PATH=D:\tools\icu"
 SET "BOOST_PATH=D:\tools\boost"
-SET "BISON_PATH=D:\tools\bison\bin"
+SET "BISON_PATH=D:\tools\bison"
 SET "TINY_XML_PATH=D:\tools\tinyxml2"
 
  IF NOT EXIST ".\include" GOTO NOINCLUDE
@@ -45,7 +44,7 @@ FOR %%G IN ("%BOOST_PATH%\boost\*") DO (
     mklink  ".\include\boost\%%~nxG" "%%G"
 )
 
-FOR %%G IN ("%BOOST_PATH%\lib32-msvc-12.0\*") DO (
+FOR %%G IN ("%BOOST_PATH%\stage\lib\*") DO (
     mklink  ".\lib32\%%~nxG" "%%G"
 )
 
@@ -63,4 +62,3 @@ FOR %%G IN ("%TINY_XML_PATH%\lib32\*") DO (
 )
 
 mklink /D ".\bison" "%BISON_PATH%"
-
