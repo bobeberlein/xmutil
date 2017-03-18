@@ -64,6 +64,11 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	BOOST_FOREACH(Equation* eq, equations)
 	{
 		Expression* exp = eq->GetExpression();
+		if (exp->GetType() == EXPTYPE_Symlist)
+		{
+			mVariableType = XMILE_Type_ARRAY;
+			return mVariableType;
+		}
 		if (exp->TestMarkFlows(sns, '\0', '\0'))
 		{
 			gotone = true;
@@ -338,7 +343,7 @@ int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
    int count ;
    if(vEquations.empty())
       return 0 ;
-   if(count = vEquations[0]->SubscriptCount()) {
+   if(count = vEquations[0]->SubscriptCount(elmlist)) {
       if(vEquations.size() != 1)
          throw "Bad subscript equations" ;
 

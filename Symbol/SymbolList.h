@@ -28,7 +28,7 @@ public:
    SymbolList *Append(Symbol *last, bool bang) { vSymbols.push_back(SymbolListEntry(last, bang)); return this; }
    SymbolList *Append(SymbolList *next) { vSymbols.push_back(SymbolListEntry(next)); return this; }
    int Length(void) { return vSymbols.size(); }
-   const SymbolListEntry operator[]( int pos ) const {return vSymbols[pos] ; }
+   const SymbolListEntry& operator[]( int pos ) const {return vSymbols[pos] ; }
    bool IsMapList() { return pMapRange != '\0'; }
    Symbol* MapRange() { return pMapRange; }
    void SetMapRange(Symbol *range) { assert(!pMapRange); pMapRange = range; }

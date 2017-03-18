@@ -68,14 +68,23 @@ void Equation::GetVarsUsed(std::vector<Variable*>& vars)
 	pExpression->GetVarsUsed(vars); 
 }
 
-#ifdef laksdjlkj
-int Equation::SubscriptCount(void) 
+int Equation::SubscriptCount(std::vector<Symbol *> &elmlist)
 {
-   if(iEqType == ':') { /* a subscript equation */
-
-
-      
-   } /* equiv ?? */
-   return 0 ;
+	if (iEqType == ':') /* a subscript equation */
+		return 0;
+	// we just need to look at the LHS variable and count the number of subscripts on it - all usage should be the same
+	LeftHandSide* lhs = this->GetLeft();
+	if (!lhs)
+		return 0;
+	SymbolList* subs = lhs->GetSubs();
+	if (!subs)
+		return 0;
+	int n =  subs->Length();
+	for (int i = 0; i < n; i++)
+	{
+		const SymbolList::SymbolListEntry& sub = (*subs)[i];
+		if (sub.eType == SymbolList::EntryType_SYMBOL) // only valid type
+			elmlist.push_back(sub.u.pSymbol);
+	}
+	return n;
 }
-#endif

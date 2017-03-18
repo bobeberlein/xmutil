@@ -16,7 +16,7 @@ public:
    void GetVarsUsed(std::vector<Variable*>& vars);
    inline Expression *GetExpression(void)  { return pExpression ; }
    inline bool IsTable(void) { return iEqType == '(' ; }
-   inline int SubscriptCount(void) { return 0 ; }
+   int SubscriptCount(std::vector<Symbol *> &elmlist);
    void Execute(ContextInfo *info) ;
    void OutputComputable(ContextInfo *info) ;
    void CheckPlaceholderVars(Model *m) ;

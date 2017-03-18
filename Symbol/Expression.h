@@ -89,6 +89,7 @@ public :
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) { assert(false); }
+   SymbolList* SymList() const { return pSymList; }
 private:
    SymbolList *pSymList ; // subscript elements - should be deleted by this object
    SymbolList *pMap ; // 

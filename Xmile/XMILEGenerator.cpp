@@ -116,6 +116,38 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement* element, std::vector
 
 void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs)
 {
+	tinyxml2::XMLDocument* doc = element->GetDocument();
+	std::vector<Variable*> vars = _model->GetVariables(); // all symbols that are variables
+	BOOST_FOREACH(Variable* var, vars)
+	{
+		if (var->VariableType() == XMILE_Type_ARRAY)
+		{
+			tinyxml2::XMLElement* xsub = doc->NewElement("dim");
+			xsub->SetAttribute("name", var->GetName().c_str());
+			// simple minded - defining equation - 
+			Equation* eq = var->GetEquation(0);
+			if (eq)
+			{
+				Expression* exp = eq->GetExpression();
+				if (exp && exp->GetType() == EXPTYPE_Symlist)
+				{
+					SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
+					int n = symlist->Length();
+					for (int i = 0; i < n; i++)
+					{
+						const SymbolList::SymbolListEntry& elm = (*symlist)[i];
+						if (elm.eType == SymbolList::EntryType_SYMBOL)
+						{
+							tinyxml2::XMLElement* xelm = doc->NewElement("elem");
+							xelm->SetAttribute("name", elm.u.pSymbol->GetName().c_str());
+							xsub->InsertEndChild(xelm);
+						}
+					}
+				}
+			}
+			element->InsertEndChild(xsub);
+		}
+	}
 }
 
 // first pass if flat - we probably want to do this differently when we break up into modules
@@ -153,6 +185,21 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 		variables->InsertEndChild(xvar);
 		xvar->SetAttribute("name", var->GetAlternateName().c_str());
+
+		// dimensions
+		std::vector<Symbol*> elmlist;
+		int dim_count = var->SubscriptCount(elmlist);
+		if (dim_count)
+		{
+			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
+			for (int i = 0; i < dim_count; i++)
+			{
+				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
+				xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
+				xdims->InsertEndChild(xdim);
+			}
+			xvar->InsertEndChild(xdims);
+		}
 
 		std::string comment = var->Comment();
 		if (!comment.empty())
@@ -318,6 +365,8 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 						tag = "flow";
 						break;
 					}
+					if (tag.empty())
+						continue;
 					tinyxml2::XMLElement* xvar = doc->NewElement(tag.c_str());
 
 					element->InsertEndChild(xvar);
