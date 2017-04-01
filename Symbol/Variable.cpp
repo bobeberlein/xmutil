@@ -66,6 +66,9 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		Expression* exp = eq->GetExpression();
 		if (exp->GetType() == EXPTYPE_Symlist)
 		{
+			// the array should be a list of elements - we need to point those back to the array so that we can propery dimension variables
+			SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
+			symlist->SetOwner(this); // this can recur
 			mVariableType = XMILE_Type_ARRAY;
 			return mVariableType;
 		}
@@ -338,14 +341,29 @@ void  VariableContentVar::SetupState(ContextInfo *info)
 
 }
 
-int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
+int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist, bool want_parent)
 {
    int count ;
    if(vEquations.empty())
       return 0 ;
-   if(count = vEquations[0]->SubscriptCount(elmlist)) {
-      if(vEquations.size() != 1)
-         throw "Bad subscript equations" ;
+   if(count = vEquations[0]->SubscriptCount(elmlist, want_parent)) {
+	   if (vEquations.size() != 1)
+	   {
+		   for (size_t i = 1; i < vEquations.size(); i++)
+		   if (vEquations[0]->SubscriptCount(elmlist, want_parent) != count)
+			   throw "Bad subscript equations";
+	   }
+	   // we need to get to the array not the elements for elmlist
+	   if (want_parent)
+	   {
+		   for (int i = 0; i < count; i++)
+		   {
+			   Symbol* sym = elmlist[i];
+			   Variable* var = sym->Owner();
+			   if (var)
+				   elmlist[i] = var;
+		   }
+	   }
 
       return count ;
    }

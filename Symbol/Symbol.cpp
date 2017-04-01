@@ -11,6 +11,7 @@ Symbol::Symbol(SymbolNameSpace *sns,const std::string &name)
    : SymbolTableBase(sns)
 {
    sName = name ;
+   pOwner = NULL;
    // insert into the name space sns if it has a name - empty get special treatment
    if(!name.empty())
       sns->Insert(this) ;

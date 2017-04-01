@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
   // _CrtDumpMemoryLeaks() ;
 
    // if want to look at terminal 
+
    std::cin.get() ;
    return 0 ;
 }

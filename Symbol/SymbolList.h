@@ -20,6 +20,7 @@ public:
 			Symbol* pSymbol;
 			SymbolList* pSymbolList;
 		} u;
+		void SetOwner(Variable* var);
 		EntryType eType;
 	} ;
    SymbolList(SymbolNameSpace *sns,Symbol *first,bool bang);
@@ -32,6 +33,7 @@ public:
    bool IsMapList() { return pMapRange != '\0'; }
    Symbol* MapRange() { return pMapRange; }
    void SetMapRange(Symbol *range) { assert(!pMapRange); pMapRange = range; }
+   void SetOwner(Variable *var);
    virtual void OutputComputable(ContextInfo *info);
 
 private :

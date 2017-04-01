@@ -81,7 +81,7 @@ bool Model::OrganizeSubscripts(void)
       SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable() ;
       BOOST_FOREACH(const SymbolNameSpace::iterator it,*ht) {
          siwc.v = static_cast<Variable *>SNSitToSymbol(it) ;
-         if(siwc.count = siwc.v->SubscriptCount(subelm)) {
+         if(siwc.count = siwc.v->SubscriptCount(subelm, false)) {
             sublist.push_back(siwc) ;
          }
       }

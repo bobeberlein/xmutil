@@ -36,8 +36,11 @@ public :
    virtual int SubscriptCount(std::vector<Symbol *> &elmlist) { return 0 ; }
    const std::string &GetName(void) ;
    inline void SetName(const std::string &name) { sName = name ; }
+   void SetOwner(Variable* var) { pOwner = var; }
+   Variable* Owner() { return pOwner; }
 private :
    std::string sName ;
+   Variable* pOwner;
 };
 
 

@@ -188,7 +188,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 		// dimensions
 		std::vector<Symbol*> elmlist;
-		int dim_count = var->SubscriptCount(elmlist);
+		int dim_count = var->SubscriptCount(elmlist, true);
 		if (dim_count)
 		{
 			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
@@ -211,14 +211,32 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 
 		std::vector<Equation*> eqns = var->GetAllEquations();
-		if (eqns.size() == 1)
+		int eq_count = eqns.size();
+		tinyxml2::XMLElement* xparent = xvar;
+		for (int i = 0; i < eq_count; i++)
 		{
-			tinyxml2::XMLElement* eqn = doc->NewElement("eqn");
-			xvar->InsertEndChild(eqn);
-			eqn->SetText(eqns[0]->RHSFormattedXMILE().c_str());
+			Equation* eqn = eqns[i];
+			if (eq_count > 1)
+			{
+				xparent = doc->NewElement("element");
+				std::vector<Symbol*> dims;
+				std::string s;
+				int dim_count = eqn->SubscriptCount(dims, false);
+				for (int j = 0; j < dim_count; j++)
+				{
+					if (j)
+						s += ", ";
+					s += dims[j]->GetName();
+				}
+				xparent->SetAttribute("subscript", s.c_str());
+				xvar->InsertEndChild(xparent);
+			}
+			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
+			xparent->InsertEndChild(xeqn);
+			xeqn->SetText(eqn->RHSFormattedXMILE().c_str());
 			if (type == XMILE_Type_STOCK)
 			{
-				assert(!eqns[0]->IsTable());
+				assert(!eqn->IsTable());
 				BOOST_FOREACH(Variable* in, var->Inflows())
 				{
 					tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
@@ -235,10 +253,10 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 			}
 			// if it has a lookup we need to store that separately
-			if (eqns[0]->IsTable())
+			if (eqn->IsTable())
 			{
 				assert(type == XMILE_Type_AUX);
-				ExpressionTable* et = static_cast<ExpressionTable*>(eqns[0]->GetExpression());
+				ExpressionTable* et = static_cast<ExpressionTable*>(eqn->GetExpression());
 				std::vector<double>* xvals = et->GetXVals();
 				std::vector<double>* yvals = et->GetYVals();
 				tinyxml2::XMLElement* gf = doc->NewElement("gf");

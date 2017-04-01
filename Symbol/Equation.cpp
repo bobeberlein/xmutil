@@ -68,7 +68,7 @@ void Equation::GetVarsUsed(std::vector<Variable*>& vars)
 	pExpression->GetVarsUsed(vars); 
 }
 
-int Equation::SubscriptCount(std::vector<Symbol *> &elmlist)
+int Equation::SubscriptCount(std::vector<Symbol *> &elmlist, bool want_parent)
 {
 	if (iEqType == ':') /* a subscript equation */
 		return 0;
