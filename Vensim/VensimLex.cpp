@@ -136,10 +136,19 @@ int VensimLex::ReadTabbedArray(void)
       ent->AddValue(row,vpyylval.num) ;
       // test for \n
       while(c = GetNextChar(false)) {
-         if(c == '\n') {
-            row++ ;
-            break ;
-         }
+		  if (c == '\n') {
+			  row++;
+			  break;
+		  }
+		  if(c == '\r') {
+			  c = GetNextChar(false);
+			  if (c != '\n')
+			  {
+				  PushBack(c, false);
+			  }
+			  row++;
+			  break;
+         } 
          if(c != '\t' && c != '\r' && c != ' ') {
             PushBack(c,false) ;
             break ;
@@ -329,7 +338,7 @@ int VensimLex::NextToken() // also sets token type
       default : // a variable name or an unrecognizable token
          if(isalpha(c) || c > 127 || ((iInUnitsComment == 1) && c == '$')) { // a variable
             while(c = GetNextChar(true)) {
-               if(!isalnum(c) && c != ' ' && c != '_' && c != '$' && c != '\t' && c  < 128) {
+               if(!isalnum(c) && c != ' ' && c != '_' && c != '$' && c != '\t' && c != '\'' && c  < 128) {
                   PushBack(c,true) ;
                   break ;
                }

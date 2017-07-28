@@ -31,11 +31,17 @@ void Equation::CheckPlaceholderVars(Model *m)
    pExpression->CheckPlaceholderVars(m,true) ;
 }
 
-std::string Equation::RHSFormattedXMILE()
+std::string Equation::RHSFormattedXMILE(std::vector<Symbol*>* dims)
 {
 	ContextInfo info;
+	info.SetLHSElms(dims, dims);
 	pExpression->OutputComputable(&info);
 	return info.str();
+}
+
+bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> > elms)// can be one or many depending on the subs
+{
+	return false;
 }
 
 
@@ -68,7 +74,7 @@ void Equation::GetVarsUsed(std::vector<Variable*>& vars)
 	pExpression->GetVarsUsed(vars); 
 }
 
-int Equation::SubscriptCount(std::vector<Symbol *> &elmlist, bool want_parent)
+int Equation::SubscriptCount(std::vector<Symbol *> &elmlist)
 {
 	if (iEqType == ':') /* a subscript equation */
 		return 0;

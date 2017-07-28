@@ -341,28 +341,25 @@ void  VariableContentVar::SetupState(ContextInfo *info)
 
 }
 
-int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist, bool want_parent)
+int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
 {
    int count ;
    if(vEquations.empty())
       return 0 ;
-   if(count = vEquations[0]->SubscriptCount(elmlist, want_parent)) {
+   if(count = vEquations[0]->SubscriptCount(elmlist)) {
 	   if (vEquations.size() != 1)
 	   {
 		   for (size_t i = 1; i < vEquations.size(); i++)
-		   if (vEquations[0]->SubscriptCount(elmlist, want_parent) != count)
+		   if (vEquations[0]->SubscriptCount(elmlist) != count)
 			   throw "Bad subscript equations";
 	   }
 	   // we need to get to the array not the elements for elmlist
-	   if (want_parent)
+	   for (int i = 0; i < count; i++)
 	   {
-		   for (int i = 0; i < count; i++)
-		   {
-			   Symbol* sym = elmlist[i];
-			   Variable* var = sym->Owner();
-			   if (var)
-				   elmlist[i] = var;
-		   }
+		   Symbol* sym = elmlist[i];
+		   Variable* var = sym->Owner();
+		   if (var)
+			   elmlist[i] = var;
 	   }
 
       return count ;

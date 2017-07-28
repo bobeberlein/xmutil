@@ -188,7 +188,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 		// dimensions
 		std::vector<Symbol*> elmlist;
-		int dim_count = var->SubscriptCount(elmlist, true);
+		int dim_count = var->SubscriptCount(elmlist);
 		if (dim_count)
 		{
 			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
@@ -213,15 +213,27 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		std::vector<Equation*> eqns = var->GetAllEquations();
 		int eq_count = eqns.size();
 		tinyxml2::XMLElement* xparent = xvar;
-		for (int i = 0; i < eq_count; i++)
+		int eq_ind = 0;
+		int eq_pos = 0;
+		std::vector<std::vector<Symbol*> > elms;
+		std::vector<Symbol*> dims;
+		while (eq_ind < eq_count)
 		{
-			Equation* eqn = eqns[i];
+			Equation* eqn = eqns[eq_ind];
 			if (eq_count > 1)
 			{
-				xparent = doc->NewElement("element");
-				std::vector<Symbol*> dims;
+				// we will blow up everything to single elements
+				if (elms.empty())
+				{
+					eq_pos = 0;
+					elms.clear();
+					std::vector<Symbol*> dims;
+					eqn->SubscriptExpand(elms);
+					assert(!elms.empty());
+				}
+				dims = elms[eq_pos];
 				std::string s;
-				int dim_count = eqn->SubscriptCount(dims, false);
+				int dim_count = dims.size();
 				for (int j = 0; j < dim_count; j++)
 				{
 					if (j)
@@ -233,7 +245,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			}
 			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 			xparent->InsertEndChild(xeqn);
-			xeqn->SetText(eqn->RHSFormattedXMILE().c_str());
+			xeqn->SetText(eqn->RHSFormattedXMILE(&dims).c_str());
 			if (type == XMILE_Type_STOCK)
 			{
 				assert(!eqn->IsTable());
@@ -300,6 +312,17 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 				yscale->SetAttribute("min", StringFromDouble(ymin).c_str());
 				yscale->SetAttribute("max", StringFromDouble(ymax).c_str());
 			}
+			if (eq_count > 1)
+			{
+				eq_pos++;
+				if (eq_pos >= elms.size())
+				{
+					elms.clear();
+					eq_ind++;
+				}
+			}
+			else
+				eq_ind++;
 		}
 		UnitExpression* un = var->Units();
 		if (un)
