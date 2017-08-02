@@ -6,6 +6,15 @@ ipch/
 *.suo
 *.opensdf
 third_party/include/
-third_party/lib64/
-third_party/lib32/
+third_party/include/*
+third_party/mac/*
+third_party/win/*
 third_party/bison/
+third_party/build/build_boost_mac
+third_party/build/build_icu_mac
+third_party/build/osx
+third_party/build/osx-build
+third_party/build/tinyxml2
+third_party/build/boost_1_58_0.tar.gz
+DerivedData/
+*.xcodeproj
