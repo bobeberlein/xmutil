@@ -114,10 +114,20 @@ private :
 #define FSubclassTime(name,xname,narg,cname) FSubclassTimeStart(name,xname,narg,cname) };
 
 FSubclass(FunctionAbs, "ABS", 1, "ABS")
+FSubclass(FunctionExp, "EXP", 1, "EXP")
+FSubclass(FunctionSqrt, "SQRT", 1, "SQRT")
+
+FSubclass(FunctionCosine, "COS", 1, "COS")
+FSubclass(FunctionTangent, "TAN", 1, "TAN")
+FSubclass(FunctionSine, "SIN", 1, "SIN")
+FSubclass(FunctionArcCosine, "ARCCOS", 1, "ARCCOS")
+FSubclass(FunctionArcSine, "ARCSIN", 1, "ARCSIN")
+FSubclass(FunctionArcTangent, "ARCTAN", 1, "ARCTAN")
+
 FSubclass(FunctionMax, "MAX", 2, "MAX")
 FSubclass(FunctionMin, "MIN", 2, "MIN")
-FSubclass(FunctionZidz, "ZIDZ", 2, "ZIDZ")
-FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
+FSubclass(FunctionZidz, "ZIDZ", 2, "SAFEDIV")
+FSubclass(FunctionXidz, "XIDZ", 3, "SAFEDIV")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionSum, "SUM", 1, "SUM");
 FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");

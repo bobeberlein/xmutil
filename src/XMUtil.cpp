@@ -90,7 +90,6 @@ int main(int argc, char* argv[])
 
    Model *m = new Model() ;
    if(ParseVensimModel(argc,argv,m)) {
-       std::cout << "Translating model...";
        
       /*if(m->AnalyzeEquations()) {
          m->Simulate() ;

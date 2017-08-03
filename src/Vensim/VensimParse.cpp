@@ -71,9 +71,17 @@ void VensimParse::ReadyFunctions()
 		new FunctionVectorSortOrder(pSymbolNameSpace);
 		new FunctionGame(pSymbolNameSpace);
         new FunctionAbs(pSymbolNameSpace);
+        new FunctionExp(pSymbolNameSpace);
+        new FunctionSqrt(pSymbolNameSpace);
+        
+        new FunctionCosine(pSymbolNameSpace);
+        new FunctionSine(pSymbolNameSpace);
+        new FunctionTangent(pSymbolNameSpace);
+        new FunctionArcCosine(pSymbolNameSpace);
+        new FunctionArcSine(pSymbolNameSpace);
+        new FunctionArcTangent(pSymbolNameSpace);
 
-
-		pSymbolNameSpace->ConfirmAllAllocations();
+        pSymbolNameSpace->ConfirmAllAllocations();
 	}
 	catch (...) {
 		std::cout << "Failed to initialize symbol table" << std::endl;
