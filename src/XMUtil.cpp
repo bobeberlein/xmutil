@@ -90,6 +90,8 @@ int main(int argc, char* argv[])
 
    Model *m = new Model() ;
    if(ParseVensimModel(argc,argv,m)) {
+       std::cout << "Translating model...";
+       
       /*if(m->AnalyzeEquations()) {
          m->Simulate() ;
          m->OutputComputable(true);
@@ -128,7 +130,6 @@ int main(int argc, char* argv[])
 
    // if want to look at terminal 
 
-   std::cin.get() ;
    return 0 ;
 }
 
