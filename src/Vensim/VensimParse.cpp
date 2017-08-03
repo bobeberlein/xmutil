@@ -70,6 +70,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionVectorElmMap(pSymbolNameSpace);
 		new FunctionVectorSortOrder(pSymbolNameSpace);
 		new FunctionGame(pSymbolNameSpace);
+        new FunctionAbs(pSymbolNameSpace);
 
 
 		pSymbolNameSpace->ConfirmAllAllocations();

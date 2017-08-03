@@ -113,8 +113,9 @@ private :
 
 #define FSubclassTime(name,xname,narg,cname) FSubclassTimeStart(name,xname,narg,cname) };
 
-FSubclass(FunctionMax, "MAX", 2, "max")
-FSubclass(FunctionMin, "MIN", 2, "min")
+FSubclass(FunctionAbs, "ABS", 1, "ABS")
+FSubclass(FunctionMax, "MAX", 2, "MAX")
+FSubclass(FunctionMin, "MIN", 2, "MIN")
 FSubclass(FunctionZidz, "ZIDZ", 2, "ZIDZ")
 FSubclass(FunctionXidz, "XIDZ", 3, "XIDZ")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
