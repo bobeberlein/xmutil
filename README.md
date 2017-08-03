@@ -1,10 +1,44 @@
-# Building the XMUtil XMILE utilities
+# Building the XMUtil XMILE utilities on OS X
 
-Windows is required to build and run XMUtil. These instructions were developed on Windows 10.
+## Build third_party
+Open Terminal 
 
-Microsoft Visual Studio is required for the C++ compiler. These instructions use Visual Studio Community 2015.
+~~~
+cd /third_party
+./all_mac.bash
+~~~
 
-Use the "VS2015 x86 Native Tools Command Prompt" for all commands. `XMUtil` is built as 32-bit software.
+## Generate XCode Project
+
+Open Terminal
+
+~~~
+./configure.bash --use-xcode
+open XMUtil.xcodeproj
+~~~
+
+## Build the project
+
+Take the project open it and run it, it will produce a naked executable xmutil (no app bundle)
+
+Then to use
+~~~
+{/path/to/xmutil}/xmutil {mdl-file}
+~~~
+
+# Building the XMUtil XMILE utilities on Windows
+
+These instructions were developed on Windows 10.
+
+Microsoft Visual Studio 2017 is required for the C++ compiler. These instructions use Visual Studio Community 2017.
+
+Use the "VS2017 x64 Native Tools Command Prompt" for all commands. `XMUtil` is built as 64-bit software.
+
+## Install MSYS
+
+Download [MSYS](http://www.mingw.org/wiki/MSYS) 
+In MinGW Installation Manager make sure you've installed:
+    msys-base msys-bash msys-core msys-coreutils
 
 ## Install dependencies
 
@@ -13,17 +47,26 @@ Use the "VS2015 x86 Native Tools Command Prompt" for all commands. `XMUtil` is b
 Download and extract the latest version of [Boost](http://www.boost.org/users/download/).
 
 Follow the instructions in [Boost Getting Started on Windows](http://www.boost.org/doc/libs/1_63_0/more/getting_started/windows.html).
+
 ~~~
 cd boost
-bootstrap
-.\b2
+bootstrap.bat
+bjam -j4 toolset=msvc-14.1 architecture=x86 address-model=64 --build-type=complete --with-filesystem --with-date_time --with-iostreams --with-chrono --with-system --with-random --with-program_options stage
 ~~~
 
-Note the include and library paths emitted at the end of the build process.
+The products end up in stage\lib
+The include directory is \include
+
+Copy the headers into \third_party\include
+Copy the libs into \third_party\win\lib
 
 ### ICU - International Components for Unicode
 
-Download [ICU4C](http://site.icu-project.org/download/57#TOC-ICU4C-Download)version 57.1 binaries for Win32. This is the last version with 32-bit binaries.
+Download [ICU4C](http://site.icu-project.org/download/59#TOC-ICU4C-Download)version 59.1 binaries for Win64.
+
+Copy the \include folder contents (\unicode) into \third_party\include
+Copy the \lib64 folder contents into \third_party\win\lib
+Copy the \dll files from /bin into \third_party\win\lib\dlls
 
 ### Win flex-bison - Flex (the fast lexical analyser) and Bison (GNU parser generator)
 
@@ -33,15 +76,47 @@ Download and extract [Win flex-bison](http://sourceforge.net/projects/winflexbis
 
 Download and extract [TinyXML-2](https://github.com/leethomason/tinyxml2).
 
+Compile TinyXML-2:
+
+~~~
+MSBuild.exe tinyxml2/tinyxml2.sln /t:tinyxml2:rebuild /property:Configuration=Release-Lib
+~~~
+
+Move lib into third_party/win/lib
+tinyxml2/bin/tinyxml2/x64-Release-Lib/tinyxml2.lib /third_party/win/lib
+
+Move header to include director
+tinyxml2.h to /third_party/include
+
+- OR -
+
+From environment.bat run 
+
+~~~
+third_party/build/tinyxml_win.bash
+~~~
+
 ## Build XMUtil
 
-Set dependency directories in the `setup.bat` file in the `third_party` directory. You may also need to change the Boost library path according to the output of the Boost build process.
+Once you have the /third_party directory setup you are ready to generate the Visual Studio project and build
 
-Open the "VS2015 x86 Native Tools Command Prompt" as administrator and run `setup.bat`.
+To generate the Visual Studio project run
+
+Run:
+
+~~~
+environment.bat
+~~~
+
+In the msys terminal run
+
+~~~
+./configure.bash --use-msvs 
+~~~
 
 Open the `XMUtil.vcxproj` project in Visual Studio. The project settings will be upgraded if necessary.
 
-Choose Build Solution from the Build menu. Bison will generate code. The build result is `XMUtil.exe` in the Debug directory.
+Choose Build Solution from the Build menu. The build result is `XMUtil.exe` in the Debug directory.
 
 ## Convert a Vensim model to XMILE
 

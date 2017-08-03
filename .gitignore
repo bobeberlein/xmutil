@@ -18,3 +18,7 @@ third_party/build/tinyxml2
 third_party/build/boost_1_58_0.tar.gz
 DerivedData/
 *.xcodeproj
+*.sln
+*.vcxproj
+*.vcxproj.filters
+.vs/*

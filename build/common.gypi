@@ -7,7 +7,7 @@
         'default_configuration': 'Debug',
         'configurations': {
             'Debug': {
-		        'defines': [ '_DEBUG', ],
+		        'defines': [ '_DEBUG_XMUTIL', ],
                 'conditions': [
                     ['OS=="mac"', {
                        'xcode_settings': {
@@ -72,7 +72,7 @@
                     },
                     'VCLinkerTool': {
                         'AdditionalLibraryDirectories': [
-                            'C:/Program Files/boost/boost_1_64_0/lib64',
+                            'C:/Program Files/boost/boost_1_64_0/lib64'
                         ],
                         'SubSystem' : '1',
                     },
@@ -80,6 +80,30 @@
                 'include_dirs': [
                     'C:\\Program Files\\boost\\boost_1_64_0',
                 ],
+                'link_settings': {
+                    'ldflags': [
+                        '-L<(cwd)/third_party/win/lib',
+                    ],
+                    'libraries': [
+                        '<(cwd)/third_party/win/lib/tinyxml2.lib',
+                        '<(cwd)/third_party/win/lib/icudt.lib',
+                        '<(cwd)/third_party/win/lib/icuin.lib',
+                        '<(cwd)/third_party/win/lib/icuio.lib',
+                        '<(cwd)/third_party/win/lib/icutu.lib',
+                        '<(cwd)/third_party/win/lib/icuuc.lib',
+                    ]
+                }, 
+                'copies': [{
+                    'files': [
+                            '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
+                            '$(SolutionDir)third_party/win/lib/dlls/icuin59.dll',
+                            '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
+                            '$(SolutionDir)third_party/win/lib/dlls/icuio59.dll',
+                            '$(SolutionDir)third_party/win/lib/dlls/icutu59.dll',
+                            '$(SolutionDir)third_party/win/lib/dlls/icuuc59.dll',
+                        ],
+                    'destination': '$(SolutionDir)$(CONFIGURATION)',
+                }]
             }],
             ['OS=="mac"', {
                 'defines': [

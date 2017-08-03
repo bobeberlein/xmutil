@@ -4,9 +4,9 @@
         './build/common.gypi',
     ],
     'targets': [{
-        'target_name': 'XMLUtil',
+        'target_name': 'XMUtil',
         'type': 'executable',
-        'product_name': 'XMLUtil',
+        'product_name': 'XMUtil',
         'mac_bundle': 0,
         'sources': [
             './src/XMUtil.h',

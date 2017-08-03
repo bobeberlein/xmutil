@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gypfile="${GYPFILE:-XMLUtil.gyp}"
+gypfile="${GYPFILE:-XMUtil.gyp}"
 rmout="${rmout:-yes}"
 
 source ./build/environment.bash
