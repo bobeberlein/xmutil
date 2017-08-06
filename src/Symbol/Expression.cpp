@@ -72,14 +72,14 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 		const char *op = e->GetOperator();
 		if (op)
 		{
-			if (*op == NULL) // could be () or unary +/- if - we need to flip neg
+			if (*op == '\0') // could be () or unary +/- if - we need to flip neg
 			{
 				const char *before = e->GetBefore();
 				if (before && *before == '-')
 					neg = !neg;
 				is_all_plus_minus(e->GetArg(0), fl, neg);
 			}
-			else if ((*op == '-' || *op == '+') && op[1] == NULL)
+			else if ((*op == '-' || *op == '+') && op[1] == '\0')
 			{
 				is_all_plus_minus(e->GetArg(0), fl, neg);
 				if (*op == '-')

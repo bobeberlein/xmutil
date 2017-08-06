@@ -39,8 +39,23 @@ std::string Equation::RHSFormattedXMILE(std::vector<Symbol*>* dims)
 	return info.str();
 }
 
+// look at the lhs of equation to get element by element expanded subscripts - eg [plant] becomes [p1],[p2],[p3]
 bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> > elms)// can be one or many depending on the subs
 {
+    SymbolList* subs = pLeftHandSide->GetSubs();
+    if (!subs)
+        return 0;
+    int n =  subs->Length();
+    for (int i = 0; i < n; i++)
+    {
+        std::vector<Symbol*> elmlist;
+        const SymbolList::SymbolListEntry& sub = (*subs)[i];
+        if (sub.eType == SymbolList::EntryType_SYMBOL) // only valid type
+        {
+            elmlist.push_back(sub.u.pSymbol);
+        }
+    }
+    return n;
 	return false;
 }
 

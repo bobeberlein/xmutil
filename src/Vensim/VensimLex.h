@@ -39,7 +39,7 @@ private :
    int NextToken(void) ;
    bool KeywordMatch(const char *target) ;
    void GetDigits(void) ;
-   bool iInUnitsComment ; // 0 no, 1 units, 2 comment
+   int iInUnitsComment ; // 0 no, 1 units, 2 comment
    bool bInGroup ;
    int TestColonKeyword(void) ;
    int ReadTabbedArray(void) ;

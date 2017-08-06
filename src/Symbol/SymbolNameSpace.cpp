@@ -109,11 +109,11 @@ std::string *SymbolNameSpace::ToLowerSpace(const std::string &sin)
    ws[j] = NULL ;
    ucasemap_utf8ToLower(GlobalUCaseMap, ws2, n + 1, ws, j, &ec);
    if(ec != U_ZERO_ERROR) {
-      delete ws ;
+      delete[] ws ;
       throw "Bad unicode string" ;
    }
    std::string *s = new std::string(ws2) ;
-   delete ws ;
+   delete[] ws ;
    return s ;
 
          
