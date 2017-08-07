@@ -72,13 +72,13 @@
                     },
                     'VCLinkerTool': {
                         'AdditionalLibraryDirectories': [
-                            'C:/Program Files/boost/boost_1_64_0/lib64'
+                            '<(cwd)/third_party/win/lib'
                         ],
                         'SubSystem' : '1',
                     },
                 },
                 'include_dirs': [
-                    'C:\\Program Files\\boost\\boost_1_64_0',
+                    '-L<(cwd)/third_party/include',
                 ],
                 'link_settings': {
                     'ldflags': [
