@@ -17,7 +17,7 @@ public:
    inline Expression *GetExpression(void)  { return pExpression ; }
    inline bool IsTable(void) { return iEqType == '(' ; }
    int SubscriptCount(std::vector<Symbol *> &elmlist);
-   bool SubscriptExpand(std::vector<std::vector<Symbol*> > elms); // can be one or many depending on the subs
+   bool SubscriptExpand(std::vector<std::vector<Symbol*> >& elms); // can be one or many depending on the subs
    void Execute(ContextInfo *info) ;
    void OutputComputable(ContextInfo *info) ;
    void CheckPlaceholderVars(Model *m) ;
