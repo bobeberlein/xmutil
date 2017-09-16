@@ -2,6 +2,7 @@
 #define _XMUTIL_CONTEXTINFO_H
 #include <vector>
 #include <sstream>
+#include <assert.h>
 /* a utility class helpfu in sorting and evaluating equations 
 */
 
@@ -50,7 +51,7 @@ public:
    inline void AddDDF(unsigned char flag) { cDynamicDependencyFlag |= flag ; }
    inline double GetTime(void) { return dTime ; }
    inline double GetDT(void) { return dDT ; }
-   inline void SetLHSElms(std::vector<Symbol*>* generic, std::vector<Symbol*>* specific) { pLHSElmsGeneric = generic; pLHSElmsSpecific = specific;  }
+   inline void SetLHSElms(const std::vector<Symbol*>* generic, const std::vector<Symbol*>* specific) { assert(specific->size() == generic->size()); pLHSElmsGeneric = generic; pLHSElmsSpecific = specific; }
    Symbol* GetLHSSpecific(Symbol* generic);
 private:
    double dTime,dDT ;
@@ -58,8 +59,8 @@ private:
    double *pBaseRate,*pCurRate ;
    double *pBaseAux,*pCurAux ;
    SymbolNameSpace *pSymbolNameSpace ;
-   std::vector<Symbol*>* pLHSElmsGeneric; // left hand side current settings of subscripts
-   std::vector<Symbol*>* pLHSElmsSpecific; // left hand side current settings of subscripts
+   const std::vector<Symbol*>* pLHSElmsGeneric; // left hand side current settings of subscripts
+   const std::vector<Symbol*>* pLHSElmsSpecific; // left hand side current settings of subscripts
    std::vector<Equation *>*pEquations; /* passed from model - active or initial or... */
    int iComputeType ; // CF_... as above
    unsigned char cDynamicDependencyFlag ; // DDF_... as above

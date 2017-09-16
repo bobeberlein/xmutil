@@ -16,6 +16,7 @@ Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, n
 {
    pVariableContent = NULL ;
    mVariableType = XMILE_Type_UNKNOWN; // till typed
+   iNelm = 0;
 
 }
 
@@ -68,6 +69,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		{
 			// the array should be a list of elements - we need to point those back to the array so that we can propery dimension variables
 			SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
+			std::string name = this->GetName();
 			symlist->SetOwner(this); // this can recur
 			mVariableType = XMILE_Type_ARRAY;
 			return mVariableType;
@@ -350,14 +352,17 @@ int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
 	   if (vEquations.size() != 1)
 	   {
 		   for (size_t i = 1; i < vEquations.size(); i++)
-		   if (vEquations[0]->SubscriptCount(elmlist) != count)
-			   throw "Bad subscript equations";
+		   {
+			   std::vector<Symbol*> other;
+			   if (vEquations[0]->SubscriptCount(other) != count)
+				   throw "Bad subscript equations";
+		   }
 	   }
 	   // we need to get to the array not the elements for elmlist
 	   for (int i = 0; i < count; i++)
 	   {
 		   Symbol* sym = elmlist[i];
-		   Variable* var = sym->Owner();
+		   Symbol* var = sym->Owner();
 		   if (var)
 			   elmlist[i] = var;
 	   }

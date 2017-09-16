@@ -123,7 +123,7 @@ public:
    // passthrough calls - many of these are virtual in VariableContent or passed through to yet another class
    void AddEq(Equation *eq) ;
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
-   std::vector<Equation*> GetAllEquations() { return pVariableContent->GetAllEquations(); }
+   std::vector<Equation*> GetAllEquations() { return pVariableContent?pVariableContent->GetAllEquations():std::vector<Equation*>(); }
    inline bool AddUnits(UnitExpression *un) { return pVariableContent->AddUnits(un); }
    UnitExpression* Units() { return pVariableContent->Units(); }
    inline void OutputComputable(ContextInfo *info) { if (pVariableContent)pVariableContent->OutputComputable(info); else *info << SpaceToUnderBar(GetName()); }
@@ -138,6 +138,9 @@ public:
    XMILE_Type VariableType() { return mVariableType; }
    void SetVariableType(XMILE_Type t) { mVariableType = t; }
 
+   int Nelm() const { return iNelm; }
+   void SetNelm(int set) { iNelm = set; }
+
    // for other function calles
    inline VariableContent *Content(void) { return pVariableContent ; }
    void SetContent(VariableContent *v) { pVariableContent = v ; } 
@@ -150,6 +153,7 @@ private :
 	std::vector<Variable*> mOutflows;
    VariableContent *pVariableContent ; // dependent on variable type which is not known on instantiation
    XMILE_Type mVariableType;
+   int iNelm; // used for subscript owners
    View* _view; // view defined in
 } ;
 

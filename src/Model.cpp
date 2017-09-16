@@ -609,6 +609,8 @@ bool Model::WriteToXMILE(const std::string& path, std::vector<std::string>& errs
 {
 	bool success = true;
 
+	// sim specs are different 
+
 	XMILEGenerator generator(this);
 	success = generator.Generate(path, errs);
 

@@ -14,6 +14,7 @@
             './src/Model.h',
             './src/Model.cpp',
             './src/ContextInfo.h',
+            './src/ContextInfo.cpp',
 
             './src/Xmile/XMILEGenerator.h',
             './src/Xmile/XMILEGenerator.cpp',

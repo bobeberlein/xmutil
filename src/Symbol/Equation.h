@@ -17,11 +17,12 @@ public:
    inline Expression *GetExpression(void)  { return pExpression ; }
    inline bool IsTable(void) { return iEqType == '(' ; }
    int SubscriptCount(std::vector<Symbol *> &elmlist);
-   bool SubscriptExpand(std::vector<std::vector<Symbol*> >& elms); // can be one or many depending on the subs
+   static void GetSubscriptElements(std::vector<Symbol*>& vals, Symbol* s); // if nested defs
+   bool SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::vector<Symbol*>& subs); // can be one or many depending on the subs
    void Execute(ContextInfo *info) ;
    void OutputComputable(ContextInfo *info) ;
    void CheckPlaceholderVars(Model *m) ;
-   std::string RHSFormattedXMILE(std::vector<Symbol*>* dims); // need a_b*c
+   std::string RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims); // need a_b*c
 private :
    LeftHandSide *pLeftHandSide ;
    Expression *pExpression ;

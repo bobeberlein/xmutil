@@ -119,8 +119,6 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 	{
 		if (var->VariableType() == XMILE_Type_ARRAY)
 		{
-			tinyxml2::XMLElement* xsub = doc->NewElement("dim");
-			xsub->SetAttribute("name", var->GetName().c_str());
 			// simple minded - defining equation - 
 			Equation* eq = var->GetEquation(0);
 			if (eq)
@@ -129,20 +127,30 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 				if (exp && exp->GetType() == EXPTYPE_Symlist)
 				{
 					SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
+					std::vector<Symbol*> expanded;
 					int n = symlist->Length();
 					for (int i = 0; i < n; i++)
 					{
 						const SymbolList::SymbolListEntry& elm = (*symlist)[i];
 						if (elm.eType == SymbolList::EntryType_SYMBOL)
 						{
+							Equation::GetSubscriptElements(expanded, elm.u.pSymbol);
+						}
+					}
+					if (!expanded.empty() && expanded[0]->Owner() == var)
+					{
+						tinyxml2::XMLElement* xsub = doc->NewElement("dim");
+						xsub->SetAttribute("name", var->GetName().c_str());
+						BOOST_FOREACH(Symbol* s, expanded)
+						{
 							tinyxml2::XMLElement* xelm = doc->NewElement("elem");
-							xelm->SetAttribute("name", elm.u.pSymbol->GetName().c_str());
+							xelm->SetAttribute("name", s->GetName().c_str());
 							xsub->InsertEndChild(xelm);
 						}
+						element->InsertEndChild(xsub);
 					}
 				}
 			}
-			element->InsertEndChild(xsub);
 		}
 	}
 }
@@ -192,7 +200,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			for (int i = 0; i < dim_count; i++)
 			{
 				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
-				xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
+				// we might get a subrange in elmlist so need to get parent
+				xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
 				xdims->InsertEndChild(xdim);
 			}
 			xvar->InsertEndChild(xdims);
@@ -209,10 +218,11 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 		std::vector<Equation*> eqns = var->GetAllEquations();
 		int eq_count = eqns.size();
-		tinyxml2::XMLElement* xparent = xvar;
+		tinyxml2::XMLElement* xelement = xvar; // usually these are the same - but for non a2a we have element entries
 		int eq_ind = 0;
 		int eq_pos = 0;
-		std::vector<std::vector<Symbol*> > elms;
+		std::vector<Symbol*> subs; // [ship,location]
+		std::vector<std::vector<Symbol*> > elms; // [s1,l1]
 		std::vector<Symbol*> dims;
 		while (eq_ind < eq_count)
 		{
@@ -224,8 +234,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 				{
 					eq_pos = 0;
 					elms.clear();
-					std::vector<Symbol*> dims;
-					eqn->SubscriptExpand(elms);
+					eqn->SubscriptExpand(elms, subs);
 					assert(!elms.empty());
 				}
 				dims = elms[eq_pos];
@@ -237,25 +246,26 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 						s += ", ";
 					s += dims[j]->GetName();
 				}
-				xparent->SetAttribute("subscript", s.c_str());
-				xvar->InsertEndChild(xparent);
+				xelement = doc->NewElement("element");
+				xelement->SetAttribute("subscript", s.c_str());
+				xvar->InsertEndChild(xelement);
 			}
 			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
-			xparent->InsertEndChild(xeqn);
-			xeqn->SetText(eqn->RHSFormattedXMILE(&dims).c_str());
+			xelement->InsertEndChild(xeqn);
+			xeqn->SetText(eqn->RHSFormattedXMILE(subs,dims).c_str());
 			if (type == XMILE_Type_STOCK)
 			{
 				assert(!eqn->IsTable());
 				BOOST_FOREACH(Variable* in, var->Inflows())
 				{
 					tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
-					xvar->InsertEndChild(inflow);
+					xelement->InsertEndChild(inflow);
 					inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
 				}
 				BOOST_FOREACH(Variable* out, var->Outflows())
 				{
 					tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
-					xvar->InsertEndChild(outflow);
+					xelement->InsertEndChild(outflow);
 					outflow->SetText(SpaceToUnderBar(out->GetAlternateName()).c_str());
 				}
 
@@ -269,7 +279,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 				std::vector<double>* xvals = et->GetXVals();
 				std::vector<double>* yvals = et->GetYVals();
 				tinyxml2::XMLElement* gf = doc->NewElement("gf");
-				xvar->InsertEndChild(gf);
+				xelement->InsertEndChild(gf);
 				tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
 				gf->InsertEndChild(yscale);
 				tinyxml2::XMLElement* xpts = doc->NewElement("xpts");
@@ -373,8 +383,9 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 			if (ele->Type() == VensimViewElement::ElementTypeVARIABLE)
 			{
 				VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
+				Variable* var = vele->GetVariable();
 				// skip time altogether - this never shows up under xmil
-				if (StringMatch(vele->GetVariable()->GetName(),"Time"))
+				if (!var || StringMatch(vele->GetVariable()->GetName(),"Time"))
 					; // do nothing
 				else if (vele->Ghost())
 				{

@@ -328,9 +328,9 @@ void VensimView::CheckLinksIn()
 		if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE)
 		{
 			VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
-			if (vele->GetVariable()->VariableType() != XMILE_Type_STOCK && !vele->Ghost())
+			Variable* var = vele->GetVariable();
+			if (var && var->VariableType() != XMILE_Type_STOCK && !vele->Ghost())
 			{
-				Variable* var = vele->GetVariable();
 				std::vector<Variable*>ins = var->GetInputVars();
 				BOOST_FOREACH(Variable* in, ins)
 				{

@@ -31,31 +31,90 @@ void Equation::CheckPlaceholderVars(Model *m)
    pExpression->CheckPlaceholderVars(m,true) ;
 }
 
-std::string Equation::RHSFormattedXMILE(std::vector<Symbol*>* dims)
+std::string Equation::RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims)
 {
 	ContextInfo info;
-	info.SetLHSElms(dims, dims);
+
+	assert(subs.size() == dims.size());
+	info.SetLHSElms(&subs, &dims);
 	pExpression->OutputComputable(&info);
 	return info.str();
 }
 
+void Equation::GetSubscriptElements(std::vector<Symbol*>& vals, Symbol* s)
+{
+	assert(s->isType() == Symtype_Variable);
+	if (s->isType() != Symtype_Variable)
+		return;
+	Variable* v = static_cast<Variable*>(s);
+
+	std::vector<Equation*> eqs = v->GetAllEquations();
+	if (!eqs.empty()) // recur this is a nested def or equivalence 
+	{
+		assert(eqs.size() == 1);
+		Expression* exp = eqs[0]->GetExpression();
+		assert(exp->GetType() == EXPTYPE_Symlist);
+		if (exp->GetType() == EXPTYPE_Symlist)
+		{
+			SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
+			int n = symlist->Length();
+			for (int i = 0; i < n; i++)
+			{
+				const SymbolList::SymbolListEntry& elm = (*symlist)[i];
+				if (elm.eType == SymbolList::EntryType_SYMBOL) // only valid type
+					GetSubscriptElements(vals, elm.u.pSymbol);
+			}
+		}
+	}
+	else // otherwise the symbol is it
+		vals.push_back(s);
+}
+
+
 // look at the lhs of equation to get element by element expanded subscripts - eg [plant] becomes [p1],[p2],[p3]
-bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> >& elms)// can be one or many depending on the subs
+bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::vector<Symbol*>& orig)// can be one or many depending on the subs
 {
     SymbolList* subs = pLeftHandSide->GetSubs();
     if (!subs)
         return false;
     int n =  subs->Length();
-	std::vector<Symbol*> elmlist;
+	std::vector<std::vector<Symbol*> > elmlist;
+	std::vector<int> maxpos;
+	std::vector<int> curpos;
+	std::vector<Symbol*> cur_elms;
+	orig.clear();
 	for (int i = 0; i < n; i++)
     {
         const SymbolList::SymbolListEntry& sub = (*subs)[i];
-        if (sub.eType == SymbolList::EntryType_SYMBOL) // only valid type
-        {
-            elmlist.push_back(sub.u.pSymbol);
-        }
+		if (sub.eType == SymbolList::EntryType_SYMBOL) // only valid type
+		{
+			// see if it has an equation
+			GetSubscriptElements(cur_elms, sub.u.pSymbol);
+			orig.push_back(sub.u.pSymbol);
+		}
+		else
+			cur_elms.push_back(NULL);
+		elmlist.push_back(cur_elms);
+		maxpos.push_back(cur_elms.size());
+		curpos.push_back(0);
     }
-	elms.push_back(elmlist);
+	// now cycle through elmlist - might be a single entry - we need to do all combinations
+	while (curpos[0] < maxpos[0])
+	{
+		cur_elms.clear();
+		for (int i = 0; i < n; i++)
+			cur_elms.push_back(elmlist[i][curpos[i]]);
+		elms.push_back(cur_elms);
+		for (int j = n; j-- > 0;)
+		{
+			curpos[j]++;
+			if (curpos[j] < maxpos[j])
+				break;
+		}
+	}
+
+	    
+	//elms.push_back(elmlist);
 	return n > 0;
 }
 
