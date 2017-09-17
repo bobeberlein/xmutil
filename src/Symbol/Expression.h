@@ -22,6 +22,7 @@ enum EXPTYPE {
    EXPTYPE_Variable,
    EXPTYPE_Symlist,
    EXPTYPE_Number,
+   EXPTYPE_Literal,
    EXPTYPE_NumberTable,
    EXPTYPE_Function,
    EXPTYPE_FunctionMemory,
@@ -112,6 +113,22 @@ public :
 private:
    double value ;
 } ;
+class ExpressionLiteral :
+	public Expression
+{
+public:
+	ExpressionLiteral(SymbolNameSpace *sns, const char *str) : Expression(sns) { value = str; }
+	virtual ~ExpressionLiteral(void) {}
+	virtual EXPTYPE GetType(void) { return EXPTYPE_Literal; }
+	virtual double Eval(ContextInfo *info) { return -1; }
+	virtual void CheckPlaceholderVars(Model *m, bool isfirst) {}
+	virtual void OutputComputable(ContextInfo *info) { *info << value; }
+	virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
+	virtual void GetVarsUsed(std::vector<Variable*>& vars) {} // list of variables used
+	virtual void MarkType(XMILE_Type type) {}
+private:
+	std::string value;
+};
 class ExpressionNumberTable :
    public Expression
 {

@@ -41,16 +41,24 @@ void SymbolList::SetOwner(Variable* var)
 	{
 		if (vSymbols[i].eType == EntryType_SYMBOL)
 		{
-			vSymbols[i].u.pSymbol->SetOwner(var);
 			Equation::GetSubscriptElements(expanded, vSymbols[i].u.pSymbol);
 		}
 	}
 	var->SetNelm(expanded.size());
-
+	// the two that follow might end up doing the same thing depending on the content of the defining list
+	for (size_t i = 0; i < vSymbols.size(); i++)
+	{
+		if (vSymbols[i].eType == EntryType_SYMBOL)
+		{
+			vSymbols[i].u.pSymbol->SetOwner(var);
+		}
+	}
 	BOOST_FOREACH(Symbol* s, expanded)
 	{
 		s->SetOwner(var);
 	}
+	if (expanded[0]->Owner() != var)
+		var->SetOwner(expanded[0]->Owner());
 }
 
 
@@ -61,14 +69,21 @@ void SymbolList::OutputComputable(ContextInfo *info)
 	*info << "[";
 	for (size_t i = 0; i < vSymbols.size(); i++)
 	{
+		if (i)
+			*info << ", ";
 		if (vSymbols[i].eType == EntryType_SYMBOL)
 		{
-			if (i)
-				*info << ", ";
 			// try to find the symbol in the lhs generic list - if there substitue specific otherwise
 			// use the original symbol
 			Symbol* s = info->GetLHSSpecific(vSymbols[i].u.pSymbol);
 			*info << SpaceToUnderBar(s->GetName());
+		}
+		else if (vSymbols[i].eType == EntryType_BANG_SYMBOL)
+		{
+			*info << "*"; // normally this is all 
+			Symbol* s = vSymbols[i].u.pSymbol;
+			if (s->Owner() != s)
+				*info << SpaceToUnderBar(s->GetName());
 		}
 	}
 	*info << "]";

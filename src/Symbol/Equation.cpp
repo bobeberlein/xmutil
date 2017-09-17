@@ -93,7 +93,11 @@ bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::ve
 			orig.push_back(sub.u.pSymbol);
 		}
 		else
+		{
+			assert(false);
 			cur_elms.push_back(NULL);
+		}
+		assert(!cur_elms.empty());
 		elmlist.push_back(cur_elms);
 		maxpos.push_back(cur_elms.size());
 		curpos.push_back(0);
@@ -110,6 +114,8 @@ bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::ve
 			curpos[j]++;
 			if (curpos[j] < maxpos[j])
 				break;
+			if(j)
+				curpos[j] = 0;
 		}
 	}
 

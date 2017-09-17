@@ -49,6 +49,9 @@ int VensimLex::yylex()
 {
    int toktype = NextToken() ;
    switch(toktype) {
+	  case VPTT_literal:
+		  vpyylval.lit = sToken.c_str();
+		  break;
       case VPTT_number :
          vpyylval.num = atof(sToken.c_str()) ;
          break ;
@@ -310,6 +313,16 @@ int VensimLex::NextToken() // also sets token type
          ReturnToMark() ; // failed to find pair give up
          }
          break ; // give up and just return the one char - will throw error message 
+	  case '\'': // vensim literal - just look for matching ' 
+		{
+			int len;
+			for (len = 1; c = GetNextChar(true); len++) {
+				if (c == '\'') {
+					return VPTT_literal;// the returned token includes both the opening and closing quote
+				}
+			}
+		}
+		  break;
       case '\"' : // a quoted variable name potentially with embedded escaped quotes
          {
             int len ;

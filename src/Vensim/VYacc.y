@@ -1,7 +1,7 @@
 /* 
-c:\tools\bison\bin\win_bison -o $(ProjectDir)Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)Vensim\VYacc.y
+d:\tools\bison\bin\win_bison -o $(ProjectDir)src\Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)src\Vensim\VYacc.y
 Converting VYacc.y
-dependencies: VYacc.tab.c VYacc.tab.h 
+Outputs: VYacc.tab.c VYacc.tab.h 
 */
 
 %{
@@ -41,6 +41,7 @@ extern void vpyyerror (char const *);
    for these the tokenizer needs to set yylval.var
    and so on before returning the token ID  */
 %token <num> VPTT_number
+%token <lit> VPTT_literal
 %token <sym> VPTT_symbol
 %token <uni> VPTT_units_symbol
 %token <fnc> VPTT_function
@@ -197,6 +198,7 @@ exp:
       VPTT_number         { $$ = vpyy_num_expression($1) ; } /* since we allow unary - number not used here */
 	 | VPTT_na			  { $$ = vpyy_num_expression(-1E38);}
      | var                { $$ = (Expression *)$1 ; } /* ExpressionVariable is subclassed from Expression */
+	 | VPTT_literal       { $$ = vpyy_literal_expression($1) ; } // not part of XMILE - just dumped directly for editing afterward
 	 | var '(' exp ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
 	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,'\0') ; }
      | VPTT_function '(' exprlist ')'   { $$ = vpyy_function_expression($1,$3) ;}

@@ -9,7 +9,6 @@ Function::Function(SymbolNameSpace *sns,const std::string &name,int nargs)
 {
    assert(nargs < 32) ; // the way initial argument identification is implemented requires this
    iNumberArgs = nargs ;
-
 }
 
 

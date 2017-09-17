@@ -81,6 +81,8 @@ void VensimParse::ReadyFunctions()
         new FunctionArcSine(pSymbolNameSpace);
         new FunctionArcTangent(pSymbolNameSpace);
 
+		new FunctionGetDirectData(pSymbolNameSpace);
+
         pSymbolNameSpace->ConfirmAllAllocations();
 	}
 	catch (...) {
@@ -423,7 +425,11 @@ Expression *VensimParse::NumExpression(double num)
 { 
    return new ExpressionNumber(pSymbolNameSpace,num) ;
 }
-ExpressionVariable *VensimParse::VarExpression(Variable *var,SymbolList *subs) 
+Expression *VensimParse::LiteralExpression(const char* lit)
+{
+	return new ExpressionLiteral(pSymbolNameSpace, lit);
+}
+ExpressionVariable *VensimParse::VarExpression(Variable *var,SymbolList *subs)
 { 
    return new ExpressionVariable(pSymbolNameSpace,var,subs) ;
 }

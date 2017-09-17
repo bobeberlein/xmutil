@@ -154,7 +154,7 @@ FSubclassTime(FunctionStep, "STEP", 2, "step")
 FSubclassKeyword(FunctionTabbedArray, "TABBED ARRAY", 1)
 
 // functions that will never translate - but easier to catch error on other side
-FSubclass(FunctionGETDIRECTDATA, "GET DIRECT DATA", 4, "GET_DIRECT_DATA")
+FSubclass(FunctionGetDirectData, "GET DIRECT DATA", 4, "GET_DIRECT_DATA")
 
 /*
 class FunctionMin :

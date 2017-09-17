@@ -46,6 +46,7 @@ public:
    SymbolListList *ChainSublist(SymbolListList *sll,SymbolList *nsl) ;
    ExpressionList *ChainExpressionList(ExpressionList *el,Expression *e) ;
    Expression *NumExpression(double num) ;
+   Expression *LiteralExpression(const char *lit);
    ExpressionVariable *VarExpression(Variable *var,SymbolList *subs) ;
    ExpressionSymbolList *SymlistExpression(SymbolList *sym,SymbolList *map) ;
    Expression *OperatorExpression(int oper,Expression *exp1,Expression *exp2) ;

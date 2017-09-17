@@ -30,6 +30,7 @@ ForwardDeclaration Function ;
 typedef union _tag_parse_union {
    // note everything is 3 letters to make the .y files look a little nicer
    int tok ;
+   const char* lit;
    SymbolList *sml ;
    SymbolListList *sll ;
    Expression *exn ;

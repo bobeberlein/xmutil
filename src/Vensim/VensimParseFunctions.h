@@ -19,6 +19,7 @@ extern CNF UnitExpression *vpyy_unitsrange(UnitExpression *f,double minval,doubl
 extern CNF SymbolListList *vpyy_chain_sublist(SymbolListList *sll,SymbolList *nsl) ;
 extern CNF ExpressionList *vpyy_chain_exprlist(ExpressionList *el,Expression *e) ;
 extern CNF Expression *vpyy_num_expression(double num) ;
+extern CNF Expression *vpyy_literal_expression(const char *tok);
 extern CNF ExpressionVariable *vpyy_var_expression(Variable *var,SymbolList *subs) ;
 extern CNF ExpressionSymbolList *vpyy_symlist_expression(SymbolList *subs,SymbolList *map) ;
 extern CNF Expression *vpyy_operator_expression(int oper,Expression *exp1,Expression *exp2) ;

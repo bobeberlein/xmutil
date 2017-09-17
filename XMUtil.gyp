@@ -30,7 +30,7 @@
 #            './src/Vensim/VLex.y',
             './src/Vensim/VYacc.tab.c',
             './src/Vensim/VYacc.tab.h',
-#            './src/Vensim/VYacc.y',
+            './src/Vensim/VYacc.y',
 
             './src/Symbol/Variable.h',
             './src/Symbol/Variable.cpp',

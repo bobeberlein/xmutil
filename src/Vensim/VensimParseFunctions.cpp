@@ -28,6 +28,8 @@ extern "C" ExpressionList *vpyy_chain_exprlist(ExpressionList *el,Expression *e)
 { return VPObject->ChainExpressionList(el,e) ; }
 extern "C" Expression *vpyy_num_expression(double num) 
 { return VPObject->NumExpression(num) ; }
+extern "C" Expression *vpyy_literal_expression(const char *lit) 
+{ return VPObject->LiteralExpression(lit) ; }
 extern "C" ExpressionVariable *vpyy_var_expression(Variable *var,SymbolList *subs) 
 { return VPObject->VarExpression(var,subs) ; }
 extern "C" ExpressionSymbolList *vpyy_symlist_expression(SymbolList *sym,SymbolList *map) 
