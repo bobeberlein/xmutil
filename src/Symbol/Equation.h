@@ -4,6 +4,7 @@
 #include "SymbolTableBase.h"
 
 class Model ;
+class ExpressionTable;
 
 class Equation :
    public SymbolTableBase
@@ -15,7 +16,7 @@ public:
    Variable *GetVariable(void) ; // LeftHandSide forward declared can't put function here
    void GetVarsUsed(std::vector<Variable*>& vars);
    inline Expression *GetExpression(void)  { return pExpression ; }
-   inline bool IsTable(void) { return iEqType == '(' ; }
+   ExpressionTable* GetTable(void);
    int SubscriptCount(std::vector<Symbol *> &elmlist);
    static void GetSubscriptElements(std::vector<Symbol*>& vals, Symbol* s); // if nested defs
    bool SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::vector<Symbol*>& subs); // can be one or many depending on the subs

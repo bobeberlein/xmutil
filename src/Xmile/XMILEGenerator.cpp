@@ -191,6 +191,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		variables->InsertEndChild(xvar);
 		xvar->SetAttribute("name", var->GetAlternateName().c_str());
 
+
+
 		// dimensions
 		std::vector<Symbol*> elmlist;
 		int dim_count = var->SubscriptCount(elmlist);
@@ -255,7 +257,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			xeqn->SetText(eqn->RHSFormattedXMILE(subs,dims).c_str());
 			if (type == XMILE_Type_STOCK)
 			{
-				assert(!eqn->IsTable());
+				assert(!eqn->GetTable());
 				BOOST_FOREACH(Variable* in, var->Inflows())
 				{
 					tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
@@ -272,10 +274,15 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 			}
 			// if it has a lookup we need to store that separately
-			if (eqn->IsTable())
+
+			if (var->GetAlternateName() == "effect capcity on production")
+				xvar->SetAttribute("name", var->GetAlternateName().c_str());
+
+
+			ExpressionTable* et = eqn->GetTable();
+			if (et)
 			{
 				assert(type == XMILE_Type_AUX);
-				ExpressionTable* et = static_cast<ExpressionTable*>(eqn->GetExpression());
 				std::vector<double>* xvals = et->GetXVals();
 				std::vector<double>* yvals = et->GetYVals();
 				tinyxml2::XMLElement* gf = doc->NewElement("gf");

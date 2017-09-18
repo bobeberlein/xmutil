@@ -223,6 +223,8 @@ tablevals :
 	tablepairs { $$ = $1 ; }
 	| '[' '(' number ',' number ')' '-' '(' number ',' number ')' ']' ',' tablepairs 
 	{ $$ = vpyy_tablerange($15,$3,$5,$9,$11) ; }
+	| '[' '(' number ',' number ')' '-' '(' number ',' number ')' ',' tablepairs ']' ',' tablepairs 
+	{ $$ = vpyy_tablerange($17,$3,$5,$9,$11) ; }
 	;
 
 	xytablevals :

@@ -207,3 +207,16 @@ void ExpressionTable::TransformLegacy()
 	vXVals.resize(n);
 	vYVals.resize(n);
 }
+
+void ExpressionLookup::OutputComputable(ContextInfo *info) {
+	if (pExpressionVariable) {
+		*info << "LOOKUP(";
+		pExpressionVariable->OutputComputable(info);
+		*info << ", ";
+		pExpression->OutputComputable(info);
+		*info << ")";
+	}
+	else {
+		pExpression->OutputComputable(info);
+	}
+}

@@ -65,6 +65,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionSmoothI(pSymbolNameSpace);
 		new FunctionSmooth3(pSymbolNameSpace);
 		new FunctionDelay3(pSymbolNameSpace);
+		new FunctionNPV(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);
 		new FunctionVectorSelect(pSymbolNameSpace);
 		new FunctionVectorElmMap(pSymbolNameSpace);
@@ -80,6 +81,7 @@ void VensimParse::ReadyFunctions()
         new FunctionArcCosine(pSymbolNameSpace);
         new FunctionArcSine(pSymbolNameSpace);
         new FunctionArcTangent(pSymbolNameSpace);
+		new FunctionInterger(pSymbolNameSpace);
 
 		new FunctionGetDirectData(pSymbolNameSpace);
 
@@ -122,9 +124,9 @@ Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTab
 		tbl->TransformLegacy();
 	if (!ex)
 		return new Equation(pSymbolNameSpace, lhs, tbl, '(');
-	Function* wl = static_cast<Function*>(pSymbolNameSpace->Find("WITH LOOKUP"));
-	ExpressionList* el = ChainExpressionList(NULL, tbl);
-	Expression* rhs =  new ExpressionFunction(pSymbolNameSpace, wl, el);
+	// with lookup is just a table embedded in a variable - actually the norm for XMILE
+	//Function* wl = static_cast<Function*>(pSymbolNameSpace->Find("WITH LOOKUP"));
+	Expression* rhs =  new ExpressionLookup(pSymbolNameSpace, ex, tbl);
 	return new Equation(pSymbolNameSpace, lhs, rhs, '=');
 
 }

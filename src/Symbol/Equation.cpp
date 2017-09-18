@@ -26,6 +26,12 @@ Variable *Equation::GetVariable(void)
    return pLeftHandSide->GetVariable() ; 
 }
 
+ExpressionTable* Equation::GetTable(void)
+{
+	return pExpression->GetTable(); 
+}
+
+
 void Equation::CheckPlaceholderVars(Model *m)
 {
    pExpression->CheckPlaceholderVars(m,true) ;

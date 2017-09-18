@@ -15,6 +15,7 @@
 class ExpressionList ; // forward declaration
 class Model ;
 class FlowList;
+class ExpressionTable;
 
 // probably don't need these after all
 enum EXPTYPE {
@@ -44,6 +45,7 @@ public:
    virtual Function *GetFunction(void) { return NULL ; }
    virtual const char* GetOperator() { return NULL; }
    virtual const char* GetBefore() { return NULL; }
+   virtual ExpressionTable* GetTable() { return NULL; }
    virtual void CheckPlaceholderVars(Model *m, bool isfirst) = 0;// generally do nothing, but big error to skip
    virtual bool CheckComputed(ContextInfo *info) { return true ; }
    virtual void RemoveFunctionArgs(void) {} // only 1 subclass does anything
@@ -190,22 +192,25 @@ private:
 
 
 class ExpressionLookup :
-   public Expression 
+	public Expression
 {
 public:
-   ExpressionLookup(SymbolNameSpace *sns,ExpressionVariable *var,Expression *e) : Expression(sns) {pExpressionVariable =var;pExpression = e ; }
-   ~ExpressionLookup(void) {if(HasGoodAlloc()) { delete pExpressionVariable;delete pExpression;}}
-   virtual EXPTYPE GetType(void) { return EXPTYPE_Lookup ; }
-   void CheckPlaceholderVars(Model *m,bool isfirst) { pExpression->CheckPlaceholderVars(m,false) ; }
-   bool CheckComputed(ContextInfo *info) { return pExpression->CheckComputed(info) ; }
-   double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable,pExpression,info)  ; } 
-   virtual void OutputComputable(ContextInfo *info) { *info << "LOOKUP("; pExpressionVariable->OutputComputable(info); *info << ", "; pExpression->OutputComputable(info); *info << ")"; }
+	ExpressionLookup(SymbolNameSpace *sns, ExpressionVariable *var, Expression *e) : Expression(sns) { pExpressionVariable = var; pExpression = e; pExpressionTable = NULL; }
+	ExpressionLookup(SymbolNameSpace *sns, Expression *e, ExpressionTable *tbl) : Expression(sns) { pExpressionVariable = NULL; pExpression = e; pExpressionTable = tbl; }
+	~ExpressionLookup(void) { if (HasGoodAlloc()) { delete pExpressionVariable; delete pExpression; } }
+	virtual EXPTYPE GetType(void) { return EXPTYPE_Lookup; }
+	virtual ExpressionTable* GetTable(void) { return pExpressionTable; }
+	void CheckPlaceholderVars(Model *m, bool isfirst) { pExpression->CheckPlaceholderVars(m, false); }
+	bool CheckComputed(ContextInfo *info) { return pExpression->CheckComputed(info); }
+	double Eval(ContextInfo *info) { return TableFunction::Eval(pExpressionVariable, pExpression, info); }
+   virtual void OutputComputable(ContextInfo *info);
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pExpressionVariable)pExpressionVariable->GetVarsUsed(vars); if (pExpression)pExpression->GetVarsUsed(vars); } // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 private:
    ExpressionVariable *pExpressionVariable ; // null for with_lookup
    Expression *pExpression ;
+   ExpressionTable* pExpressionTable;
 } ;
 
 class ExpressionTable :
@@ -215,6 +220,7 @@ public :
    ExpressionTable(SymbolNameSpace *sns) : Expression(sns) { bHasRange=false;}
    ~ExpressionTable(void) {/* vector destructors only*/ }
    virtual EXPTYPE GetType(void) { return EXPTYPE_Table; }
+   virtual ExpressionTable* GetTable(void) { return this; }
    void AddPair(double x,double y) { vXVals.push_back(x);vYVals.push_back(y);}
    void AddRange(double x1,double y1,double x2,double y2) { bHasRange=true;dX2=x2;dY1=y1;dX2=x2;dY2=y2;}
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
