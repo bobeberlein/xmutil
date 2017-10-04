@@ -471,8 +471,10 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
    case VPTT_and:
    case VPTT_or:
    case '=':
-   case VPTT_not:
 	   return new ExpressionLogical(pSymbolNameSpace, exp1, exp2, oper);
+   case VPTT_not:
+	   assert(exp2 == NULL);
+	   return new ExpressionLogical(pSymbolNameSpace, NULL, exp1, oper);
    default :
      mSyntaxError.str = "Unknown operator internal error "  ;
      throw mSyntaxError ;
