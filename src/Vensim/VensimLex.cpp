@@ -164,7 +164,7 @@ return 0 ;
 
 int VensimLex::NextToken() // also sets token type 
 {
-   char c ;
+   unsigned char c ;
    int toktype ;
 
    do { 
