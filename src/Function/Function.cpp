@@ -95,6 +95,37 @@ void FunctionIfThenElse::OutputComputable(ContextInfo *info, ExpressionList *arg
 	Function::OutputComputable(info, arg);
 }
 
+void FunctionDelayN::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 4)
+	{
+		*info << "DELAYN(";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info);
+		*info << ",";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info);
+		*info << ",";
+		const_cast<Expression*>((*arg)[3])->OutputComputable(info);
+		*info << ",";
+		const_cast<Expression*>((*arg)[2])->OutputComputable(info);
+		*info << ")";
+	}
+}
+void FunctionSmoothN::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 4)
+	{
+		*info << "SMTHN(";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info);
+		*info << ",";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info);
+		*info << ",";
+		const_cast<Expression*>((*arg)[3])->OutputComputable(info);
+		*info << ",";
+		const_cast<Expression*>((*arg)[2])->OutputComputable(info);
+		*info << ")";
+	}
+}
+
 void FunctionLog::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
 	if (arg->Length() == 2)

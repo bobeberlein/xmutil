@@ -140,8 +140,20 @@ FSubclass(FunctionGame, "GAME", 1, ""); // don't need this
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
 FSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
 FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH3")
+FSubclass(FunctionTrend,"TREND", 3, "TREND")
 FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
+FSubclass(FunctionDelay, "DELAY FIXED", 3, "DELAY")
 FSubclass(FunctionNPV,"NPV",4,"NPV")
+
+FSubclassStart(FunctionDelayN, "DELAY N", 4, "DELAYN")
+public:
+virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+};
+FSubclassStart(FunctionSmoothN, "SMOOTH N", 4, "SMTHN")
+public:
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+};
+
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
