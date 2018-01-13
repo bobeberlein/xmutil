@@ -36,6 +36,7 @@ public :
    virtual void AddEq(Equation *eq) { }
    virtual Equation *GetEquation(int pos) { return NULL ; }
    virtual std::vector<Equation*> GetAllEquations() { return std::vector<Equation*>(); }
+   virtual void SetAllEquations(std::vector<Equation*> set) { assert(false); }
    virtual std::vector<Variable*> GetInputVars() { return std::vector<Variable*>(); }
    virtual bool AddUnits(UnitExpression *un) { return false; }
    virtual UnitExpression* Units() { return NULL; }
@@ -83,6 +84,7 @@ public :
    void AddEq(Equation *eq) { vEquations.push_back(eq) ; }
    virtual Equation *GetEquation(int pos) { return vEquations[pos] ; }
    virtual std::vector<Equation*> GetAllEquations() { return vEquations; }
+   virtual void SetAllEquations(std::vector<Equation*> set) { vEquations=set; }
    virtual std::vector<Variable*> GetInputVars();
    bool AddUnits(UnitExpression *un) { if (!pUnits) { pUnits = un; return true; } return false; }
    UnitExpression* Units() { return pUnits; }

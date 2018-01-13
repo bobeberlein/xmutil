@@ -17,6 +17,7 @@ public:
    LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var,SymbolListList *exceptlist,int interpmode) ;
    LeftHandSide(SymbolNameSpace *sns, const LeftHandSide& base, Variable *newvar); // copy but put new variable in place
    ~LeftHandSide(void) ;
+   ExpressionVariable* GetExpressionVariable() { return pExpressionVariable; }
    Variable *GetVariable(void) {return pExpressionVariable->GetVariable() ; }
    SymbolList *GetSubs() { return pExpressionVariable->GetSubs(); }
 private:

@@ -141,14 +141,15 @@ public :
    virtual double Eval(ContextInfo *info) { return -FLT_MAX ; }
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    virtual void OutputComputable(ContextInfo *info) { *info << " ??? " ; }
-   void AddValue(unsigned row,double num) {if(row+1 > vRow.size()) vRow.resize(row+1) ; vRow[row].push_back(num) ; }
-   int Count(unsigned row) { if(row < vRow.size()) return 0 ; return vRow[row].size() ; }
-   typedef  std::vector<double> ColVals ;
+   void AddValue(unsigned row, double num) { vVals.push_back(num); } // if (row + 1 > vRow.size()) vRow.resize(row + 1); vRow[row].push_back(num); }
+  // int Count(unsigned row) { if(row < vRow.size()) return 0 ; return vRow[row].size() ; }
+   const std::vector<double>& GetVals() const { return vVals; }
+   //typedef  std::vector<double> ColVals ;
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) {}
 private:
-   std::vector<ColVals> vRow ;
+   std::vector<double> vVals;
 } ;
 
 class ExpressionFunction :

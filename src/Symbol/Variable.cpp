@@ -46,13 +46,14 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	if (!pVariableContent)
 		return mVariableType;
 
-	std::vector<Equation*>equations = pVariableContent->GetAllEquations();
+	std::vector<Equation*>&equations = pVariableContent->GetAllEquations();
 
 	if (equations.empty())
 	{
 		// todo data variables have empty equations  - could fill something in here???
 		return mVariableType;
 	}
+
 
 	/* if the equations are INTEG this is a stock and we need to validate flows - if we need to make
 	   up flows it has to be done here so that all the equations get the same net flow name
@@ -62,8 +63,10 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	   */
 	//first pass - just figure out if there is anything to do - 
 	bool gotone = false;
-	BOOST_FOREACH(Equation* eq, equations)
-	{
+	size_t n = equations.size();
+	for (size_t i = 0; i < n; i++)
+	{ 
+		Equation* eq = equations[i];
 		Expression* exp = eq->GetExpression();
 		if (exp->GetType() == EXPTYPE_Symlist)
 		{
@@ -73,6 +76,38 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 			symlist->SetOwner(this); // this can recur
 			mVariableType = XMILE_Type_ARRAY;
 			return mVariableType;
+		}
+		if (exp->GetType() == EXPTYPE_NumberTable)
+		{
+			// need to blow this out to separate equations for allentries - only implemented for the single equation version right now
+			std::vector< std::vector< Symbol*> >elms;
+			std::vector<Symbol*>subs;
+			eq->SubscriptExpand(elms, subs);
+			if (!elms.empty()) // can do something - otherwise just put out ???
+			{
+				ExpressionNumberTable* t = static_cast<ExpressionNumberTable*>(exp);
+				const std::vector<double>& vals = t->GetVals();
+				assert(vals.size() == elms.size());
+				if (vals.size() == elms.size())
+				{
+					equations.erase(equations.begin() + i);
+					size_t n2 = vals.size();
+					for (size_t j = 0; j < n2; j++)
+					{
+						SymbolList* entry = new SymbolList(sns, elms[j][0], SymbolList::EntryType_SYMBOL);
+						for (size_t k = 1; k < elms[j].size(); k++)
+							entry->Append(elms[j][k], false);
+						SymbolListList* entryl = new SymbolListList(sns, entry);
+						LeftHandSide* lhs = new LeftHandSide(sns, eq->GetLeft()->GetExpressionVariable(), entryl, 0);
+						ExpressionNumber* expnum = new ExpressionNumber(sns, vals[j]);
+						Equation* neq = new Equation(sns, lhs, expnum, '=');
+						equations.push_back(neq);
+					}
+					// now reenter with new equations
+					pVariableContent->SetAllEquations(equations);
+					return MarkFlows(sns);
+				}
+			}
 		}
 		if (exp->TestMarkFlows(sns, NULL, NULL))
 		{

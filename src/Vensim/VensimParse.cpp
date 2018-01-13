@@ -124,6 +124,17 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
 }
 Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl, bool legacy)
 {
+	if (!tbl)
+	{
+		// this is an exogenous data entry - treat as a table on time and give the table value 1 at all times if we have that info
+		tbl = new ExpressionTable(this->pSymbolNameSpace);
+		tbl->AddPair(0, 1);
+		tbl->AddPair(1, 1);
+		Variable* var = this->FindVariable("TIME");
+		if(!var)
+			var = new Variable(this->pSymbolNameSpace, "TIME");
+		ex = new ExpressionVariable(this->pSymbolNameSpace, var, NULL);
+	}
 	if (legacy)
 		tbl->TransformLegacy();
 	if (!ex)

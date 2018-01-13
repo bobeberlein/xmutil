@@ -107,6 +107,7 @@ eqn :
    | lhs '(' xytablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3, 1) ; }
    | lhs '=' VPTT_with_lookup '(' exp ',' '(' tablevals ')' ')' { $$ = vpyy_add_lookup($1,$5,$8, 0) ; }
    | lhs VPTT_dataequals exp {$$ = vpyy_addeq($1,$3,'\0',VPTT_dataequals) ; }
+   | lhs { $$ = vpyy_add_lookup($1,'\0','\0', 0) ; } // treat as if a lookup on time - don't have numbers
    | VPTT_symbol ':' subdef maplist {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,'\0'),'\0','\0'),(Expression *)vpyy_symlist_expression($3,$4),'\0',':') ; }
    | lhs '=' VPTT_tabbed_array { $$ = vpyy_addeq($1,$3,'\0','=') ; }
    ;
@@ -188,6 +189,7 @@ maplist :
     { $$ = '\0' ; }
 	| VPTT_map mapsymlist { $$ =  $2 ; }
 	;
+
 
 exprlist :
    exp {$$ = vpyy_chain_exprlist('\0',$1) ;}

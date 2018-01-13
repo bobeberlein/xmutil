@@ -91,6 +91,7 @@ bool Equation::SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::ve
 	orig.clear();
 	for (int i = 0; i < n; i++)
     {
+		cur_elms.clear();
         const SymbolList::SymbolListEntry& sub = (*subs)[i];
 		if (sub.eType == SymbolList::EntryType_SYMBOL) // only valid type
 		{

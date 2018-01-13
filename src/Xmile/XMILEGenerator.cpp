@@ -216,6 +216,21 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			xvar->InsertEndChild(xcomment);
 			xcomment->SetText(comment.c_str());
 		}
+		if (type == XMILE_Type_STOCK)
+		{
+			BOOST_FOREACH(Variable* in, var->Inflows())
+			{
+				tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
+				xvar->InsertEndChild(inflow);
+				inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
+			}
+			BOOST_FOREACH(Variable* out, var->Outflows())
+			{
+				tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
+				xvar->InsertEndChild(outflow);
+				outflow->SetText(SpaceToUnderBar(out->GetAlternateName()).c_str());
+			}
+		}
 
 
 		std::vector<Equation*> eqns = var->GetAllEquations();
@@ -255,29 +270,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 			xelement->InsertEndChild(xeqn);
 			xeqn->SetText(eqn->RHSFormattedXMILE(subs,dims).c_str());
-			if (type == XMILE_Type_STOCK)
-			{
-				assert(!eqn->GetTable());
-				BOOST_FOREACH(Variable* in, var->Inflows())
-				{
-					tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
-					xelement->InsertEndChild(inflow);
-					inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
-				}
-				BOOST_FOREACH(Variable* out, var->Outflows())
-				{
-					tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
-					xelement->InsertEndChild(outflow);
-					outflow->SetText(SpaceToUnderBar(out->GetAlternateName()).c_str());
-				}
-
-
-			}
 			// if it has a lookup we need to store that separately
-
-			if (var->GetAlternateName() == "effect capcity on production")
-				xvar->SetAttribute("name", var->GetAlternateName().c_str());
-
 
 			ExpressionTable* et = eqn->GetTable();
 			if (et)
