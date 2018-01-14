@@ -93,6 +93,7 @@ public :
    virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) { assert(false); }
    SymbolList* SymList() const { return pSymList; }
+   SymbolList* Map() const { return pMap; }
 private:
    SymbolList *pSymList ; // subscript elements - should be deleted by this object
    SymbolList *pMap ; // 
