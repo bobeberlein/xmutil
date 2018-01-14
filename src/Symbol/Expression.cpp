@@ -5,8 +5,8 @@
 #include "Equation.h"
 #include "LeftHandSide.h"
 #include "../Symbol/Parse.h"
-#define YYSTYPE  "C" ParseUnion
-#include "../Vensim/VYacc.tab.h"
+#define YYSTYPE  ParseUnion
+#include "../Vensim/VYacc.tab.hpp"
 
 
 Expression::Expression(SymbolNameSpace *sns)

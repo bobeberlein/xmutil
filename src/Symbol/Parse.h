@@ -12,7 +12,7 @@
 #ifdef __cplusplus
 #define ForwardDeclaration class
 #else
-#define ForwardDeclaration typedef struct  {int i ;}
+#define ForwardDeclaration ` typedef struct  {int i ;}
 #endif
 ForwardDeclaration SymbolList ;
 ForwardDeclaration SymbolListList ;

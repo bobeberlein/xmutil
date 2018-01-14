@@ -1,7 +1,7 @@
 /* 
-d:\tools\bison\bin\win_bison -o $(ProjectDir)src\Vensim\VYacc.tab.c -p vpyy -d $(ProjectDir)src\Vensim\VYacc.y
+d:\tools\bison\bin\win_bison -o $(ProjectDir)src\Vensim\VYacc.tab.cpp -p vpyy -d $(ProjectDir)src\Vensim\VYacc.y
 Converting VYacc.y
-Outputs: VYacc.tab.c VYacc.tab.h 
+Outputs: VYacc.tab.cpp VYacc.tab.h 
 */
 
 %{

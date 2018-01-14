@@ -28,7 +28,7 @@
             './src/Vensim/VensimView.h',
             './src/Vensim/VensimView.cpp',
 #            './src/Vensim/VLex.y',
-            './src/Vensim/VYacc.tab.c',
+            './src/Vensim/VYacc.tab.cpp',
             './src/Vensim/VYacc.tab.h',
             './src/Vensim/VYacc.y',
 

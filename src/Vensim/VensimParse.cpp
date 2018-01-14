@@ -8,13 +8,8 @@
 #include "../Symbol/LeftHandSide.h"
 #include "../Symbol/ExpressionList.h"
 #include <boost/lexical_cast.hpp>
-extern "C" {
-/* VYacc.tab.h is C and - most importantly vpyyparse appears
-  without extern "C" so by prefacing everything we can include
-  it here and not cause link issues */
 #define YYSTYPE VensimParse
-#include "VYacc.tab.h"
-}
+#include "VYacc.tab.hpp"
 #include "../XMUtil.h"
 #include "VensimView.h"
 

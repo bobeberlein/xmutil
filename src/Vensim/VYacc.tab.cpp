@@ -79,7 +79,7 @@ extern void vpyyerror (char const *);
 #define YYSTYPE ParseUnion
 
 /* Line 371 of yacc.c  */
-#line 83 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.tab.c"
+#line 83 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.tab.cpp"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -98,9 +98,9 @@ extern void vpyyerror (char const *);
 #endif
 
 /* In a future release of Bison, this section will be replaced
-   by #include "VYacc.tab.h".  */
-#ifndef YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_H_INCLUDED
-# define YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_H_INCLUDED
+   by #include "VYacc.tab.hpp".  */
+#ifndef YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
+# define YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -170,12 +170,12 @@ int vpyyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_H_INCLUDED  */
+#endif /* !YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 179 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.tab.c"
+#line 179 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.tab.cpp"
 
 #ifdef short
 # undef short
@@ -2108,7 +2108,7 @@ yyreduce:
 
 
 /* Line 1792 of yacc.c  */
-#line 2112 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.tab.c"
+#line 2112 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.tab.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

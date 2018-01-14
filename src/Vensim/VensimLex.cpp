@@ -3,8 +3,8 @@
 #include "VensimLex.h"
 #include "VensimParse.h"
 /* try to avoid the tab.h file as it is C  */
-#define YYSTYPE  "C" ParseUnion
-#include "VYacc.tab.h"
+#define YYSTYPE  ParseUnion
+#include "VYacc.tab.hpp"
 #include "../Symbol/Variable.h"
 #include "../Symbol/Expression.h"
 #include "../XMUtil.h"
