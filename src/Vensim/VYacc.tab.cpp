@@ -1605,13 +1605,13 @@ yyreduce:
   case 8:
 /* Line 1792 of yacc.c  */
 #line 89 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {vpyy_addfulleq((yyvsp[(1) - (3)].eqn),'\0') ; return '~' ;}
+    {vpyy_addfulleq((yyvsp[(1) - (3)].eqn),NULL) ; return '~' ;}
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
 #line 90 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {vpyy_addfulleq((yyvsp[(1) - (3)].eqn),'\0') ; return '|' ;}
+    {vpyy_addfulleq((yyvsp[(1) - (3)].eqn),NULL) ; return '|' ;}
     break;
 
   case 10:
@@ -1635,19 +1635,19 @@ yyreduce:
   case 13:
 /* Line 1792 of yacc.c  */
 #line 105 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),'\0',(yyvsp[(3) - (3)].exl),'=') ; }
+    {(yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),NULL,(yyvsp[(3) - (3)].exl),'=') ; }
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
 #line 106 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.eqn) = vpyy_add_lookup((yyvsp[(1) - (4)].lhs),'\0',(yyvsp[(3) - (4)].tbl), 0) ; }
+    { (yyval.eqn) = vpyy_add_lookup((yyvsp[(1) - (4)].lhs),NULL,(yyvsp[(3) - (4)].tbl), 0) ; }
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
 #line 107 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.eqn) = vpyy_add_lookup((yyvsp[(1) - (4)].lhs),'\0',(yyvsp[(3) - (4)].tbl), 1) ; }
+    { (yyval.eqn) = vpyy_add_lookup((yyvsp[(1) - (4)].lhs),NULL,(yyvsp[(3) - (4)].tbl), 1) ; }
     break;
 
   case 16:
@@ -1659,49 +1659,49 @@ yyreduce:
   case 17:
 /* Line 1792 of yacc.c  */
 #line 109 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),(yyvsp[(3) - (3)].exn),'\0',VPTT_dataequals) ; }
+    {(yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),(yyvsp[(3) - (3)].exn),NULL,VPTT_dataequals) ; }
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
 #line 110 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.eqn) = vpyy_add_lookup((yyvsp[(1) - (1)].lhs),'\0','\0', 0) ; }
+    { (yyval.eqn) = vpyy_add_lookup((yyvsp[(1) - (1)].lhs),NULL,NULL, 0) ; }
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
 #line 111 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[(1) - (4)].sym),'\0'),'\0','\0'),(Expression *)vpyy_symlist_expression((yyvsp[(3) - (4)].sml),(yyvsp[(4) - (4)].sml)),'\0',':') ; }
+    {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[(1) - (4)].sym),NULL),NULL,NULL),(Expression *)vpyy_symlist_expression((yyvsp[(3) - (4)].sml),(yyvsp[(4) - (4)].sml)),NULL,':') ; }
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
 #line 112 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),(yyvsp[(3) - (3)].exn),'\0','=') ; }
+    { (yyval.eqn) = vpyy_addeq((yyvsp[(1) - (3)].lhs),(yyvsp[(3) - (3)].exn),NULL,'=') ; }
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
 #line 117 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (1)].var),'\0','\0') ; }
+    { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (1)].var),NULL,NULL) ; }
     break;
 
   case 22:
 /* Line 1792 of yacc.c  */
 #line 118 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (2)].var),(yyvsp[(2) - (2)].sll),'\0') ;}
+    {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (2)].var),(yyvsp[(2) - (2)].sll),NULL) ;}
     break;
 
   case 23:
 /* Line 1792 of yacc.c  */
 #line 119 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (2)].var),'\0',(yyvsp[(2) - (2)].tok)) ;}
+    {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[(1) - (2)].var),NULL,(yyvsp[(2) - (2)].tok)) ;}
     break;
 
   case 24:
 /* Line 1792 of yacc.c  */
 #line 123 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.var) = vpyy_var_expression((yyvsp[(1) - (1)].sym),'\0');}
+    { (yyval.var) = vpyy_var_expression((yyvsp[(1) - (1)].sym),NULL);}
     break;
 
   case 25:
@@ -1719,43 +1719,43 @@ yyreduce:
   case 27:
 /* Line 1792 of yacc.c  */
 #line 132 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (1)].sym),0,'\0') ; }
+    { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[(1) - (1)].sym),0,NULL) ; }
     break;
 
   case 28:
 /* Line 1792 of yacc.c  */
 #line 133 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (2)].sym),1,'\0') ; }
+    { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[(1) - (2)].sym),1,NULL) ; }
     break;
 
   case 29:
 /* Line 1792 of yacc.c  */
 #line 134 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,'\0') ;}
+    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,NULL) ;}
     break;
 
   case 30:
 /* Line 1792 of yacc.c  */
 #line 135 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (4)].sml),(yyvsp[(3) - (4)].sym),1,'\0') ;}
+    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (4)].sml),(yyvsp[(3) - (4)].sym),1,NULL) ;}
     break;
 
   case 31:
 /* Line 1792 of yacc.c  */
 #line 138 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (1)].sym),0,'\0') ; }
+    { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[(1) - (1)].sym),0,NULL) ; }
     break;
 
   case 32:
 /* Line 1792 of yacc.c  */
 #line 139 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.sml) = vpyy_symlist('\0',(yyvsp[(2) - (5)].sym),0,(yyvsp[(4) - (5)].sym)) ;}
+    {(yyval.sml) = vpyy_symlist(NULL,(yyvsp[(2) - (5)].sym),0,(yyvsp[(4) - (5)].sym)) ;}
     break;
 
   case 33:
 /* Line 1792 of yacc.c  */
 #line 140 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,'\0') ; }
+    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,NULL) ; }
     break;
 
   case 34:
@@ -1863,7 +1863,7 @@ yyreduce:
   case 51:
 /* Line 1792 of yacc.c  */
 #line 176 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sll) = vpyy_chain_sublist('\0',(yyvsp[(2) - (2)].sml)) ; }
+    { (yyval.sll) = vpyy_chain_sublist(NULL,(yyvsp[(2) - (2)].sml)) ; }
     break;
 
   case 52:
@@ -1875,19 +1875,19 @@ yyreduce:
   case 53:
 /* Line 1792 of yacc.c  */
 #line 181 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist('\0',(yyvsp[(1) - (1)].sym),0,'\0') ; }
+    { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[(1) - (1)].sym),0,NULL) ; }
     break;
 
   case 54:
 /* Line 1792 of yacc.c  */
 #line 182 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_mapsymlist('\0', (yyvsp[(2) - (5)].sym), (yyvsp[(4) - (5)].sml)); }
+    { (yyval.sml) = vpyy_mapsymlist(NULL, (yyvsp[(2) - (5)].sym), (yyvsp[(4) - (5)].sml)); }
     break;
 
   case 55:
 /* Line 1792 of yacc.c  */
 #line 183 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,'\0') ;}
+    { (yyval.sml) = vpyy_symlist((yyvsp[(1) - (3)].sml),(yyvsp[(3) - (3)].sym),0,NULL) ;}
     break;
 
   case 56:
@@ -1899,7 +1899,7 @@ yyreduce:
   case 57:
 /* Line 1792 of yacc.c  */
 #line 189 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.sml) = '\0' ; }
+    { (yyval.sml) = NULL ; }
     break;
 
   case 58:
@@ -1911,7 +1911,7 @@ yyreduce:
   case 59:
 /* Line 1792 of yacc.c  */
 #line 195 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    {(yyval.exl) = vpyy_chain_exprlist('\0',(yyvsp[(1) - (1)].exn)) ;}
+    {(yyval.exl) = vpyy_chain_exprlist(NULL,(yyvsp[(1) - (1)].exn)) ;}
     break;
 
   case 60:
@@ -1953,7 +1953,7 @@ yyreduce:
   case 66:
 /* Line 1792 of yacc.c  */
 #line 205 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.exn) = vpyy_operator_expression('(',(yyvsp[(2) - (3)].exn),'\0') ; }
+    { (yyval.exn) = vpyy_operator_expression('(',(yyvsp[(2) - (3)].exn),NULL) ; }
     break;
 
   case 67:
@@ -2025,7 +2025,7 @@ yyreduce:
   case 78:
 /* Line 1792 of yacc.c  */
 #line 217 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.exn) = vpyy_operator_expression(VPTT_not,(yyvsp[(2) - (2)].exn),'\0') ; }
+    { (yyval.exn) = vpyy_operator_expression(VPTT_not,(yyvsp[(2) - (2)].exn),NULL) ; }
     break;
 
   case 79:
@@ -2037,13 +2037,13 @@ yyreduce:
   case 80:
 /* Line 1792 of yacc.c  */
 #line 219 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[(2) - (2)].exn),'\0') ; }
+    { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[(2) - (2)].exn),NULL) ; }
     break;
 
   case 81:
 /* Line 1792 of yacc.c  */
 #line 220 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[(2) - (2)].exn),'\0') ; }
+    { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[(2) - (2)].exn),NULL) ; }
     break;
 
   case 82:
@@ -2085,7 +2085,7 @@ yyreduce:
   case 88:
 /* Line 1792 of yacc.c  */
 #line 239 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.tbl) = vpyy_tablevec('\0',(yyvsp[(1) - (1)].num)) ;}
+    { (yyval.tbl) = vpyy_tablevec(NULL,(yyvsp[(1) - (1)].num)) ;}
     break;
 
   case 89:
@@ -2097,7 +2097,7 @@ yyreduce:
   case 90:
 /* Line 1792 of yacc.c  */
 #line 245 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.tbl) = vpyy_tablepair('\0',(yyvsp[(2) - (5)].num),(yyvsp[(4) - (5)].num)) ;}
+    { (yyval.tbl) = vpyy_tablepair(NULL,(yyvsp[(2) - (5)].num),(yyvsp[(4) - (5)].num)) ;}
     break;
 
   case 91:

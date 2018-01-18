@@ -86,8 +86,8 @@ fulleq :
 	| macroend			  {return '|'; } /* back to regular equations */
 	| eqn '~' unitsrange '~' /* comment follows */{vpyy_addfulleq($1,$3) ; return '~' ; }
 	| eqn '~' unitsrange '|' /* comment skipped */ {vpyy_addfulleq($1,$3) ; return '|' ; }
-	| eqn '~' '~' /* units skipped */{vpyy_addfulleq($1,'\0') ; return '~' ;}
-	| eqn '~' '|' /* units, comment skipped */ {vpyy_addfulleq($1,'\0') ; return '|' ;}
+	| eqn '~' '~' /* units skipped */{vpyy_addfulleq($1,NULL) ; return '~' ;}
+	| eqn '~' '|' /* units, comment skipped */ {vpyy_addfulleq($1,NULL) ; return '|' ;}
 	;
 
 macrostart:
@@ -102,25 +102,25 @@ macroend:
 
 
 eqn : 
-   lhs '=' exprlist {$$ = vpyy_addeq($1,'\0',$3,'=') ; }
-   | lhs '(' tablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3, 0) ; }
-   | lhs '(' xytablevals ')' { $$ = vpyy_add_lookup($1,'\0',$3, 1) ; }
+   lhs '=' exprlist {$$ = vpyy_addeq($1,NULL,$3,'=') ; }
+   | lhs '(' tablevals ')' { $$ = vpyy_add_lookup($1,NULL,$3, 0) ; }
+   | lhs '(' xytablevals ')' { $$ = vpyy_add_lookup($1,NULL,$3, 1) ; }
    | lhs '=' VPTT_with_lookup '(' exp ',' '(' tablevals ')' ')' { $$ = vpyy_add_lookup($1,$5,$8, 0) ; }
-   | lhs VPTT_dataequals exp {$$ = vpyy_addeq($1,$3,'\0',VPTT_dataequals) ; }
-   | lhs { $$ = vpyy_add_lookup($1,'\0','\0', 0) ; } // treat as if a lookup on time - don't have numbers
-   | VPTT_symbol ':' subdef maplist {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,'\0'),'\0','\0'),(Expression *)vpyy_symlist_expression($3,$4),'\0',':') ; }
-   | lhs '=' VPTT_tabbed_array { $$ = vpyy_addeq($1,$3,'\0','=') ; }
+   | lhs VPTT_dataequals exp {$$ = vpyy_addeq($1,$3,NULL,VPTT_dataequals) ; }
+   | lhs { $$ = vpyy_add_lookup($1,NULL,NULL, 0) ; } // treat as if a lookup on time - don't have numbers
+   | VPTT_symbol ':' subdef maplist {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,NULL),NULL,NULL),(Expression *)vpyy_symlist_expression($3,$4),NULL,':') ; }
+   | lhs '=' VPTT_tabbed_array { $$ = vpyy_addeq($1,$3,NULL,'=') ; }
    ;
 
 
 lhs : 
-   var  { $$ = vpyy_addexceptinterp($1,'\0','\0') ; }
-   | var exceptlist  {$$ = vpyy_addexceptinterp($1,$2,'\0') ;}
-   | var interpmode {$$ = vpyy_addexceptinterp($1,'\0',$2) ;}
+   var  { $$ = vpyy_addexceptinterp($1,NULL,NULL) ; }
+   | var exceptlist  {$$ = vpyy_addexceptinterp($1,$2,NULL) ;}
+   | var interpmode {$$ = vpyy_addexceptinterp($1,NULL,$2) ;}
    ;
 
 var : 
-	VPTT_symbol { $$ = vpyy_var_expression($1,'\0');}
+	VPTT_symbol { $$ = vpyy_var_expression($1,NULL);}
 	| VPTT_symbol sublist { $$ = vpyy_var_expression($1,$2) ;}
 	;
 
@@ -129,15 +129,15 @@ sublist :
 	;
 
 symlist :
-	VPTT_symbol { $$ = vpyy_symlist('\0',$1,0,'\0') ; }
-	| VPTT_symbol '!' { $$ = vpyy_symlist('\0',$1,1,'\0') ; }
-	| symlist ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,'\0') ;}
-	| symlist ',' VPTT_symbol '!' { $$ = vpyy_symlist($1,$3,1,'\0') ;}
+	VPTT_symbol { $$ = vpyy_symlist(NULL,$1,0,NULL) ; }
+	| VPTT_symbol '!' { $$ = vpyy_symlist(NULL,$1,1,NULL) ; }
+	| symlist ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,NULL) ;}
+	| symlist ',' VPTT_symbol '!' { $$ = vpyy_symlist($1,$3,1,NULL) ;}
 	;
 subdef :
-	VPTT_symbol { $$ = vpyy_symlist('\0',$1,0,'\0') ; }
-	| '(' VPTT_symbol '-' VPTT_symbol ')' {$$ = vpyy_symlist('\0',$2,0,$4) ;}
-	| subdef ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,'\0') ; }
+	VPTT_symbol { $$ = vpyy_symlist(NULL,$1,0,NULL) ; }
+	| '(' VPTT_symbol '-' VPTT_symbol ')' {$$ = vpyy_symlist(NULL,$2,0,$4) ;}
+	| subdef ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,NULL) ; }
 	| subdef ',' '(' VPTT_symbol '-' VPTT_symbol ')' {$$ = vpyy_symlist($1,$4,0,$6) ; }
 	;
 
@@ -173,26 +173,26 @@ interpmode :
 	;
 
 exceptlist :
-    VPTT_except sublist { $$ = vpyy_chain_sublist('\0',$2) ; }
+    VPTT_except sublist { $$ = vpyy_chain_sublist(NULL,$2) ; }
 	| exceptlist ',' sublist { vpyy_chain_sublist($1,$3) ; $$ = $1 ; }
 	;
 
 mapsymlist :
-	VPTT_symbol { $$ = vpyy_symlist('\0',$1,0,'\0') ; }
-	| '(' VPTT_symbol ':' symlist ')' { $$ = vpyy_mapsymlist('\0', $2, $4); }
-	| mapsymlist ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,'\0') ;}
+	VPTT_symbol { $$ = vpyy_symlist(NULL,$1,0,NULL) ; }
+	| '(' VPTT_symbol ':' symlist ')' { $$ = vpyy_mapsymlist(NULL, $2, $4); }
+	| mapsymlist ',' VPTT_symbol { $$ = vpyy_symlist($1,$3,0,NULL) ;}
 	| mapsymlist ',' '(' VPTT_symbol ':' symlist ')' { $$ = vpyy_mapsymlist($1, $4, $6);}
 	;
 
 
 maplist :
-    { $$ = '\0' ; }
+    { $$ = NULL ; }
 	| VPTT_map mapsymlist { $$ =  $2 ; }
 	;
 
 
 exprlist :
-   exp {$$ = vpyy_chain_exprlist('\0',$1) ;}
+   exp {$$ = vpyy_chain_exprlist(NULL,$1) ;}
    | exprlist ',' exp {$$ = vpyy_chain_exprlist($1,$3) ; }
    ;
     
@@ -202,7 +202,7 @@ exp:
      | var                { $$ = (Expression *)$1 ; } /* ExpressionVariable is subclassed from Expression */
 	 | VPTT_literal       { $$ = vpyy_literal_expression($1) ; } // not part of XMILE - just dumped directly for editing afterward
 	 | var '(' exp ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
-	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,'\0') ; }
+	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,NULL) ; }
      | VPTT_function '(' exprlist ')'   { $$ = vpyy_function_expression($1,$3) ;}
      | exp '+' exp        { $$ = vpyy_operator_expression('+',$1,$3) ; }
      | exp '-' exp        { $$ = vpyy_operator_expression('-',$1,$3) ; }
@@ -214,10 +214,10 @@ exp:
      | exp VPTT_ge exp    { $$ = vpyy_operator_expression(VPTT_ge,$1,$3) ; }
      | exp VPTT_or exp    { $$ = vpyy_operator_expression(VPTT_or,$1,$3) ; }
      | exp VPTT_and exp    { $$ = vpyy_operator_expression(VPTT_and,$1,$3) ; }
-	 | VPTT_not exp		  { $$ = vpyy_operator_expression(VPTT_not,$2,'\0') ; }
+	 | VPTT_not exp		  { $$ = vpyy_operator_expression(VPTT_not,$2,NULL) ; }
      | exp '=' exp    { $$ = vpyy_operator_expression('=',$1,$3) ; }
-     | '-' exp            { $$ = vpyy_operator_expression('-',$2,'\0') ; } /* unary plus - might be used by numbers */
-     | '+' exp            { $$ = vpyy_operator_expression('+',$2,'\0') ; } /* unary plus - might be used by numbers */
+     | '-' exp            { $$ = vpyy_operator_expression('-',$2,NULL) ; } /* unary plus - might be used by numbers */
+     | '+' exp            { $$ = vpyy_operator_expression('+',$2,NULL) ; } /* unary plus - might be used by numbers */
      | exp '^' exp        { $$ = vpyy_operator_expression('^',$1,$3) ; }
      ;
 
@@ -236,13 +236,13 @@ tablevals :
 	;
 
 	xytablevec :
-	number  { $$ = vpyy_tablevec('\0',$1) ;}
+	number  { $$ = vpyy_tablevec(NULL,$1) ;}
 	| xytablevec ',' number   {$$ = vpyy_tablevec($1,$3) ;}
 	;
 
 	
 tablepairs :
-	'(' number ',' number ')' { $$ = vpyy_tablepair('\0',$2,$4) ;}
+	'(' number ',' number ')' { $$ = vpyy_tablepair(NULL,$2,$4) ;}
 	| tablepairs ',' '(' number ',' number ')'  {$$ = vpyy_tablepair($1,$4,$6) ;}
 	;
 

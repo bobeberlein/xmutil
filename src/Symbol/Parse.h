@@ -9,23 +9,18 @@
   as arbitray structure pointers so that all look different to the 
   compiler */
 
-#ifdef __cplusplus
-#define ForwardDeclaration class
-#else
-#define ForwardDeclaration ` typedef struct  {int i ;}
-#endif
-ForwardDeclaration SymbolList ;
-ForwardDeclaration SymbolListList ;
-ForwardDeclaration Expression ;
-ForwardDeclaration ExpressionList ;
-ForwardDeclaration ExpressionTable ;
-ForwardDeclaration Equation ;
-ForwardDeclaration UnitExpression ;
-ForwardDeclaration LeftHandSide ;
-ForwardDeclaration ExpressionVariable ;
-ForwardDeclaration ExpressionSymbolList ;
-ForwardDeclaration Variable ;
-ForwardDeclaration Function ;
+class SymbolList ;
+class SymbolListList ;
+class Expression ;
+class ExpressionList ;
+class ExpressionTable ;
+class Equation ;
+class UnitExpression ;
+class LeftHandSide ;
+class ExpressionVariable ;
+class ExpressionSymbolList ;
+class Variable ;
+class Function ;
 
 typedef union _tag_parse_union {
    // note everything is 3 letters to make the .y files look a little nicer
@@ -46,5 +41,9 @@ typedef union _tag_parse_union {
    double num ;
 
 } ParseUnion ;
+
+#ifndef NULL
+#define NULL 0
+#endif
 
 #endif
