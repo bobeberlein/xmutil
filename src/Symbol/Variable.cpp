@@ -46,7 +46,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	if (!pVariableContent)
 		return mVariableType;
 
-	std::vector<Equation*>&equations = pVariableContent->GetAllEquations();
+	std::vector<Equation*>equations = pVariableContent->GetAllEquations();
 
 	if (equations.empty())
 	{
