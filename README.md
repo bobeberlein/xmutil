@@ -1,29 +1,35 @@
 # Building the XMUtil XMILE utilities on OS X
 
 ## Build third_party
-Open Terminal 
+Open Terminal
 
 ~~~
-cd /third_party
-./all_mac.bash
+cd third_party
+./all_mac.sh
 ~~~
 
-## Generate XCode Project
+## Generate Xcode Project
 
 Open Terminal
 
 ~~~
-./configure.bash --use-xcode
+cd ..
+./configure.sh --use-xcode
 open XMUtil.xcodeproj
 ~~~
 
 ## Build the project
 
-Take the project open it and run it, it will produce a naked executable xmutil (no app bundle)
+Run the Xcode project. It will produce a naked executable `xmutil` (no app bundle). To find where it is located, look in Xcode > Preferences > Locations. Click the arrow to the right of the pathname under Derived Data. This will show the folder in the Finder.
 
-Then to use
+To run the `xmutil` command line app:
 ~~~
 {/path/to/xmutil}/xmutil {mdl-file}
+~~~
+
+To make this command more convenient, add an alias to your `~/.bash_profile`.
+~~~
+alias xmutil='{/path/to/xmutil}/xmutil'
 ~~~
 
 # Building the XMUtil XMILE utilities on Windows
@@ -36,7 +42,7 @@ Use the "VS2017 x64 Native Tools Command Prompt" for all commands. `XMUtil` is b
 
 ## Install MSYS
 
-Download [MSYS](http://www.mingw.org/wiki/MSYS) 
+Download [MSYS](http://www.mingw.org/wiki/MSYS)
 In MinGW Installation Manager make sure you've installed:
     msys-base msys-bash msys-core msys-coreutils
 
@@ -46,7 +52,7 @@ In MinGW Installation Manager make sure you've installed:
 
 Download and extract the latest version of [Boost](http://www.boost.org/users/download/).
 
-Follow the instructions in [Boost Getting Started on Windows](http://www.boost.org/doc/libs/1_64_0/more/getting_started/windows.html).	
+Follow the instructions in [Boost Getting Started on Windows](http://www.boost.org/doc/libs/1_64_0/more/getting_started/windows.html).
 
 ~~~
 cd boost
@@ -90,7 +96,7 @@ tinyxml2.h to /third_party/include
 
 - OR -
 
-From environment.bat run 
+From environment.bat run
 
 ~~~
 third_party/build/tinyxml_win.bash
@@ -111,7 +117,7 @@ environment.bat
 In the msys terminal run
 
 ~~~
-./configure.bash --use-msvs 
+./configure.bash --use-msvs
 ~~~
 
 Open the `XMUtil.vcxproj` project in Visual Studio. The project settings will be upgraded if necessary.
