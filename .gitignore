@@ -22,4 +22,5 @@ DerivedData/
 *.sln
 *.vcxproj
 *.vcxproj.filters
+out/*
 .vs/*

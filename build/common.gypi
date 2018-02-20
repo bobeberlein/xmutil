@@ -72,12 +72,18 @@
                     },
                     'VCLinkerTool': {
                         'AdditionalLibraryDirectories': [
-                            '<(cwd)/third_party/win/lib'
+                            '<(cwd)/third_party/win/lib',
+                            '<(qtdir)/lib'
+
                         ],
                         'SubSystem' : '1',
                     },
                 },
                 'include_dirs': [
+                    '<(qtdir)/include/QtCore', 
+                    '<(qtdir)/include/QtGui',
+                    '<(qtdir)/include', 
+                    '<(qtdir)/include/QtWidgets', 
                     '-L<(cwd)/third_party/include',
                 ],
                 'link_settings': {
@@ -85,6 +91,9 @@
                         '-L<(cwd)/third_party/win/lib',
                     ],
                     'libraries': [
+                        '<(qtdir)/lib/Qt5Core.lib',
+                        '<(qtdir)/lib/Qt5Widgets.lib',
+                        '<(qtdir)/lib/Qt5Gui.lib',
                         '<(cwd)/third_party/win/lib/tinyxml2.lib',
                         '<(cwd)/third_party/win/lib/icudt.lib',
                         '<(cwd)/third_party/win/lib/icuin.lib',
@@ -95,13 +104,13 @@
                 }, 
                 'copies': [{
                     'files': [
-                            '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
-                            '$(SolutionDir)third_party/win/lib/dlls/icuin59.dll',
-                            '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
-                            '$(SolutionDir)third_party/win/lib/dlls/icuio59.dll',
-                            '$(SolutionDir)third_party/win/lib/dlls/icutu59.dll',
-                            '$(SolutionDir)third_party/win/lib/dlls/icuuc59.dll',
-                        ],
+                        '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuin59.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuio59.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icutu59.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuuc59.dll',
+                    ],
                     'destination': '$(SolutionDir)$(CONFIGURATION)',
                 }]
             }],
@@ -135,12 +144,32 @@
                         '-Wno-switch', # FIXME - fix
                         '-Wno-invalid-source-encoding',
                     ],
+                    'OTHER_LDFLAGS': [
+                        '-F<(qtdir)/lib',
+                        '-F/System/Library/Frameworks',
+                        '-L$SDKROOT/usr/lib',
+                        '-L/usr/local/lib',
+                        '-lz',
+                        '-framework CoreFoundation',
+                        '-framework ApplicationServices',
+                        '-framework Cocoa',
+                        '-framework IOKit'
+                    ],
+                    'LD_RUNPATH_SEARCH_PATHS':'<(qtdir)/lib',
                 },
+                'include_dirs': [
+                    '<(qtdir)/lib/QtCore.framework/Headers',
+                    '<(qtdir)/lib/QtWidgets.framework/Headers',
+                    '<(qtdir)/lib/QtGui.framework/Headers'
+                ],
                 'link_settings': {
                     'ldflags': [
                         '-L<(cwd)/third_party/mac/lib',
                     ],
                     'libraries': [
+                        '<(qtdir)/lib/QtCore.framework',
+                        '<(qtdir)/lib/QtWidgets.framework',
+                        '<(qtdir)/lib/QtGui.framework',
                         '<(cwd)/third_party/mac/lib/libboost_filesystem.a',
                         '<(cwd)/third_party/mac/lib/libboost_date_time.a',
                         '<(cwd)/third_party/mac/lib/libboost_chrono.a',
@@ -165,6 +194,9 @@
                     'linux',
                 ],
                 'include_dirs': [
+                    '<(qtdir)/include/QtCore', 
+                    '<(qtdir)/include/QtGui', 
+                    '<(qtdir)/include/QtWidgets',
                     './third_party/include',
                     './third_party/linux/include',
                 ],
@@ -173,6 +205,9 @@
                         '-L./third_party/linux/lib',
                     ],
                     'libraries': [
+                        '<(qtdir)/lib/libQt5Core.so',
+                        '<(qtdir)/lib/libQt5Gui.so',
+                        '<(qtdir)/lib/libQt5Widgets.so',
                         '<(cwd)/third_party/linux/lib/libboost_filesystem.a',
                         '<(cwd)/third_party/linux/lib/libboost_system.a',
                         '<(cwd)/third_party/linux/lib/libboost_chrono.a',

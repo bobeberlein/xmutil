@@ -10,6 +10,9 @@
 #include "Model.h"
 #include "XMUtil.h"
 
+#include "UI/Main_Window.h"
+#include <QApplication>
+
 UCaseMap *GlobalUCaseMap ;
 bool OpenUCaseMap(void)
 {
@@ -86,8 +89,9 @@ void CheckMemoryTrack(int clear) ;
 int main(int argc, char* argv[])
 {
    if(!OpenUCaseMap())
-      return -1 ;
-
+      return -1;
+    
+   int ret = 0;
    Model *m = new Model() ;
    if(ParseVensimModel(argc,argv,m)) {
        
@@ -117,6 +121,17 @@ int main(int argc, char* argv[])
 	   {
 		   std::cout << err << std::endl;
 	   }
+   } else {
+       QApplication app(argc, argv);
+       //QApplication::setWindowIcon(QIcon(":icons/icon.svg"));
+       QApplication::setOrganizationName("XMUtil");
+       QApplication::setOrganizationDomain("github.com/xmutil");
+       QApplication::setApplicationName("MDL to XMILE");
+       
+       Main_Window window;
+       window.show();
+       
+       ret = app.exec();
    }
    delete m ;
    CloseUCaseMap() ;
@@ -129,7 +144,7 @@ int main(int argc, char* argv[])
 
    // if want to look at terminal 
 
-   return 0 ;
+   return ret;
 }
 
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy)

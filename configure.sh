@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 gypfile="${GYPFILE:-XMUtil.gyp}"
 rmout="${rmout:-yes}"
 
-source ./build/environment.bash
+source ./build/environment.sh
 
 quiet=no
 msvs=no
@@ -36,6 +36,8 @@ do
     esac
 done
 
+. ./qt_generate.sh
+
 if [ $xcode = 'yes' ]; then
     generator=xcode
 elif [ $msvs = 'yes' ]; then
@@ -44,7 +46,8 @@ else
     generator=ninja
 fi
 
-GYP_GENERATORS=$generator 
+export GYP_GENERATORS=$generator 
+export GYPDEFS="-Dqtdir=$QTDIR"
 
 "./build/bin/gyp" -Dcwd=`pwd` $GYPDEFS $gypfile --toplevel-dir=`pwd` --depth=0
 result=$?

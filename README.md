@@ -1,5 +1,12 @@
 # Building the XMUtil XMILE utilities on OS X
 
+## Download and install Qt 5.9.3
+You can find this verion here:
+https://download.qt.io/official_releases/qt/5.9/5.9.3/
+
+On OS X install in $HOME\Qt5.9.3 (default install directory)
+On Windows install in C:/Qt/x64/Qt5.9.3 (on Windows you will have to put the Qt DLLs into the build directory to make the UI open)
+
 ## Build third_party
 Open Terminal
 
