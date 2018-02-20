@@ -23,4 +23,5 @@ DerivedData/
 *.vcxproj
 *.vcxproj.filters
 out/*
+**/.DS_Store
 .vs/*
