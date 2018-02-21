@@ -3,6 +3,7 @@
     'target_defaults': {
         'include_dirs': [
             '<(cwd)/third_party/include',
+            '<(cwd)/out/generated',
         ],
         'default_configuration': 'Debug',
         'configurations': {

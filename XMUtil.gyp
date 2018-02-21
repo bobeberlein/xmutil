@@ -36,7 +36,7 @@
             './src/Vensim/VensimView.cpp',
 #            './src/Vensim/VLex.y',
             './src/Vensim/VYacc.tab.cpp',
-            './src/Vensim/VYacc.tab.h',
+            './src/Vensim/VYacc.tab.hpp',
             './src/Vensim/VYacc.y',
 
             './src/Symbol/Variable.h',
