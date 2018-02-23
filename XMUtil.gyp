@@ -10,12 +10,6 @@
         'mac_bundle': 0,
         'sources': [
 
-            './src/UI/Main_Window.h',
-            './src/UI/Main_Window.cpp',
-            './src/UI/resources/main_window.ui',
-            './out/generated/moc_Main_Window.cpp',
-            './out/generated/ui_main_window.h',
-
             './src/XMUtil.h',
             './src/XMUtil.cpp',
             './src/Model.h',

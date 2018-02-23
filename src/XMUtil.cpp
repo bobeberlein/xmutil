@@ -10,9 +10,6 @@
 #include "Model.h"
 #include "XMUtil.h"
 
-#include "UI/Main_Window.h"
-#include <QApplication>
-
 UCaseMap *GlobalUCaseMap ;
 bool OpenUCaseMap(void)
 {
@@ -121,18 +118,7 @@ int main(int argc, char* argv[])
 	   {
 		   std::cout << err << std::endl;
 	   }
-   } else {
-       QApplication app(argc, argv);
-       //QApplication::setWindowIcon(QIcon(":icons/icon.svg"));
-       QApplication::setOrganizationName("XMUtil");
-       QApplication::setOrganizationDomain("github.com/xmutil");
-       QApplication::setApplicationName("MDL to XMILE");
-       
-       Main_Window window;
-       window.show();
-       
-       ret = app.exec();
-   }
+   } 
    delete m ;
    CloseUCaseMap() ;
    //CheckMemoryTrack(1) ;

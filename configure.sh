@@ -36,8 +36,6 @@ do
     esac
 done
 
-. ./qt_generate.sh
-
 if [ $xcode = 'yes' ]; then
     generator=xcode
 elif [ $msvs = 'yes' ]; then
@@ -47,9 +45,8 @@ else
 fi
 
 export GYP_GENERATORS=$generator 
-export GYPDEFS="-Dqtdir=$QTDIR"
 
-"./build/bin/gyp" -Dcwd=`pwd` $GYPDEFS $gypfile --toplevel-dir=`pwd` --depth=0
+"./build/bin/gyp" -Dcwd=`pwd` $gypfile --toplevel-dir=`pwd` --depth=0
 result=$?
 
 if [ $quiet = 'no' ]; then
