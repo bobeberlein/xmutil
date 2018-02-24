@@ -109,6 +109,11 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement* element, std::vector
 	val = _model->GetConstanValue("TIME STEP", 1);
 	dtEle->SetText(StringFromDouble(val).c_str());
 	element->InsertEndChild(dtEle);
+
+	_model->SetUnwanted("INITIAL TIME", "STARTTIME");
+	_model->SetUnwanted("FINAL TIME", "STOPTIME");
+	_model->SetUnwanted("TIME STEP", "DT");
+	_model->SetUnwanted("SAVEPER", "DT");
 }
 
 void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs)
@@ -165,6 +170,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 	std::vector<Variable*> vars = _model->GetVariables(); // all symbols that are variables
 	BOOST_FOREACH(Variable* var, vars)
 	{
+		if (var->Unwanted())
+			continue;
 		XMILE_Type type = var->VariableType();
 		std::string tag;
 		switch (type)

@@ -31,6 +31,7 @@ public:
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 
    double GetConstanValue(const char *var, double defval);
+   void SetUnwanted(const char *var, const char *nametouse);
    std::vector<Variable*> GetVariables();
    void AddView(View* view) { vViews.push_back(view); }
    std::vector<View*>& Views() { return vViews; }

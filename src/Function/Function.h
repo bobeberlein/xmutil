@@ -25,8 +25,8 @@ public:
    virtual double Eval(Expression *ex, ExpressionList *arg, ContextInfo *info) { return 0; } // make this pure virtual if finishing engine is required
    virtual bool CheckComputed(ContextInfo *info,ExpressionList *arg) ;
    virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
-   virtual const char *ComputableName(void) { return "" ; }
-   virtual const char *ComputableNameInit(void) { return "" ; }
+   virtual std::string ComputableName(void) { return "" ; }
+   virtual std::string ComputableNameInit(void) { return "" ; }
    int NumberArgs(void) { return iNumberArgs ; }
 protected :
    int iNumberArgs ;
@@ -57,7 +57,7 @@ public:
 	MacroFunction(SymbolNameSpace *sns, SymbolNameSpace* local, const std::string& name, ExpressionList *margs);
 	~MacroFunction() { delete pSymbolNameSpace; }
 	void AddEq(Equation* equation, UnitExpression* units) { mEquations.push_back(EqUnitPair(equation, units)); }
-	virtual const char *ComputableName(void) { return this->GetName().c_str(); }
+	virtual std::string ComputableName(void);
 private:
 	SymbolNameSpace *pSymbolNameSpace; // local
 	MacroFunction(const MacroFunction& other);
@@ -70,7 +70,7 @@ class name : public Function {\
 public :\
    name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
    ~name(void) {}\
-    const char *ComputableName(void) { return " ?? " ; }\
+    std::string ComputableName(void) { return " ?? " ; }\
     bool AsKeyword(void) { return true ; } \
 } ;
 
@@ -82,7 +82,7 @@ class name : public Function {\
 public :\
    name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
    ~name(void) {}\
-    const char *ComputableName(void) { return cname ; }\
+    std::string ComputableName(void) { return cname ; }\
 private :
 
 #define FSubclass(name,xname,narg,cname) FSubclassStart(name,xname,narg,cname) };
@@ -95,8 +95,8 @@ class name : public FunctionMemoryBase {\
 public :\
    name(SymbolNameSpace *sns) : FunctionMemoryBase(sns,xname,narg,actarg,iniarg) { }\
    ~name(void) {}\
-   const char *ComputableName(void) { return cnamea ; }\
-   const char *ComputableNameInit(void) { return cnamei ; }\
+   std::string ComputableName(void) { return cnamea ; }\
+   std::string ComputableNameInit(void) { return cnamei ; }\
 private :
 
 #define FSubclassMemory(name,xname,narg,actarg,iniarg,cnamea,cnamei) FSubclassMemoryStart(name,xname,narg,actarg,iniarg,cnamea,cnamei) };
@@ -108,7 +108,7 @@ public :\
    name(SymbolNameSpace *sns) : Function(sns,xname,narg) { ; }\
    ~name(void) {}\
    bool IsTimeDependent(void) { return true ; }\
-   const char *ComputableName(void) { return cname ; }\
+   std::string ComputableName(void) { return cname ; }\
 private :
 
 #define FSubclassTime(name,xname,narg,cname) FSubclassTimeStart(name,xname,narg,cname) };
@@ -135,6 +135,7 @@ FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
 FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
 FSubclass(FunctionGame, "GAME", 1, ""); // don't need this 
+FSubclass(FunctionRandom01, "RANDOM 0 1", 0, "UNIFORM(0,1)");
 
 // actually memory but no init - or init - does not matter for translation
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
@@ -187,7 +188,7 @@ class FunctionIfThenElse : public Function
 public:
 	FunctionIfThenElse(SymbolNameSpace *sns) : Function(sns, "IF THEN ELSE", 3) { ; }\
 		~FunctionIfThenElse(void) {}
-	const char *ComputableName(void) { return "IF"; }
+	std::string ComputableName(void) { return "IF"; }
 	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
 private:
 };
@@ -197,7 +198,7 @@ class FunctionLog : public Function
 public:
 	FunctionLog(SymbolNameSpace *sns) : Function(sns, "LOG", 2) { ; }\
 		~FunctionLog(void) {}
-	const char *ComputableName(void) { return "LOG10"; }
+	std::string ComputableName(void) { return "LOG10"; }
 	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
 private:
 };

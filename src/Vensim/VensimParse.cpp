@@ -70,7 +70,8 @@ void VensimParse::ReadyFunctions()
 		new FunctionVectorElmMap(pSymbolNameSpace);
 		new FunctionVectorSortOrder(pSymbolNameSpace);
 		new FunctionGame(pSymbolNameSpace);
-        new FunctionAbs(pSymbolNameSpace);
+		new FunctionRandom01(pSymbolNameSpace);
+		new FunctionAbs(pSymbolNameSpace);
         new FunctionExp(pSymbolNameSpace);
         new FunctionSqrt(pSymbolNameSpace);
         
@@ -492,7 +493,8 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
 }
 Expression *VensimParse::FunctionExpression(Function *func,ExpressionList *eargs) 
 {  
-   if(func->NumberArgs() != eargs->Length()) {
+   if((!eargs && func->NumberArgs() > 0)  
+	   || (eargs && func->NumberArgs() != eargs->Length())) {
       mSyntaxError.str = "Argument count mismatch for "  ;
       mSyntaxError.str.append(func->GetName()) ;
       throw mSyntaxError ;

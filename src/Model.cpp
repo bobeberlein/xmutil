@@ -592,6 +592,18 @@ double Model::GetConstanValue(const char *str, double val)
 	return val;
 }
 
+void Model::SetUnwanted(const char *str, const char *defname)
+{
+	Symbol* s = mSymbolNameSpace.Find(str);
+	if (s && s->isType() == Symtype_Variable)
+	{
+		Variable* v = static_cast<Variable*>(s);
+		v->SetUnwanted(true);
+		v->SetAlternateName(defname);
+	}
+}
+
+
 std::vector<Variable*> Model::GetVariables()
 {
 	std::vector<Variable*> vars;

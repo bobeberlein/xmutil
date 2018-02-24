@@ -21,6 +21,11 @@ MacroFunction::MacroFunction(SymbolNameSpace *sns, SymbolNameSpace* local, const
 {
 }
 
+std::string MacroFunction::ComputableName(void) 
+{
+	return SpaceToUnderBar(this->GetName());
+}
+
 
 bool Function::CheckComputed(ContextInfo *info,ExpressionList *arg) 
 { 

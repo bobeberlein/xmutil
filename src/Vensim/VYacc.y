@@ -1,7 +1,7 @@
 /* 
 d:\tools\bison\bin\win_bison -o $(ProjectDir)src\Vensim\VYacc.tab.cpp -p vpyy -d $(ProjectDir)src\Vensim\VYacc.y
 Converting VYacc.y
-Outputs: VYacc.tab.cpp VYacc.tab.h 
+Outputs: VYacc.tab.cpp VYacc.tab.hpp 
 */
 
 %{
@@ -204,6 +204,7 @@ exp:
 	 | var '(' exp ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
 	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,NULL) ; }
      | VPTT_function '(' exprlist ')'   { $$ = vpyy_function_expression($1,$3) ;}
+     | VPTT_function '(' ')'   { $$ = vpyy_function_expression($1,NULL) ;}
      | exp '+' exp        { $$ = vpyy_operator_expression('+',$1,$3) ; }
      | exp '-' exp        { $$ = vpyy_operator_expression('-',$1,$3) ; }
      | exp '*' exp        { $$ = vpyy_operator_expression('*',$1,$3) ; }

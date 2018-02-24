@@ -116,6 +116,8 @@ public:
    void SetView(View* view) { _view = view; }
 
    void SetComment(const std::string& com) { _comment = com; }
+   bool Unwanted() const { return _unwanted; }
+   void SetUnwanted(bool set) { _unwanted = set; }
    const std::string& Comment() { return _comment; }
    // virtuals passed on to content - need to keep pVariableContent populated before calling
    bool CheckComputed(ContextInfo *info,bool first) {if(pVariableContent)return pVariableContent->CheckComputed(this,info,first) ; return false ; }  
@@ -157,6 +159,7 @@ private :
    XMILE_Type mVariableType;
    int iNelm; // used for subscript owners
    View* _view; // view defined in
+   bool _unwanted;
 } ;
 
 

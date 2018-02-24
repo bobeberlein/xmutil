@@ -230,7 +230,7 @@ public :
    void TransformLegacy();
    std::vector<double>*GetXVals(void) { return &vXVals ; }
    std::vector<double>*GetYVals(void) { return &vYVals ; }
-   virtual void OutputComputable(ContextInfo *info) { *info << "0"; } // unattached table give it a 0 equation - points dealt with separately
+   virtual void OutputComputable(ContextInfo *info) { *info << "0+0"; } // unattached table give it a 0+0 equation - points dealt with separately
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) {}

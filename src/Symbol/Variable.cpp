@@ -17,7 +17,7 @@ Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, n
    pVariableContent = NULL ;
    mVariableType = XMILE_Type_UNKNOWN; // till typed
    iNelm = 0;
-
+   _unwanted = false;
 }
 
 
