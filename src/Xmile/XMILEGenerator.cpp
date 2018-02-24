@@ -347,12 +347,12 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		}
 	}
 	tinyxml2::XMLElement* views = doc->NewElement("views");
-	this->generateViews(views, errs);
+	this->generateViews(views, variables, errs);
 	element->InsertEndChild(views);
 
 }
 
-void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, std::vector<std::string>& errs)
+void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, tinyxml2::XMLElement* xvars, std::vector<std::string>& errs)
 {
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 
@@ -370,10 +370,35 @@ void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, std::vector<st
 	{
 		VensimView* view = static_cast<VensimView*>(gview);
 		// first update geometry - we put views one after another along the y axix - could lay out in pages or something
-		uid_off = view->SetViewStart(x, y, uid_off);
-		y = view->GetViewMaxY(y+40) + 80;
+		uid_off = view->SetViewStart(x, y+20, uid_off);
+		int width = view->GetViewMaxX(100);
+		int height = view->GetViewMaxY(y + 80) - y;
+		// add a surrounding sector to contain this view - call it the view name
+		// 				<group locked="false" x="184" y="154" width="300" height="184" name="Sector 1"/>
+
+		if (views.size() > 1)
+		{
+			std::string name = view->Title();
+			while (_model->GetNameSpace()->Find(name))
+			{
+				name += "1"; // not very original
+			}
+			tinyxml2::XMLElement* xsectorvar = doc->NewElement("group");
+			xvars->InsertEndChild(xsectorvar);
+			xsectorvar->SetAttribute("name", name.c_str());
+			tinyxml2::XMLElement* xsector = doc->NewElement("group");
+			xview->InsertEndChild(xsector);
+			xsector->SetAttribute("name", name.c_str());
+			xsector->SetAttribute("x", StringFromDouble(x - 40).c_str());
+			xsector->SetAttribute("y", StringFromDouble(y).c_str());
+			xsector->SetAttribute("width", StringFromDouble(width + 60).c_str());
+			xsector->SetAttribute("height", StringFromDouble(height + 40).c_str());
+		}
+
+		y += height + 80;
 
 		this->generateView(view, xview, errs);
+
 	}
 }
 
@@ -392,7 +417,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 				VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
 				Variable* var = vele->GetVariable();
 				// skip time altogether - this never shows up under xmil
-				if (!var || StringMatch(vele->GetVariable()->GetName(),"Time"))
+				if (!var || StringMatch(vele->GetVariable()->GetName(),"Time") || var->Unwanted())
 					; // do nothing
 				else if (vele->Ghost())
 				{
@@ -553,8 +578,6 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 						}
 						tinyxml2::XMLElement* xto = doc->NewElement("to");
 						xconnector->InsertEndChild(xto);
-						if ("industrial_capital_output_ratio_multiplier_from_pollution_technology" == SpaceToUnderBar(to->GetVariable()->GetAlternateName()))
-							xto->SetText(SpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
 						xto->SetText(SpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
 					}
 				}
