@@ -434,12 +434,15 @@ char VensimLex::GetNextChar(bool store)
       return 0 ; // nothing to do 
    c = ucContent[iCurPos++] ;
    if(c == '\\') { // check for continuation lines
-      if(iCurPos < iFileLength && ucContent[iCurPos] == '\n' || ucContent[iCurPos] == '\r') {
-         iLineNumber++ ;
-         iLineStart = iCurPos+1 ; // actually the next pos
-         for(iCurPos++;iCurPos < iFileLength;) {
+      if(iCurPos < iFileLength && (ucContent[iCurPos] == '\n' || ucContent[iCurPos] == '\r')) {
+         for(;iCurPos < iFileLength;) {
             c = ucContent[iCurPos++] ;
-            if(c != '\t' && c != ' ' && c != '\r' && c != '\n')
+			if (c == '\n')
+			{
+				iLineNumber++;
+				iLineStart = iCurPos + 1; // actually the next pos
+			}
+			else if(c != '\t' && c != ' ' && c != '\r')
                break ;
             // note as in vensim two \ line ends in a row just cause an error
          }

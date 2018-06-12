@@ -64,6 +64,13 @@ void VensimParse::ReadyFunctions()
 		new FunctionDelay(pSymbolNameSpace);
 		new FunctionDelayN(pSymbolNameSpace);
 		new FunctionSmoothN(pSymbolNameSpace);
+		new FunctionDelayConveyor(pSymbolNameSpace);
+		new FunctionVectorReorder(pSymbolNameSpace);
+		new FunctionRandomNormal(pSymbolNameSpace);
+		new FunctionLookupArea(pSymbolNameSpace);
+		new FunctionGetDataAtTime(pSymbolNameSpace);
+		new FunctionGetDataLastTime(pSymbolNameSpace);
+		new FunctionModulo(pSymbolNameSpace);
 		new FunctionNPV(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);
 		new FunctionVectorSelect(pSymbolNameSpace);
@@ -426,7 +433,11 @@ UnitExpression *VensimParse::UnitsRange(UnitExpression *e,double minval,double m
 
 SymbolListList *VensimParse::ChainSublist(SymbolListList *sll,SymbolList *nsl) 
 { 
-   return sll->Append(nsl) ;
+	if (!sll)
+		sll = new SymbolListList(pSymbolNameSpace, nsl);
+	else
+		sll->Append(nsl);
+	return sll;
 }
 ExpressionList *VensimParse::ChainExpressionList(ExpressionList *el,Expression *e) 
 {

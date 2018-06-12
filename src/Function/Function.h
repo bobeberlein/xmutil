@@ -146,6 +146,16 @@ FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
 FSubclass(FunctionDelay, "DELAY FIXED", 3, "DELAY")
 FSubclass(FunctionNPV,"NPV",4,"NPV")
 
+// done as macros
+FSubclass(FunctionDelayConveyor,"DELAY CONVEYOR", 6, "DELAY_CONVEYOR")
+// - this one is fake - return NaN
+FSubclass(FunctionVectorReorder,"VECTOR REORDER", 2, "VECTOR_REORDER")
+FSubclass(FunctionModulo,"MODULO",2,"MODULO")
+FSubclass(FunctionGetDataAtTime, "GET DATA AT TIME", 2, "GET_DATA_AT_TIME")
+FSubclass(FunctionGetDataLastTime, "GET DATA LAST TIME", 1, "GET_DATA_LAST_TIME")
+FSubclass(FunctionLookupArea, "LOOKUP AREA", 3, "LOOKUP_AREA")
+FSubclass(FunctionRandomNormal, "RANDOM NORMAL", 5, "RANDOM_NORMAL")
+
 FSubclassStart(FunctionDelayN, "DELAY N", 4, "DELAYN")
 public:
 virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
@@ -159,7 +169,6 @@ public:
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
 FSubclassMemory(FunctionInitial, "INITIAL", 1, BOOST_BINARY(0), BOOST_BINARY(1), "no active equation only init", "INITIAL")
-FSubclassMemory(FunctionSampleIfTrue, "SAMPLE IF TRUE", 3, BOOST_BINARY(110), BOOST_BINARY(001), "sample_active", "sample_init")
 
 FSubclassTime(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclass(FunctionLn, "LN", 1, "LN")
@@ -182,6 +191,18 @@ public :
 } ;
 
 */
+
+
+class FunctionSampleIfTrue : public Function
+{
+public:
+	FunctionSampleIfTrue(SymbolNameSpace *sns) : Function(sns, "SAMPLE IF TRUE", 3) {}
+	~FunctionSampleIfTrue(void) {}
+	std::string ComputableName(void) { return "SampleIfTrue"; }
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+private:
+};
+
 
 class FunctionIfThenElse : public Function
 {

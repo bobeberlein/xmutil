@@ -122,6 +122,10 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 	std::vector<Variable*> vars = _model->GetVariables(); // all symbols that are variables
 	BOOST_FOREACH(Variable* var, vars)
 	{
+		if (var->GetName() == "services")
+			int iii = 0;
+
+
 		if (var->VariableType() == XMILE_Type_ARRAY)
 		{
 			// simple minded - defining equation - 
@@ -282,7 +286,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			ExpressionTable* et = eqn->GetTable();
 			if (et)
 			{
-				assert(type == XMILE_Type_AUX);
+				assert(type == XMILE_Type_AUX || type == XMILE_Type_FLOW);
 				std::vector<double>* xvals = et->GetXVals();
 				std::vector<double>* yvals = et->GetYVals();
 				tinyxml2::XMLElement* gf = doc->NewElement("gf");
@@ -421,6 +425,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					; // do nothing
 				else if (vele->Ghost())
 				{
+					assert(vele->GetVariable()->VariableType() != XMILE_Type_ARRAY);
 					tinyxml2::XMLElement* xghost = doc->NewElement("alias");
 					element->InsertEndChild(xghost);
 					xghost->SetAttribute("x", vele->X());

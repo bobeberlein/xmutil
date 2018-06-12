@@ -228,8 +228,8 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 	}
 	double centerx = line1x + delta1 * slope1x;
 	double centery = line1y + delta1 * slope1y;
-	assert(line2x + delta2 * slope2x - centerx < 1e-9);
-	assert(line2y + delta2 * slope2y - centery < 1e-9);
+	assert(line2x + delta2 * slope2x - centerx < 1e-8);
+	assert(line2y + delta2 * slope2y - centery < 1e-8);
 	// arc tan of slope perpeindicular to center start line
 	if (abs(centery - starty) < 1e-6)
 	{

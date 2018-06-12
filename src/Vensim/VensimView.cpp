@@ -23,6 +23,11 @@ VensimVariableElement::VensimVariableElement(VensimView* view, char *curpos, cha
 		_ghost = false;
 	else
 		_ghost = true;
+#ifndef NDEBUG
+	if (name == "P100")
+		curpos = curpos;
+#endif
+
 
 	// try to find the variable
 	_variable = parser->FindVariable(name);
@@ -44,6 +49,11 @@ VensimVariableElement::VensimVariableElement(VensimView* view, Variable* var, in
 	_ghost = var->GetView() != NULL;
 	_variable = var;
 	_variable->SetView(view);
+#ifndef NDEBUG
+	if (var->GetName() == "P100")
+		x = x;
+#endif
+
 }
 
 VensimCommentElement::VensimCommentElement(char *curpos, char *buf, VensimParse* parser)
@@ -334,7 +344,7 @@ void VensimView::CheckLinksIn()
 				std::vector<Variable*>ins = var->GetInputVars();
 				BOOST_FOREACH(Variable* in, ins)
 				{
-					if (!this->FindInArrow(in, uid))
+					if (!this->FindInArrow(in, uid) && in->VariableType() != XMILE_Type_ARRAY && in->VariableType() != XMILE_Type_ARRAY_ELM && in->VariableType() != XMILE_Type_UNKNOWN)
 					{
 						int fromuid = this->FindVariable(in, vele->X(), vele->Y()+ 30);
 						int x = (vElements[fromuid]->X() + vele->X()) / 2;

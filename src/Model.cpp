@@ -519,7 +519,7 @@ void Model::AttachStragglers()
 		View* dump_view = vViews[0];
 		BOOST_FOREACH(Variable* var, vars)
 		{
-			if (!var->GetView())
+			if (!var->GetView() && var->VariableType() != XMILE_Type_ARRAY && var->VariableType() != XMILE_Type_ARRAY_ELM && var->VariableType() != XMILE_Type_UNKNOWN)
 				dump_view->AddVarDefinition(var, 200, 200);
 		}
 	}
