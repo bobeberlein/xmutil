@@ -122,10 +122,6 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 	std::vector<Variable*> vars = _model->GetVariables(); // all symbols that are variables
 	BOOST_FOREACH(Variable* var, vars)
 	{
-		if (var->GetName() == "services")
-			int iii = 0;
-
-
 		if (var->VariableType() == XMILE_Type_ARRAY)
 		{
 			// simple minded - defining equation - 
@@ -146,7 +142,9 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 							Equation::GetSubscriptElements(expanded, elm.u.pSymbol);
 						}
 					}
-					if (!expanded.empty() && expanded[0]->Owner() == var)
+					// we define subranges as if they were arrays themselves - because of the unique namespace in XMILE this
+					// is proper - and it will make any model with partial definitions more or less okay -
+					if (!expanded.empty()/* && expanded[0]->Owner() == var*/)
 					{
 						tinyxml2::XMLElement* xsub = doc->NewElement("dim");
 						xsub->SetAttribute("name", var->GetName().c_str());
@@ -202,6 +200,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		variables->InsertEndChild(xvar);
 		xvar->SetAttribute("name", var->GetAlternateName().c_str());
 
+		std::vector<Equation*> eqns = var->GetAllEquations();
+		int eq_count = eqns.size();
 
 
 		// dimensions
@@ -213,8 +213,11 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			for (int i = 0; i < dim_count; i++)
 			{
 				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
-				// we might get a subrange in elmlist so need to get parent
-				xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
+				// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
+				if (eq_count > 1)
+					xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
+				else
+					xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
 				xdims->InsertEndChild(xdim);
 			}
 			xvar->InsertEndChild(xdims);
@@ -244,8 +247,6 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		}
 
 
-		std::vector<Equation*> eqns = var->GetAllEquations();
-		int eq_count = eqns.size();
 		tinyxml2::XMLElement* xelement = xvar; // usually these are the same - but for non a2a we have element entries
 		int eq_ind = 0;
 		int eq_pos = 0;

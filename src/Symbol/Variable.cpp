@@ -393,13 +393,13 @@ int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
 				   throw "Bad subscript equations";
 		   }
 	   }
-	   // we need to get to the array not the elements for elmlist
+	   // we need to get to the array not the elements for elmlist - not map to parent only if multiple equations
 	   for (int i = 0; i < count; i++)
 	   {
 		   Symbol* sym = elmlist[i];
-		   Symbol* var = sym->Owner();
-		   if (var)
-			   elmlist[i] = var;
+		   //Symbol* var = sym->Owner();
+		   if (sym)
+			   elmlist[i] = sym;
 	   }
 
       return count ;
