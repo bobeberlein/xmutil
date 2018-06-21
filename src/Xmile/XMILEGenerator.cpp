@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "XMILEGenerator.h"
 
 #include "../Model.h"

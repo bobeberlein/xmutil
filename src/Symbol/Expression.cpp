@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Expression.h"
 #include "ExpressionList.h"
 #include "../Model.h"
@@ -174,11 +176,11 @@ bool FlowList::operator == (const FlowList& rhs)
 	if (!bValid || !rhs.bValid || vInflows.size() != rhs.vInflows.size() ||
 		vOutflows.size() != rhs.vOutflows.size())
 		return false;
-	BOOST_FOREACH(Variable* v, rhs.vInflows) {
+	for (const Variable *v: rhs.vInflows) {
 		if (std::find(vInflows.begin(), vInflows.end(), v) == vInflows.end())
 			return false;
 	}
-	BOOST_FOREACH(Variable* v, rhs.vOutflows) {
+	for (const Variable *v: rhs.vOutflows) {
 		if (std::find(vOutflows.begin(), vOutflows.end(), v) == vOutflows.end())
 			return false;
 	}
