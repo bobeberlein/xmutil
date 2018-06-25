@@ -18,3 +18,4 @@ else
     rm -f ./third_party/include/QtWidgets
 	ln -s -f $QTDIR/lib/QtWidgets.framework/Headers ./third_party/include/QtWidgets
 fi
+fi

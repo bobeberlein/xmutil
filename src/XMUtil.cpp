@@ -112,36 +112,12 @@ int main(int argc, char* argv[])
 	   // connections try to put them in the right place
 	   m->AttachStragglers();
 
-
-
 	   boost::filesystem::path p(argv[1]);
 	   p.replace_extension(".xmile");
 
 	   std::vector<std::string> errs;
 	   m->WriteToXMILE(p.string(), errs);
 
-	   BOOST_FOREACH(const std::string& err, errs)
-	   {
-		   std::cout << err << std::endl;
-	   }
-        
-        // mark variable types and potentially convert INTEG equations involving expressions
-        // into flows (a single net flow on the first pass though this)
-        m->MarkVariableTypes();
-        
-        // if there is a view then try to make sure everything is defined in the views
-        // put unknowns in a heap in the first view at 20,20 but for things that have
-        // connections try to put them in the right place
-        m->AttachStragglers();
-        
-        
-        
-        boost::filesystem::path p(argv[1]);
-        p.replace_extension(".xmile");
-        
-        std::vector<std::string> errs;
-        m->WriteToXMILE(p.string(), errs);
-        
         BOOST_FOREACH(const std::string& err, errs)
         {
             std::cout << err << std::endl;
@@ -160,6 +136,7 @@ int main(int argc, char* argv[])
     window.show();
     
     ret = app.exec();
+#endif
     delete m ;
     CloseUCaseMap() ;
    //CheckMemoryTrack(1) ;

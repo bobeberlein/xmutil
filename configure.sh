@@ -57,7 +57,7 @@ fi
 export GYP_GENERATORS=$generator 
 export GYPDEFS="-Dqtdir=$QTDIR -Dwith_ui=$gyp_ui"
 
-"./build/bin/gyp" -Dcwd=`pwd` $gypfile --toplevel-dir=`pwd` --depth=0
+"./build/bin/gyp" -Dcwd=`pwd` $GYPDEFS $gypfile --toplevel-dir=`pwd` --depth=0
 result=$?
 
 
