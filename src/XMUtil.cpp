@@ -10,8 +10,10 @@
 #include "Model.h"
 #include "XMUtil.h"
 
+#ifdef WITH_UI
 #include "UI/Main_Window.h"
 #include <QApplication>
+#endif
 
 UCaseMap *GlobalUCaseMap ;
 bool OpenUCaseMap(void)
@@ -93,46 +95,50 @@ int main(int argc, char* argv[])
     
    int ret = 0;
    Model *m = new Model() ;
-   if(ParseVensimModel(argc,argv,m)) {
-       
-      /*if(m->AnalyzeEquations()) {
+#ifndef WITH_UI
+    if(ParseVensimModel(argc,argv,m)) {
+        
+        /*if(m->AnalyzeEquations()) {
          m->Simulate() ;
          m->OutputComputable(true);
-      }*/
-
-	   // mark variable types and potentially convert INTEG equations involving expressions
-	   // into flows (a single net flow on the first pass though this)
-	   m->MarkVariableTypes();
-
-	   // if there is a view then try to make sure everything is defined in the views
-	   // put unknowns in a heap in the first view at 20,20 but for things that have
-	   // connections try to put them in the right place
-	   m->AttachStragglers();
-
-
-
-	   boost::filesystem::path p(argv[1]);
-	   p.replace_extension(".xmile");
-
-	   std::vector<std::string> errs;
-	   m->WriteToXMILE(p.string(), errs);
-
-	   BOOST_FOREACH(const std::string& err, errs)
-	   {
-		   std::cout << err << std::endl;
-	   }
-   } else {
-       QApplication app(argc, argv);
-       //QApplication::setWindowIcon(QIcon(":icons/icon.svg"));
-       QApplication::setOrganizationName("XMUtil");
-       QApplication::setOrganizationDomain("github.com/xmutil");
-       QApplication::setApplicationName("MDL to XMILE");
-       
-       Main_Window window;
-       window.show();
-       
-       ret = app.exec();
-   }
+         }*/
+        
+        // mark variable types and potentially convert INTEG equations involving expressions
+        // into flows (a single net flow on the first pass though this)
+        m->MarkVariableTypes();
+        
+        // if there is a view then try to make sure everything is defined in the views
+        // put unknowns in a heap in the first view at 20,20 but for things that have
+        // connections try to put them in the right place
+        m->AttachStragglers();
+        
+        
+        
+        boost::filesystem::path p(argv[1]);
+        p.replace_extension(".xmile");
+        
+        std::vector<std::string> errs;
+        m->WriteToXMILE(p.string(), errs);
+        
+        BOOST_FOREACH(const std::string& err, errs)
+        {
+            std::cout << err << std::endl;
+        }
+    } else {
+        ret = 0;
+    }
+#else
+    QApplication app(argc, argv);
+    //QApplication::setWindowIcon(QIcon(":icons/icon.svg"));
+    QApplication::setOrganizationName("XMUtil");
+    QApplication::setOrganizationDomain("github.com/xmutil");
+    QApplication::setApplicationName("MDL to XMILE");
+    
+    Main_Window window;
+    window.show();
+    
+    ret = app.exec();
+#endif
    delete m ;
    CloseUCaseMap() ;
    //CheckMemoryTrack(1) ;
