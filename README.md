@@ -1,5 +1,12 @@
 # Building the XMUtil XMILE utilities on OS X
 
+## Download and install Qt 5.11.0
+You can find this verion here:
+https://download.qt.io/official_releases/qt/5.11/5.11.0/
+
+On OS X install in $HOME\Qt5.11.0 (default install directory)
+On Windows install in C:/Qt/x64/Qt5.11.0 (on Windows you will have to put the Qt DLLs into the build directory to make the UI open)
+
 ## Build third_party
 Open Terminal
 
@@ -14,7 +21,7 @@ Open Terminal
 
 ~~~
 cd ..
-./configure.sh --use-xcode
+./configure.sh --use-xcode --with-ui
 open XMUtil.xcodeproj
 ~~~
 
@@ -117,7 +124,7 @@ environment.bat
 In the msys terminal run
 
 ~~~
-./configure.bash --use-msvs
+./configure.bash --use-msvs --with-ui
 ~~~
 
 Open the `XMUtil.vcxproj` project in Visual Studio. The project settings will be upgraded if necessary.

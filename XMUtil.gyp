@@ -8,8 +8,95 @@
         'type': 'executable',
         'product_name': 'XMUtil',
         'mac_bundle': 0,
-        'sources': [
+        'conditions': [
+            ['with_ui==1', {
+                'sources': [
+                    './src/UI/Main_Window.h',
+                    './src/UI/Main_Window.cpp',
+                    './src/UI/resources/main_window.ui',
+                    './out/generated/moc_Main_Window.cpp',
+                    './out/generated/ui_main_window.h',
+                ],
+                'defines': [ 'WITH_UI' ],
+                'include_dirs': [
+                    '<(cwd)/out/generated',
+                ],
+                'conditions': [
+                    ['OS=="win"', {
+                        'msvs_settings': {
+                            'VCLinkerTool': {
+                                'AdditionalLibraryDirectories': [
+                                    '<(qtdir)/lib'
+                                ],
+                                'SubSystem' : '1',
+                            },
+                        },
+                        'include_dirs': [
+                            '<(qtdir)/include/QtCore', 
+                            '<(qtdir)/include/QtGui',
+                            '<(qtdir)/include', 
+                            '<(qtdir)/include/QtWidgets', 
+                        ],
+                        'link_settings': {
+                            'libraries': [
+                                '<(qtdir)/lib/Qt5Core.lib',
+                                '<(qtdir)/lib/Qt5Widgets.lib',
+                                '<(qtdir)/lib/Qt5Gui.lib',
+                            ]
+                        }
+                    }],
+                    ['OS=="mac"', {
+                        'xcode_settings': {
+                            'OTHER_LDFLAGS': [
+                                '-F<(qtdir)/lib',
+                                '-F/System/Library/Frameworks',
+                                '-L$SDKROOT/usr/lib',
+                                '-L/usr/local/lib',
+                                '-lz',
+                                '-framework CoreFoundation',
+                                '-framework ApplicationServices',
+                                '-framework Cocoa',
+                                '-framework IOKit'
+                            ],
+                            'LD_RUNPATH_SEARCH_PATHS':'<(qtdir)/lib',
+                        },
+                        'include_dirs': [
+                            '<(qtdir)/lib/QtCore.framework/Headers',
+                            '<(qtdir)/lib/QtWidgets.framework/Headers',
+                            '<(qtdir)/lib/QtGui.framework/Headers'
+                        ],
+                        'link_settings': {
+                            'libraries': [
+                                '<(qtdir)/lib/QtCore.framework',
+                                '<(qtdir)/lib/QtWidgets.framework',
+                                '<(qtdir)/lib/QtGui.framework'
+                            ]
+                        }
+                    }],
+                    ['OS=="linux"', {
+                        'defines':[
+                            'linux',
+                        ],
+                        'include_dirs': [
+                            '<(qtdir)/include/QtCore', 
+                            '<(qtdir)/include/QtGui', 
+                            '<(qtdir)/include/QtWidgets'
+                        ],
+                        'link_settings': {
+                            'libraries': [
+                                '<(qtdir)/lib/libQt5Core.so',
+                                '<(qtdir)/lib/libQt5Gui.so',
+                                '<(qtdir)/lib/libQt5Widgets.so',
+                                '-lpthread',
+                                '-ldl',
+                            ],
+                        }
+                    }]
+                ],
 
+            }]
+        ],
+        'sources': [
             './src/XMUtil.h',
             './src/XMUtil.cpp',
             './src/Model.h',

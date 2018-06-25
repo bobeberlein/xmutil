@@ -1,5 +1,8 @@
 #-*- mode: python -*-
 {
+    'variables': {
+        'with_ui%': '0',
+    },
     'target_defaults': {
         'include_dirs': [
             '<(cwd)/third_party/include',
@@ -73,7 +76,6 @@
                     'VCLinkerTool': {
                         'AdditionalLibraryDirectories': [
                             '<(cwd)/third_party/win/lib',
-
                         ],
                         'SubSystem' : '1',
                     },
@@ -137,14 +139,7 @@
                         '-Wno-invalid-source-encoding',
                     ],
                     'OTHER_LDFLAGS': [
-                        '-F/System/Library/Frameworks',
-                        '-L$SDKROOT/usr/lib',
-                        '-L/usr/local/lib',
-                        '-lz',
-                        '-framework CoreFoundation',
-                        '-framework ApplicationServices',
-                        '-framework Cocoa',
-                        '-framework IOKit'
+
                     ],
                 },
                 'link_settings': {
@@ -222,6 +217,5 @@
                 ],
             }]
         ],
-
     },
 }
