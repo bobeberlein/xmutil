@@ -10,6 +10,7 @@
         'mac_bundle': 0,
         'conditions': [
             ['with_ui==1', {
+                'mac_bundle': 1,
                 'sources': [
                     './src/UI/Main_Window.h',
                     './src/UI/Main_Window.cpp',
