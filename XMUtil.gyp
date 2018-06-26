@@ -28,7 +28,7 @@
                                 'AdditionalLibraryDirectories': [
                                     '<(qtdir)/lib'
                                 ],
-                                'SubSystem' : '1',
+                                'SubSystem' : '2',
                             },
                         },
                         'include_dirs': [
@@ -39,6 +39,8 @@
                         ],
                         'link_settings': {
                             'libraries': [
+                                'shell32.lib',
+                                '<(qtdir)/lib/qtmain.lib',
                                 '<(qtdir)/lib/Qt5Core.lib',
                                 '<(qtdir)/lib/Qt5Widgets.lib',
                                 '<(qtdir)/lib/Qt5Gui.lib',
