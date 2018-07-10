@@ -2045,13 +2045,13 @@ yyreduce:
   case 81:
 /* Line 1792 of yacc.c  */
 #line 220 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[(2) - (2)].exn),NULL) ; }
+    { (yyval.exn) = vpyy_operator_expression('-',NULL, (yyvsp[(2) - (2)].exn)) ; }
     break;
 
   case 82:
 /* Line 1792 of yacc.c  */
 #line 221 "C:\\sdev\\xmutil\\src\\Vensim\\VYacc.y"
-    { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[(2) - (2)].exn),NULL) ; }
+    { (yyval.exn) = vpyy_operator_expression('+',NULL, (yyvsp[(2) - (2)].exn)) ; }
     break;
 
   case 83:

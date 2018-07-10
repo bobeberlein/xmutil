@@ -217,8 +217,8 @@ exp:
      | exp VPTT_and exp    { $$ = vpyy_operator_expression(VPTT_and,$1,$3) ; }
 	 | VPTT_not exp		  { $$ = vpyy_operator_expression(VPTT_not,$2,NULL) ; }
      | exp '=' exp    { $$ = vpyy_operator_expression('=',$1,$3) ; }
-     | '-' exp            { $$ = vpyy_operator_expression('-',$2,NULL) ; } /* unary plus - might be used by numbers */
-     | '+' exp            { $$ = vpyy_operator_expression('+',$2,NULL) ; } /* unary plus - might be used by numbers */
+     | '-' exp            { $$ = vpyy_operator_expression('-',NULL, $2) ; } /* unary plus - might be used by numbers */
+     | '+' exp            { $$ = vpyy_operator_expression('+',NULL, $2) ; } /* unary plus - might be used by numbers */
      | exp '^' exp        { $$ = vpyy_operator_expression('^',$1,$3) ; }
      ;
 

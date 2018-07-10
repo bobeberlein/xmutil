@@ -47,6 +47,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionInitial(pSymbolNameSpace);
 		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
+		new FunctionPulseTrain(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
 		new FunctionLog(pSymbolNameSpace);
 		new FunctionZidz(pSymbolNameSpace);
@@ -60,6 +61,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionSmoothI(pSymbolNameSpace);
 		new FunctionSmooth3(pSymbolNameSpace);
 		new FunctionTrend(pSymbolNameSpace);
+		new FunctionDelay1(pSymbolNameSpace);
 		new FunctionDelay3(pSymbolNameSpace);
 		new FunctionDelay(pSymbolNameSpace);
 		new FunctionDelayN(pSymbolNameSpace);
@@ -78,6 +80,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionVectorSortOrder(pSymbolNameSpace);
 		new FunctionGame(pSymbolNameSpace);
 		new FunctionRandom01(pSymbolNameSpace);
+		new FunctionRandomUniform(pSymbolNameSpace);
 		new FunctionAbs(pSymbolNameSpace);
         new FunctionExp(pSymbolNameSpace);
         new FunctionSqrt(pSymbolNameSpace);

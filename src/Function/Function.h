@@ -136,12 +136,14 @@ FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
 FSubclass(FunctionGame, "GAME", 1, ""); // don't need this 
 FSubclass(FunctionRandom01, "RANDOM 0 1", 0, "UNIFORM(0,1)");
+FSubclass(FunctionRandomUniform, "RANDOM UNIFORM", 3, "UNIFORM");
 
 // actually memory but no init - or init - does not matter for translation
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
 FSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
 FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH3")
 FSubclass(FunctionTrend,"TREND", 3, "TREND")
+FSubclass(FunctionDelay1, "DELAY1", 2, "DELAY1")
 FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
 FSubclass(FunctionDelay, "DELAY FIXED", 3, "DELAY")
 FSubclass(FunctionNPV,"NPV",4,"NPV")
@@ -154,7 +156,6 @@ FSubclass(FunctionModulo,"MODULO",2,"MODULO")
 FSubclass(FunctionGetDataAtTime, "GET DATA AT TIME", 2, "GET_DATA_AT_TIME")
 FSubclass(FunctionGetDataLastTime, "GET DATA LAST TIME", 1, "GET_DATA_LAST_TIME")
 FSubclass(FunctionLookupArea, "LOOKUP AREA", 3, "LOOKUP_AREA")
-FSubclass(FunctionRandomNormal, "RANDOM NORMAL", 5, "RANDOM_NORMAL")
 
 FSubclassStart(FunctionDelayN, "DELAY N", 4, "DELAYN")
 public:
@@ -199,6 +200,25 @@ public:
 	FunctionSampleIfTrue(SymbolNameSpace *sns) : Function(sns, "SAMPLE IF TRUE", 3) {}
 	~FunctionSampleIfTrue(void) {}
 	std::string ComputableName(void) { return "SampleIfTrue"; }
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+private:
+};
+
+class FunctionPulseTrain : public Function
+{
+public:
+	FunctionPulseTrain(SymbolNameSpace *sns) : Function(sns, "PULSE TRAIN", 4) {}
+	~FunctionPulseTrain(void) {}
+	std::string ComputableName(void) { return "PulseTrain"; }
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+private:
+};
+class FunctionRandomNormal : public Function
+{
+public:
+	FunctionRandomNormal(SymbolNameSpace *sns) : Function(sns, "RANDOM NORMAL", 5) {}
+	~FunctionRandomNormal(void) {}
+	std::string ComputableName(void) { return "RandomNormal"; }
 	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
 private:
 };

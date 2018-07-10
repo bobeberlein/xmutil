@@ -100,6 +100,47 @@ void FunctionSampleIfTrue::OutputComputable(ContextInfo *info, ExpressionList *a
 	Function::OutputComputable(info, arg);
 }
 
+void FunctionPulseTrain::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 4)
+	{
+		*info << "( IF TIME >= (";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") AND TIME <= (";
+		const_cast<Expression*>((*arg)[3])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") AND (TIME - (";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ")) MOD (";
+		const_cast<Expression*>((*arg)[2])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") < (";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") THEN 1 ELSE 0 )";
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
+void FunctionRandomNormal::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 5)
+	{
+		*info << "NORMAL(";
+		const_cast<Expression*>((*arg)[2])->OutputComputable(info); // OutputComputable should really be const
+		*info << ", ";
+		const_cast<Expression*>((*arg)[3])->OutputComputable(info); // OutputComputable should really be const
+		*info << ", ";
+		const_cast<Expression*>((*arg)[4])->OutputComputable(info); // OutputComputable should really be const
+		*info << ", ";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ", ";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << ")";
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
+
 void FunctionIfThenElse::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
 	if (arg->Length() == 3)
