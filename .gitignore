@@ -6,6 +6,8 @@ ipch/
 *.suo
 *.opensdf
 *.pyc
+installers/out/
+installers/out/*
 third_party/include/
 third_party/include/*
 third_party/mac/*
