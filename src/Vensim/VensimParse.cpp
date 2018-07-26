@@ -114,11 +114,17 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
           int i ;
           for(i=0;i<n;i++) {
              ex = exl->GetExp(i) ;
-             if(ex->GetType() != EXPTYPE_Number) {
+			 if (ex->GetType() == EXPTYPE_Operator && ex->GetArg(0) == NULL && *ex->GetOperator() == '-')
+			 {
+				 // alloe unary minus here
+				 ent->AddValue(0, -ex->GetArg(1)->Eval(NULL)); // note eval does not need context for number
+			 }
+             else if(ex->GetType() != EXPTYPE_Number) {
                 mSyntaxError.str = "Expecting only comma delimited numbers " ;
                 throw mSyntaxError ;
              }
-             ent->AddValue(0,ex->Eval(NULL)) ; // note eval does not need context for number
+			 else 
+	             ent->AddValue(0,ex->Eval(NULL)) ; // note eval does not need context for number
              delete ex ;
           }
           delete exl ;
@@ -430,6 +436,9 @@ UnitExpression *VensimParse::UnitsMult(UnitExpression *f,UnitExpression *s)
 }
 UnitExpression *VensimParse::UnitsRange(UnitExpression *e,double minval,double maxval,double increment) 
 { 
+	if (e == NULL)	{
+		e = VPObject->InsertUnitExpression(VPObject->InsertUnits("1"));
+	}
    e->SetRange(minval,maxval,increment) ;
    return e ;
 }

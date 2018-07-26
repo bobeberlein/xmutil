@@ -145,6 +145,8 @@ unitsrange :
 	units { $$ = $1 ; }
 	| units '[' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange($1,$3,$5,-1) ; }
 	| units '[' urangenum ',' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange($1,$3,$5,$7) ; }
+	| '[' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange(NULL,$2,$4,-1) ; }
+	| '[' urangenum ',' urangenum ',' urangenum ']' { $$ = vpyy_unitsrange(NULL,$2,$4,$6) ; }
 	;
 
 urangenum :
