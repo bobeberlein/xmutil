@@ -97,8 +97,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 						SymbolList* entry = new SymbolList(sns, elms[j][0], SymbolList::EntryType_SYMBOL);
 						for (size_t k = 1; k < elms[j].size(); k++)
 							entry->Append(elms[j][k], false);
-						SymbolListList* entryl = new SymbolListList(sns, entry);
-						LeftHandSide* lhs = new LeftHandSide(sns, eq->GetLeft()->GetExpressionVariable(), entryl, 0);
+						LeftHandSide* lhs = new LeftHandSide(sns, eq->GetLeft()->GetExpressionVariable(), entry, NULL, 0);
 						ExpressionNumber* expnum = new ExpressionNumber(sns, vals[j]);
 						Equation* neq = new Equation(sns, lhs, expnum, '=');
 						equations.push_back(neq);

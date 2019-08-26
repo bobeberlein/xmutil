@@ -14,7 +14,7 @@ class LeftHandSide :
    public SymbolTableBase
 {
 public:
-   LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var,SymbolListList *exceptlist,int interpmode) ;
+   LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var, SymbolList *subs, SymbolListList *exceptlist,int interpmode) ;
    LeftHandSide(SymbolNameSpace *sns, const LeftHandSide& base, Variable *newvar); // copy but put new variable in place
    ~LeftHandSide(void) ;
    ExpressionVariable* GetExpressionVariable() { return pExpressionVariable; }

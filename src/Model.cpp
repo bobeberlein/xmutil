@@ -27,7 +27,7 @@ Equation *Model::AddUnnamedVariable(ExpressionFunctionMemory *e)
    assert(s.empty()) ;
    Variable *var = new Variable(&mSymbolNameSpace,s) ;
    ExpressionVariable *ev = new ExpressionVariable(&mSymbolNameSpace,var,NULL) ;
-   LeftHandSide *lhs = new LeftHandSide(&mSymbolNameSpace,ev,NULL,0) ;
+   LeftHandSide *lhs = new LeftHandSide(&mSymbolNameSpace,ev,NULL, NULL,0) ;
    e2 = new ExpressionFunction(&mSymbolNameSpace,e->GetFunction(),e->GetArgs()) ;
    Equation *eq = new Equation(&mSymbolNameSpace,lhs,e2,'=') ;
    //printf("Adding in a placeholder from function %s\n",e->GetFunction()->GetName().c_str()) ;

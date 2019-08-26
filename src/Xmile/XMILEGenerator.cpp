@@ -563,6 +563,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					if (to->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->To()])->Attached())
 						to = static_cast<VensimVariableElement*>(elements[cele->To() + 1]);
 					if (from && to && from->Type() == VensimViewElement::ElementTypeVARIABLE && to && to->Type() == VensimViewElement::ElementTypeVARIABLE &&
+						to->GetVariable() && 
 						to->GetVariable()->VariableType() != XMILE_Type_STOCK)
 					{
 						tinyxml2::XMLElement* xconnector = doc->NewElement("connector");

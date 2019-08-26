@@ -377,7 +377,7 @@ bool VensimParse::FindNextEq(bool want_comment)
 
 LeftHandSide *VensimParse::AddExceptInterp(ExpressionVariable *var,SymbolListList *except,int interpmode) 
 { 
-   return new LeftHandSide(pSymbolNameSpace,var,except,interpmode) ;
+   return new LeftHandSide(pSymbolNameSpace,var,NULL, except,interpmode) ;
 }
 SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,bool bang,Variable *end) 
 {

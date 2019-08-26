@@ -2,10 +2,16 @@
 #include "../XMUtil.h"
 
 
-LeftHandSide::LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var,SymbolListList *exceptlist,int interpmode)
+LeftHandSide::LeftHandSide(SymbolNameSpace *sns,ExpressionVariable *var, SymbolList *subs, SymbolListList *exceptlist,int interpmode)
    : SymbolTableBase(sns) 
 {
-   pExpressionVariable = var ;
+   if (subs) // replace in var - but make copy of var first - more memory leaks
+   {
+	   pExpressionVariable = new ExpressionVariable(*var);
+	   pExpressionVariable->SetSubs(subs);
+   }
+   else
+	   pExpressionVariable = var;
    pExceptList = exceptlist ;
    iInterpMode = interpmode ;
 }

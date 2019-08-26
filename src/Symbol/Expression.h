@@ -66,6 +66,7 @@ public :
    virtual EXPTYPE GetType(void) { return EXPTYPE_Variable; }
    virtual Variable *GetVariable(void) { return pVariable ; }
    virtual SymbolList *GetSubs() { return pSubList; }
+   void  SetSubs(SymbolList* subs) { pSubList = subs; }
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    bool CheckComputed(ContextInfo *info) { return pVariable->CheckComputed(info,false) ; }
    double Eval(ContextInfo *info) { return pVariable->Eval(info) ; } 
