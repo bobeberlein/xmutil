@@ -37,14 +37,21 @@ void Equation::CheckPlaceholderVars(Model *m)
    pExpression->CheckPlaceholderVars(m,true) ;
 }
 
-std::string Equation::RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims)
+std::string Equation::RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims, bool init)
 {
 	ContextInfo info;
+	if (init)
+		info.SetInitEqn(true);
 
 	assert(subs.size() == dims.size());
 	info.SetLHSElms(&subs, &dims);
 	pExpression->OutputComputable(&info);
 	return info.str();
+}
+
+bool Equation::IsActiveInit()
+{
+	return pExpression->IsActiveInit();
 }
 
 void Equation::GetSubscriptElements(std::vector<Symbol*>& vals, Symbol* s)

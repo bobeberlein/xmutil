@@ -77,6 +77,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionModulo(pSymbolNameSpace);
 		new FunctionNPV(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);
+		new FunctionProd(pSymbolNameSpace);
 		new FunctionTimeBase(pSymbolNameSpace);
 		new FunctionVectorSelect(pSymbolNameSpace);
 		new FunctionVectorElmMap(pSymbolNameSpace);

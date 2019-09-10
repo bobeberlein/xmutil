@@ -50,6 +50,7 @@ public:
    virtual bool CheckComputed(ContextInfo *info) { return true ; }
    virtual void RemoveFunctionArgs(void) {} // only 1 subclass does anything
    virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip - todo modify this to make dumping equations easy - possibly returning std::string
+   virtual bool IsActiveInit() { return false; }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) = 0; // but will also create a flow when the INTEG equation has other stuff
    virtual void GetVarsUsed(std::vector<Variable*>& vars) = 0; // list of variables used
    virtual void MarkType(XMILE_Type type) = 0; // only called with flow after test returns true
@@ -168,6 +169,7 @@ public :
    bool CheckComputed(ContextInfo *info) { return pFunction->CheckComputed(info,pArgs) ; }
    void RemoveFunctionArgs(void) { pArgs = NULL ; }
    virtual void OutputComputable(ContextInfo *info)  { pFunction->OutputComputable(info, pArgs); }
+   virtual bool IsActiveInit() override { return pFunction->IsActiveInit(); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void GetVarsUsed(std::vector<Variable*>& vars); // list of variables used
    virtual void MarkType(XMILE_Type type) {}

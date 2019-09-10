@@ -23,7 +23,8 @@ public:
    void Execute(ContextInfo *info) ;
    void OutputComputable(ContextInfo *info) ;
    void CheckPlaceholderVars(Model *m) ;
-   std::string RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims); // need a_b*c
+   std::string RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims, bool init); // need a_b*c
+   bool IsActiveInit(); // true only for active
 private :
    LeftHandSide *pLeftHandSide ;
    Expression *pExpression ;

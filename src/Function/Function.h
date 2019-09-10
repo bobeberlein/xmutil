@@ -27,6 +27,7 @@ public:
    virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
    virtual std::string ComputableName(void) { return "" ; }
    virtual std::string ComputableNameInit(void) { return "" ; }
+   virtual bool IsActiveInit() { return false; }
    int NumberArgs(void) { return iNumberArgs ; }
 protected :
    int iNumberArgs ;
@@ -133,6 +134,7 @@ FSubclass(FunctionZidz, "ZIDZ", 2, "SAFEDIV")
 FSubclass(FunctionXidz, "XIDZ", 3, "SAFEDIV")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionSum, "SUM", 1, "SUM");
+FSubclass(FunctionProd, "PROD", 1, "PROD");
 FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
 FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
@@ -159,7 +161,9 @@ FSubclass(FunctionGetDataAtTime, "GET DATA AT TIME", 2, "GET_DATA_AT_TIME")
 FSubclass(FunctionGetDataLastTime, "GET DATA LAST TIME", 1, "GET_DATA_LAST_TIME")
 FSubclass(FunctionLookupArea, "LOOKUP AREA", 3, "LOOKUP_AREA")
 FSubclass(FunctionLookupExtrapolate, "LOOKUP EXTRAPOLATE", 2, "LOOKUP_EXTRAPOLATE")
-FSubclass(FunctionTimeBase, "TIME BASE", 2, "TIME_BASE")
+FSubclassStart(FunctionTimeBase, "TIME BASE", 2, "TIME_BASE")
+virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+};
 
 FSubclassStart(FunctionDelayN, "DELAY N", 4, "DELAYN")
 public:
@@ -172,7 +176,9 @@ public:
 
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
-FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
+FSubclassMemoryStart(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
+virtual bool IsActiveInit() override { return true; }
+};
 FSubclass(FunctionInitial, "INITIAL", 1, "INIT")
 FSubclass(FunctionReInitial, "REINITIAL", 1, "INIT")
 

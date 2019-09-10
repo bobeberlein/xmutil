@@ -38,6 +38,24 @@ void Function::OutputComputable(ContextInfo *info,ExpressionList *arg)
     *info << ")" ;
 }
 
+void FunctionTimeBase::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 2)
+	{
+		Expression* exp1 = arg->GetExp(0);
+		exp1->OutputComputable(info);
+		*info << " + (";
+		Expression* exp2 = arg->GetExp(1);
+		exp2->OutputComputable(info);
+		*info << ") * Time";
+	}
+	else
+	{
+		Function::OutputComputable(info, arg);
+	}
+}
+
+
 bool FunctionMemoryBase::CheckComputed(ContextInfo *info,ExpressionList *arg) 
 { 
    if(info->GetComputeType() == CF_initial) 
@@ -55,7 +73,7 @@ void FunctionMemoryBase::OutputComputable(ContextInfo *info,ExpressionList *arg)
 			arg->OutputComputable(info, iInitArgMark);
 			*info << ")";
 		}
-		else if (fname == "INTEG")
+		else if (fname == "INTEG" || info->InitEqn())
 			arg->OutputComputable(info, iInitArgMark);
 		else
 			arg->OutputComputable(info, iActiveArgMark);

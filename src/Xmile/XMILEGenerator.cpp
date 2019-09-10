@@ -309,9 +309,18 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			}
 			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 			xelement->InsertEndChild(xeqn);
-			xeqn->SetText(eqn->RHSFormattedXMILE(subs,dims).c_str());
-			// if it has a lookup we need to store that separately
+			xeqn->SetText(eqn->RHSFormattedXMILE(subs,dims, false).c_str());
 
+
+			// it it is active init we need to store that separately
+			if (eqn->IsActiveInit())
+			{
+				tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
+				xelement->InsertEndChild(xieqn);
+				xieqn->SetText(eqn->RHSFormattedXMILE(subs, dims, true).c_str());
+			}
+
+			// if it has a lookup we need to store that separately
 			ExpressionTable* et = eqn->GetTable();
 			if (et)
 			{
