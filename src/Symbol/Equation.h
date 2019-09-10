@@ -17,7 +17,7 @@ public:
    void GetVarsUsed(std::vector<Variable*>& vars);
    inline Expression *GetExpression(void)  { return pExpression ; }
    ExpressionTable* GetTable(void);
-   int SubscriptCount(std::vector<Symbol *> &elmlist);
+   int SubscriptCount(std::vector<Variable *> &elmlist);
    static void GetSubscriptElements(std::vector<Symbol*>& vals, Symbol* s); // if nested defs
    bool SubscriptExpand(std::vector<std::vector<Symbol*> >& elms, std::vector<Symbol*>& subs); // can be one or many depending on the subs
    void Execute(ContextInfo *info) ;

@@ -45,6 +45,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionInteg(pSymbolNameSpace);
 		new FunctionActiveInitial(pSymbolNameSpace);
 		new FunctionInitial(pSymbolNameSpace);
+		new FunctionReInitial(pSymbolNameSpace);
 		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionPulseTrain(pSymbolNameSpace);
@@ -70,11 +71,13 @@ void VensimParse::ReadyFunctions()
 		new FunctionVectorReorder(pSymbolNameSpace);
 		new FunctionRandomNormal(pSymbolNameSpace);
 		new FunctionLookupArea(pSymbolNameSpace);
+		new FunctionLookupExtrapolate(pSymbolNameSpace);
 		new FunctionGetDataAtTime(pSymbolNameSpace);
 		new FunctionGetDataLastTime(pSymbolNameSpace);
 		new FunctionModulo(pSymbolNameSpace);
 		new FunctionNPV(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);
+		new FunctionTimeBase(pSymbolNameSpace);
 		new FunctionVectorSelect(pSymbolNameSpace);
 		new FunctionVectorElmMap(pSymbolNameSpace);
 		new FunctionVectorSortOrder(pSymbolNameSpace);
@@ -265,6 +268,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
 			   rval = 0;
 	   }
        mfSource.close() ;
+	   _model->SetMacroFunctions(mMacroFunctions);
        return true ; // got something - try to put something out
     }
     else

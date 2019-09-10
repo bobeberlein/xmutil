@@ -161,7 +161,7 @@ void Equation::GetVarsUsed(std::vector<Variable*>& vars)
 	pExpression->GetVarsUsed(vars); 
 }
 
-int Equation::SubscriptCount(std::vector<Symbol *> &elmlist)
+int Equation::SubscriptCount(std::vector<Variable *> &elmlist)
 {
 	if (iEqType == ':') /* a subscript equation */
 		return 0;
@@ -177,7 +177,7 @@ int Equation::SubscriptCount(std::vector<Symbol *> &elmlist)
 	{
 		const SymbolList::SymbolListEntry& sub = (*subs)[i];
 		if (sub.eType == SymbolList::EntryType_SYMBOL) // only valid type
-			elmlist.push_back(sub.u.pSymbol);
+			elmlist.push_back(static_cast<Variable*>(sub.u.pSymbol));
 	}
 	return n;
 }

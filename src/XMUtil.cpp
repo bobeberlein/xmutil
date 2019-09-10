@@ -105,12 +105,19 @@ int main(int argc, char* argv[])
 
 	   // mark variable types and potentially convert INTEG equations involving expressions
 	   // into flows (a single net flow on the first pass though this)
-	   m->MarkVariableTypes();
+	   m->MarkVariableTypes(NULL);
+
+	   BOOST_FOREACH(MacroFunction* mf, m->MacroFunctions())
+	   {
+		   m->MarkVariableTypes(mf->NameSpace());
+	   }
 
 	   // if there is a view then try to make sure everything is defined in the views
 	   // put unknowns in a heap in the first view at 20,20 but for things that have
 	   // connections try to put them in the right place
-	   m->AttachStragglers();
+	   bool want_complete = false; // could pass this as an option - but let the reader handle this stuff
+	   if (want_complete)
+			m->AttachStragglers();
 
 	   boost::filesystem::path p(argv[1]);
 	   p.replace_extension(".xmile");

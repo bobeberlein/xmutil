@@ -54,9 +54,11 @@ public:
 		Equation* equation;
 		UnitExpression* units;
 	};
+	SymbolNameSpace* NameSpace() { return pSymbolNameSpace; }
 	MacroFunction(SymbolNameSpace *sns, SymbolNameSpace* local, const std::string& name, ExpressionList *margs);
 	~MacroFunction() { delete pSymbolNameSpace; }
 	void AddEq(Equation* equation, UnitExpression* units) { mEquations.push_back(EqUnitPair(equation, units)); }
+	ExpressionList* Args() { return mArgs; }
 	virtual std::string ComputableName(void);
 private:
 	SymbolNameSpace *pSymbolNameSpace; // local
@@ -156,6 +158,8 @@ FSubclass(FunctionModulo,"MODULO",2,"MODULO")
 FSubclass(FunctionGetDataAtTime, "GET DATA AT TIME", 2, "GET_DATA_AT_TIME")
 FSubclass(FunctionGetDataLastTime, "GET DATA LAST TIME", 1, "GET_DATA_LAST_TIME")
 FSubclass(FunctionLookupArea, "LOOKUP AREA", 3, "LOOKUP_AREA")
+FSubclass(FunctionLookupExtrapolate, "LOOKUP EXTRAPOLATE", 2, "LOOKUP_EXTRAPOLATE")
+FSubclass(FunctionTimeBase, "TIME BASE", 2, "TIME_BASE")
 
 FSubclassStart(FunctionDelayN, "DELAY N", 4, "DELAYN")
 public:
@@ -169,7 +173,8 @@ public:
 
 FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
 FSubclassMemory(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
-FSubclassMemory(FunctionInitial, "INITIAL", 1, BOOST_BINARY(0), BOOST_BINARY(1), "no active equation only init", "INITIAL")
+FSubclass(FunctionInitial, "INITIAL", 1, "INIT")
+FSubclass(FunctionReInitial, "REINITIAL", 1, "INIT")
 
 FSubclassTime(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclass(FunctionLn, "LN", 1, "LN")

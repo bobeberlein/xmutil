@@ -377,7 +377,7 @@ void  VariableContentVar::SetupState(ContextInfo *info)
 
 }
 
-int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
+int VariableContentVar::SubscriptCount(std::vector<Variable *> &elmlist)
 {
    int count ;
    if(vEquations.empty())
@@ -387,19 +387,19 @@ int VariableContentVar::SubscriptCount(std::vector<Symbol *> &elmlist)
 	   {
 		   for (size_t i = 1; i < vEquations.size(); i++)
 		   {
-			   std::vector<Symbol*> other;
+			   std::vector<Variable*> other;
 			   if (vEquations[0]->SubscriptCount(other) != count)
 				   throw "Bad subscript equations";
 		   }
 	   }
 	   // we need to get to the array not the elements for elmlist - not map to parent only if multiple equations
-	   for (int i = 0; i < count; i++)
-	   {
-		   Symbol* sym = elmlist[i];
-		   //Symbol* var = sym->Owner();
-		   if (sym)
-			   elmlist[i] = sym;
-	   }
+	   //for (int i = 0; i < count; i++)
+	   //{
+		  // Variable* sym = elmlist[i];
+		  // //Symbol* var = sym->Owner();
+		  // if (sym)
+			 //  elmlist[i] = sym;
+	   //}
 
       return count ;
    }

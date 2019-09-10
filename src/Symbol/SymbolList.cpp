@@ -83,40 +83,42 @@ void SymbolList::OutputComputable(ContextInfo *info)
 			Symbol* s = vSymbols[i].u.pSymbol;
 			if (s->Owner() != s)
 			{
-				// if this is a contiguous subrange we can use a:b notation - otherwise can't do it
-				std::vector<Symbol*> elms;
-				Equation::GetSubscriptElements(elms, s);
-				if(elms.size() == 1)
-					*info << SpaceToUnderBar(elms[0]->GetName());
-				else
-				{
-					std::vector<Symbol*> pelms;
-					Symbol* owner = s->Owner();
-					while (owner != owner->Owner())
-						owner = owner->Owner(); // this is a bug elsewhere that does not properly reassign owners
-					Equation::GetSubscriptElements(pelms, owner);
-					int n = elms.size();
-					int m = pelms.size();
-					int i = 0;
-					int j = 0;
-					for (; j < m; j++)
-					{
-						if (pelms[j] == elms[i])
-							break;
-					}
-					for (i = 1; i < n; i++)
-					{
-						j++; // this is next
-						if (j >= m || pelms[j] != elms[i])
-							break;
-					}
-					if (i == n)
-					{
-						*info << SpaceToUnderBar(elms.front()->GetName()) << ":" << SpaceToUnderBar(elms.back()->GetName());
-					}
-					else
-						*info << "*" << SpaceToUnderBar(s->GetName());
-				}
+				*info << "*:" << SpaceToUnderBar(s->GetName()); // new convention for XMILE to allow subrange use
+ 
+				//// if this is a contiguous subrange we can use a:b notation - otherwise can't do it
+				//std::vector<Symbol*> elms;
+				//Equation::GetSubscriptElements(elms, s);
+				//if(elms.size() == 1)
+				//	*info << SpaceToUnderBar(elms[0]->GetName());
+				//else
+				//{
+				//	std::vector<Symbol*> pelms;
+				//	Symbol* owner = s->Owner();
+				//	while (owner != owner->Owner())
+				//		owner = owner->Owner(); // this is a bug elsewhere that does not properly reassign owners
+				//	Equation::GetSubscriptElements(pelms, owner);
+				//	int n = elms.size();
+				//	int m = pelms.size();
+				//	int i = 0;
+				//	int j = 0;
+				//	for (; j < m; j++)
+				//	{
+				//		if (pelms[j] == elms[i])
+				//			break;
+				//	}
+				//	for (i = 1; i < n; i++)
+				//	{
+				//		j++; // this is next
+				//		if (j >= m || pelms[j] != elms[i])
+				//			break;
+				//	}
+				//	if (i == n)
+				//	{
+				//		*info << SpaceToUnderBar(elms.front()->GetName()) << ":" << SpaceToUnderBar(elms.back()->GetName());
+				//	}
+				//	else
+				//		*info << "*" << SpaceToUnderBar(s->GetName());
+				//}
 			}
 			else
 				*info << "*"; // normally this is all 

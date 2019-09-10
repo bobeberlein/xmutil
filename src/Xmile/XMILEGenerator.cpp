@@ -3,6 +3,7 @@
 #include "../Model.h"
 #include "../XMUtil.h"
 #include "../Vensim/VensimView.h"
+#include "../Symbol/ExpressionList.h"
 
 XMILEGenerator::XMILEGenerator(Model* model)
 {
@@ -38,8 +39,35 @@ bool XMILEGenerator::Generate(const std::string& path, std::vector<std::string>&
 	root->InsertEndChild(dimensions);
 
 	tinyxml2::XMLElement* model = doc.NewElement("model");
-	this->generateModel(model, errs);
+	this->generateModel(model, errs, NULL);
 	root->InsertEndChild(model);
+
+	// macros are presented as separate models
+	BOOST_FOREACH(MacroFunction* mf, _model->MacroFunctions())
+	{
+		tinyxml2::XMLElement* macro = doc.NewElement("macro");
+		macro->SetAttribute("name", mf->GetName().c_str());
+
+		// in vensim the equation is always just the name fo the macro
+		tinyxml2::XMLElement* xeqn = doc.NewElement("eqn");
+		macro->InsertEndChild(xeqn);
+		xeqn->SetText(mf->GetName().c_str());
+		// the parms are all of the entries in the macro description
+		ExpressionList * args = mf->Args();
+		int n = args->Length();
+		for(int i = 0;i<n;i++)
+		{ 
+			tinyxml2::XMLElement* xparm = doc.NewElement("parm");
+			macro->InsertEndChild(xparm);
+			Expression* pexp = args->GetExp(i);
+			ContextInfo info;
+			pexp->OutputComputable(&info);
+			xparm->SetText(info.str().c_str());
+		}
+
+		this->generateModel(macro, errs, mf->NameSpace());
+		root->InsertEndChild(macro);
+	}
 
 	tinyxml2::XMLError err = doc.SaveFile(path.c_str());
 	if (err != tinyxml2::XML_SUCCESS)
@@ -163,13 +191,13 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 }
 
 // first pass if flat - we probably want to do this differently when we break up into modules
-void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<std::string>& errs)
+void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns)
 {
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 	tinyxml2::XMLElement* variables = doc->NewElement("variables");
 	element->InsertEndChild(variables);
 
-	std::vector<Variable*> vars = _model->GetVariables(); // all symbols that are variables
+	std::vector<Variable*> vars = _model->GetVariables(ns); // all symbols that are variables
 	BOOST_FOREACH(Variable* var, vars)
 	{
 		if (var->Unwanted())
@@ -205,7 +233,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 
 		// dimensions
-		std::vector<Symbol*> elmlist;
+		std::vector<Variable*> elmlist;
 		int dim_count = var->SubscriptCount(elmlist);
 		if (dim_count)
 		{
@@ -214,7 +242,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			{
 				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
 				// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
-				if (eq_count > 1)
+				if (eq_count > 1  || elmlist[i]->GetAllEquations().empty())
 					xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
 				else
 					xdim->SetAttribute("name", elmlist[i]->GetName().c_str());

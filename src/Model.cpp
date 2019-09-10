@@ -75,7 +75,7 @@ typedef struct {
 bool Model::OrganizeSubscripts(void)
 {
    std::vector<SubInfoWCount>sublist ;
-   std::vector<Symbol *>subelm ;
+   std::vector<Variable *>subelm ;
    SubInfoWCount siwc ;
    try {
       SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable() ;
@@ -398,10 +398,17 @@ bool Model::OutputComputable(bool wantshort)
    return true ;
 }
 
-bool Model::MarkVariableTypes()
+bool Model::MarkVariableTypes(SymbolNameSpace* ns)
 {
 	try {
-		SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();
+		SymbolNameSpace::HashTable *ht;
+		if (ns)
+			ht = ns->GetHashTable();
+		else
+		{
+			ht = mSymbolNameSpace.GetHashTable();
+			ns = &mSymbolNameSpace;
+		}
 		std::vector<Variable*> vars;
 		BOOST_FOREACH(const SymbolNameSpace::iterator it, *ht) {
 			Symbol* sym = SNSitToSymbol(it);
@@ -412,12 +419,12 @@ bool Model::MarkVariableTypes()
 		// 
 		BOOST_FOREACH(Variable* var, vars)
 		{
-			var->MarkFlows(&mSymbolNameSpace); // may change number of entries so can't be in above loop
+			var->MarkFlows(ns); // may change number of entries so can't be in above loop
 		}
 		// don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();
 	}
 	catch (...) {
-		mSymbolNameSpace.DeleteAllUnconfirmedAllocations();
+		ns->DeleteAllUnconfirmedAllocations();
 		return false;
 	}
 
@@ -604,10 +611,14 @@ void Model::SetUnwanted(const char *str, const char *defname)
 }
 
 
-std::vector<Variable*> Model::GetVariables()
+std::vector<Variable*> Model::GetVariables(SymbolNameSpace *ns)
 {
 	std::vector<Variable*> vars;
-	SymbolNameSpace::HashTable* ht = mSymbolNameSpace.GetHashTable();
+	SymbolNameSpace::HashTable* ht;
+	if (ns)
+		ht = ns->GetHashTable();
+	else
+		ht = mSymbolNameSpace.GetHashTable();
 	for (auto it = ht->begin(); it != ht->end(); it++)
 	{
 		Symbol* s = it->second;

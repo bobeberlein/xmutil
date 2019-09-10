@@ -26,15 +26,19 @@ public:
    void GenerateCanonicalNames(void) ;
    void GenerateShortNames(void) ;
    bool OutputComputable(bool wantshort) ;
-   bool MarkVariableTypes();
+   bool MarkVariableTypes(SymbolNameSpace* ns);
    void AttachStragglers(); // try to get diagramatic stuff right
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 
    double GetConstanValue(const char *var, double defval);
    void SetUnwanted(const char *var, const char *nametouse);
-   std::vector<Variable*> GetVariables();
+   std::vector<Variable*> GetVariables(SymbolNameSpace* ns = NULL);
    void AddView(View* view) { vViews.push_back(view); }
    std::vector<View*>& Views() { return vViews; }
+
+   std::vector<MacroFunction*>& MacroFunctions() { return mMacroFunctions; }
+   void SetMacroFunctions(std::vector<MacroFunction*> set) { mMacroFunctions = set; }
+
 
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
@@ -53,7 +57,8 @@ private :
    std::vector<Equation *>vUnchangingComps ;
    std::vector<Equation *>vActiveComps ;
    std::vector<Equation *>vRateComps ; 
-   /* the last could be part of active but it is helpful to split 
+   std::vector<MacroFunction*> mMacroFunctions;
+   /* the last could be part of active but it is helpful to split
       out when creating equations for a computer language */
    int iNLevel ;
    int iNAux ;
