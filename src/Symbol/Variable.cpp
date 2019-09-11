@@ -108,6 +108,25 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 				}
 			}
 		}
+		if (exp->GetType() == EXPTYPE_Function)
+		{
+			Function* function = static_cast<ExpressionFunction*>(exp)->GetFunction();
+			std::string name = function->GetName();
+			if (name == "LOOKUP EXTRAPOLATE")
+			{
+				// if we get a LOOKUP_EXTRAPOLATE then try to mark the associated lookup - assume all will extrapolate
+				std::vector<Variable*> vars;
+				exp->GetVarsUsed(vars);
+				// the first should be a graphical
+				std::vector<Equation*> eqs = vars[0]->GetAllEquations();
+				BOOST_FOREACH(Equation* eq, eqs)
+				{
+					Expression* exp = eq->GetExpression();
+					if (exp->GetType() == EXPTYPE_Table)
+						static_cast<ExpressionTable*>(exp)->SetExtrapolate(true);
+				}
+			}
+		}
 		if (exp->TestMarkFlows(sns, NULL, NULL))
 		{
 			gotone = true;

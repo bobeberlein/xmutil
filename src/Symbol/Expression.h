@@ -222,7 +222,7 @@ class ExpressionTable :
    public Expression
 {
 public :
-   ExpressionTable(SymbolNameSpace *sns) : Expression(sns) { bHasRange=false;}
+	ExpressionTable(SymbolNameSpace *sns) : Expression(sns) { bHasRange = false; bExtrapolate = false; }
    ~ExpressionTable(void) {/* vector destructors only*/ }
    virtual EXPTYPE GetType(void) { return EXPTYPE_Table; }
    virtual ExpressionTable* GetTable(void) { return this; }
@@ -237,12 +237,15 @@ public :
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){} // list of variables used
    virtual void MarkType(XMILE_Type type) {}
+   bool Extrapolate() { return bExtrapolate; }
+   void SetExtrapolate(bool set) { bExtrapolate = set; }
 
 private :
    std::vector<double> vXVals ;
    std::vector<double> vYVals ;
-   bool bHasRange ;
    double dX1,dY1,dX2,dY2 ;
+   bool bHasRange;
+   bool bExtrapolate;
 } ;
 
 

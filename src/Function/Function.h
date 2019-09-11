@@ -160,7 +160,7 @@ FSubclass(FunctionModulo,"MODULO",2,"MODULO")
 FSubclass(FunctionGetDataAtTime, "GET DATA AT TIME", 2, "GET_DATA_AT_TIME")
 FSubclass(FunctionGetDataLastTime, "GET DATA LAST TIME", 1, "GET_DATA_LAST_TIME")
 FSubclass(FunctionLookupArea, "LOOKUP AREA", 3, "LOOKUP_AREA")
-FSubclass(FunctionLookupExtrapolate, "LOOKUP EXTRAPOLATE", 2, "LOOKUP_EXTRAPOLATE")
+FSubclass(FunctionLookupExtrapolate, "LOOKUP EXTRAPOLATE", 2, "LOOKUP") // changes the graphical
 FSubclassStart(FunctionTimeBase, "TIME BASE", 2, "TIME_BASE")
 virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
 };

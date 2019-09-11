@@ -13,6 +13,7 @@ Symbol::Symbol(SymbolNameSpace *sns,const std::string &name)
 {
    sName = name ;
    pOwner = NULL;
+   pSubranges = NULL;
    // insert into the name space sns if it has a name - empty get special treatment
    if(!name.empty())
       sns->Insert(this) ;
@@ -39,6 +40,7 @@ void Symbol::SetOwner(Symbol* var)
 	if (!pOwner || static_cast<Variable*>(pOwner)->Nelm() < static_cast<Variable*>(var)->Nelm())
 	{
 		//if(f)fprintf(f,"  yes\n");
+		var->AddSubrange(this, pOwner);
 		if (pOwner)
 			pOwner->SetOwner(var);
 		pOwner = var;
@@ -51,6 +53,32 @@ void Symbol::SetOwner(Symbol* var)
 	//{
 	//	if(f)fprintf(f,"   skipped\n");
 	//}
+}
+
+void Symbol::AddSubrange(Symbol* sub, Symbol* oldowner)
+{
+	if (oldowner)
+	{
+		std::set<Symbol*>* osr = oldowner->Subranges();
+		if (osr)
+		{
+			if (pSubranges)
+				pSubranges->insert(osr->begin(), osr->end());
+			else
+				pSubranges = osr;
+		}
+	}
+	std::set<Symbol*>* osr = sub->Subranges();
+	if (osr)
+	{
+		if (pSubranges)
+			pSubranges->insert(osr->begin(), osr->end());
+		else
+			pSubranges = osr;
+	}
+	if (pSubranges == NULL)
+		pSubranges = new std::set<Symbol*>();
+	pSubranges->insert(sub);
 }
 
 

@@ -235,21 +235,6 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		// dimensions
 		std::vector<Variable*> elmlist;
 		int dim_count = var->SubscriptCount(elmlist);
-		if (dim_count)
-		{
-			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
-			for (int i = 0; i < dim_count; i++)
-			{
-				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
-				// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
-				if (eq_count > 1  || elmlist[i]->GetAllEquations().empty())
-					xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
-				else
-					xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
-				xdims->InsertEndChild(xdim);
-			}
-			xvar->InsertEndChild(xdims);
-		}
 
 		std::string comment = var->Comment();
 		if (!comment.empty())
@@ -280,12 +265,15 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		int eq_pos = 0;
 		std::vector<Symbol*> subs; // [ship,location]
 		std::vector<std::vector<Symbol*> > elms; // [s1,l1]
+		std::vector<std::set<Symbol *> > entries;
 		std::vector<Symbol*> dims;
 		while (eq_ind < eq_count)
 		{
 			Equation* eqn = eqns[eq_ind];
 			if (eq_count > 1)
 			{
+				if (entries.empty())
+					entries.resize(dim_count);
 				// we will blow up everything to single elements
 				if (elms.empty())
 				{
@@ -293,6 +281,13 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 					elms.clear();
 					eqn->SubscriptExpand(elms, subs);
 					assert(!elms.empty());
+					BOOST_FOREACH(std::vector<Symbol*> elm, elms)
+					{
+						for (int i = 0; i < dim_count; i++)
+						{
+							entries[i].insert(elm[i]);
+						}
+					}
 				}
 				dims = elms[eq_pos];
 				std::string s;
@@ -328,6 +323,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 				std::vector<double>* xvals = et->GetXVals();
 				std::vector<double>* yvals = et->GetYVals();
 				tinyxml2::XMLElement* gf = doc->NewElement("gf");
+				if (et->Extrapolate())
+					gf->SetAttribute("type", "extrapolate");
 				xelement->InsertEndChild(gf);
 				tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
 				gf->InsertEndChild(yscale);
@@ -380,6 +377,63 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			else
 				eq_ind++;
 		}
+
+
+		// use entries to try to figure out the appropriate dimensions
+		if (dim_count)
+		{
+			// Vensim allowed partial definition sets - XMILE uses subranges as separate dimensions so we 
+			// try to find the most compact set of dimensions possible that inlcude all the equations include
+			std::vector<Variable*> dimensions;
+
+			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
+			for (int i = 0; i < dim_count; i++)
+			{
+				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
+				if (entries.empty())
+				{
+					// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
+					if (eq_count > 1 || elmlist[i]->GetAllEquations().empty())
+						xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
+					else
+						xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
+				}
+				else
+				{
+					std::set<Symbol*>& entry = entries[i];
+					Symbol* parent = (*entry.begin())->Owner();
+					Symbol* best = parent;
+					if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
+					{
+						BOOST_FOREACH(Symbol* subrange, *parent->Subranges())
+						{
+							if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
+								static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
+							{
+								// does it have them all
+								bool complete = true;
+								std::vector<Symbol*> telms;
+								Equation::GetSubscriptElements(telms, subrange);
+								BOOST_FOREACH(Symbol* elm, entries[i])
+								{
+									if (std::find(telms.begin(), telms.end(), elm) == telms.end())
+									{
+										complete = false;
+										break;
+									}
+								}
+								if (complete)
+									best = subrange;
+							}
+						}
+					}
+					xdim->SetAttribute("name", best->GetName().c_str());
+				}
+				xdims->InsertEndChild(xdim);
+			}
+			xvar->InsertEndChild(xdims);
+		}
+
 		UnitExpression* un = var->Units();
 		if (un)
 		{

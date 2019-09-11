@@ -37,10 +37,13 @@ public :
    const std::string &GetName(void) ;
    inline void SetName(const std::string &name) { sName = name ; }
    void SetOwner(Symbol* var);
+   void AddSubrange(Symbol* sub, Symbol* oldowner);
+   std::set<Symbol*>* Subranges() { return pSubranges; }
    Symbol* Owner() { return pOwner?pOwner:this; }
 private :
    std::string sName ;
    Symbol* pOwner;
+   std::set<Symbol*>* pSubranges; // backward from SetOwber
 };
 
 
