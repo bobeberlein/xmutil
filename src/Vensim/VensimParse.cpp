@@ -268,6 +268,51 @@ bool VensimParse::ProcessFile(const std::string &filename)
 		   else
 			   rval = 0;
 	   }
+	   // there may be options at the end
+	   if (strncmp(buf, "///---\\\\\\", 9) == 0)
+	   {
+		   while (this->mVensimLex.ReadLine(buf, BUFLEN)) // looking for settings maker
+		   {
+			   if (strncmp(buf, ":L\177<%^E!@", 9) == 0)
+			   {
+				   while (this->mVensimLex.ReadLine(buf, BUFLEN))
+				   {
+					   int type;
+					   char *curpos = GetIntChar(buf, type, ':');
+					   if (type == 15) // fourth entry is integration type
+					   {
+						   int im;
+						   for (int i = 0; i < 4; i++)
+							   curpos = GetInt(curpos, im);
+						   Integration_Type it = Integration_Type_EULER;
+						   switch (im)
+						   {
+						   case 0:
+						   case 2:
+						   default:
+							   it = Integration_Type_EULER;
+							   break;
+						   case 1:
+						   case 5:
+							   it = Integration_Type_RK4;
+							   break;
+						   case 3:
+						   case 4:
+							   it = Integration_Type_RK2;
+							   break;
+						   }
+						   _model->SetIntegrationType(it);
+					   }
+					   else if (type == 22) // units equialences
+					   {
+						   _model->UnitEquivs().push_back(curpos);
+					   }
+
+				   }
+				   break;
+			   }
+		   }
+	   }
        mfSource.close() ;
 	   _model->SetMacroFunctions(mMacroFunctions);
        return true ; // got something - try to put something out
@@ -276,6 +321,20 @@ bool VensimParse::ProcessFile(const std::string &filename)
        return false ;
 }
 
+char *VensimParse::GetIntChar(char *s, int& val, char c)
+{
+	char* tv;
+	for (tv = s; *tv; tv++)
+	{
+		if (*tv == c)
+		{
+			*tv++ = NULL;
+			break;
+		}
+	}
+	val = atoi(s);
+	return tv;
+}
 char *VensimParse::GetInt(char *s, int& val)
 {
 	char* tv;

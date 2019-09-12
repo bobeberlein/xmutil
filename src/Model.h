@@ -3,6 +3,8 @@
 #include "Symbol/Variable.h"
 #include "Symbol/Expression.h"
 #include <vector>
+
+enum Integration_Type { Integration_Type_EULER, Integration_Type_RK2, Integration_Type_RK4 };
 class View
 {
 public:
@@ -31,6 +33,8 @@ public:
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 
    double GetConstanValue(const char *var, double defval);
+   UnitExpression* GetUnits(const char *var);
+   std::vector<std::string>& UnitEquivs() { return vUnitEquivs; }
    void SetUnwanted(const char *var, const char *nametouse);
    std::vector<Variable*> GetVariables(SymbolNameSpace* ns = NULL);
    void AddView(View* view) { vViews.push_back(view); }
@@ -38,6 +42,8 @@ public:
 
    std::vector<MacroFunction*>& MacroFunctions() { return mMacroFunctions; }
    void SetMacroFunctions(std::vector<MacroFunction*> set) { mMacroFunctions = set; }
+   void SetIntegrationType(Integration_Type type) { iIntegrationType = type; }
+   Integration_Type IntegrationType() { return iIntegrationType; }
 
 
 private :
@@ -58,10 +64,12 @@ private :
    std::vector<Equation *>vActiveComps ;
    std::vector<Equation *>vRateComps ; 
    std::vector<MacroFunction*> mMacroFunctions;
+   std::vector<std::string> vUnitEquivs;
    /* the last could be part of active but it is helpful to split
       out when creating equations for a computer language */
    int iNLevel ;
    int iNAux ;
+   Integration_Type iIntegrationType;
    double *dLevel ;
    double *dRate ;
    double *dAux ;

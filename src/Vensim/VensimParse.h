@@ -61,6 +61,7 @@ public:
 
    VensimLex& Lexer() { return mVensimLex; }
    char *GetInt(char *buf, int& val);
+   char *GetIntChar(char *buf, int& val, char c);
    char *GetString(char* buf, std::string& s);
 
 private :

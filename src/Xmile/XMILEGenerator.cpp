@@ -34,6 +34,11 @@ bool XMILEGenerator::Generate(const std::string& path, std::vector<std::string>&
 	this->generateSimSpecs(specs, errs);
 	root->InsertEndChild(specs);
 
+	tinyxml2::XMLElement* model_units = doc.NewElement("model_units");
+	this->generateModelUnits(model_units, errs);
+	root->InsertEndChild(model_units);
+
+
 	tinyxml2::XMLElement* dimensions = doc.NewElement("dimensions");
 	this->generateDimensions(dimensions, errs);
 	root->InsertEndChild(dimensions);
@@ -115,34 +120,138 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement* element, std::vector
 
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 
-	SymbolNameSpace* nameSpace = _model->GetNameSpace();
-	Variable* time = static_cast<Variable *>(nameSpace->Find("Time"));
+	if (_model->IntegrationType() == Integration_Type_RK4)
+		element->SetAttribute("method", "RK4"); 
+	else if (_model->IntegrationType() == Integration_Type_RK2)
+		element->SetAttribute("method", "RK2"); 
+	else
+		element->SetAttribute("method", "Euler"); 
 
-	element->SetAttribute("isee:simulation_delay", "0");
-	element->SetAttribute("method", "Euler"); //TODO -- FIXME!!!!
-	element->SetAttribute("time_units", "Months"); //TODO -- FIXME!!! how do I access the units of the Time Variable??
+	UnitExpression *uexpr = _model->GetUnits("TIME STEP");
+	if (!uexpr)
+		uexpr = _model->GetUnits("FINAL TIME");
+	if (!uexpr)
+		uexpr = _model->GetUnits("INITIAL TIME");
+	if (uexpr)
+		element->SetAttribute("time_units", uexpr->GetEquationString().c_str());
+	else
+		element->SetAttribute("time_units", "Months"); 
+
+	double start = _model->GetConstanValue("INITIAL TIME", -1); // default to 0 if INITIAL TIME is missing or an equation
+	double stop = _model->GetConstanValue("FINAL TIME", 100);
+	double dt = _model->GetConstanValue("TIME STEP", 1);
+	double saveper = _model->GetConstanValue("SAVEPER", dt);
+	double speed = _model->GetConstanValue("SIMULATION PAUSE", 0);
+
+	if (start == -1)
+	{
+		if (stop > 200) // this happens to work for national model - but hey
+			start = stop - 200;
+		else
+			start = 0;
+	}
+	if (stop <= start)
+		stop = start + 10 * dt;
+
+	if (speed > 0)
+	{
+		double duration = (stop - start) / saveper * speed;
+		char dur[32];
+		sprintf(dur, "%g", duration);
+		element->SetAttribute("isee:sim_duration", dur);
+	}
+	else
+		element->SetAttribute("isee:sim_duration", "0");
 
 	tinyxml2::XMLElement* startEle = doc->NewElement("start");
-	double val = _model->GetConstanValue("INITIAL TIME", 0); // default to 0 if INITIAL TIME is missing or an equation
-	startEle->SetText(StringFromDouble(val).c_str());
+	startEle->SetText(StringFromDouble(start).c_str());
 	element->InsertEndChild(startEle);
 
 
 	tinyxml2::XMLElement* stopEle = doc->NewElement("stop");
-	val = _model->GetConstanValue("FINAL TIME", 100); 
-	stopEle->SetText(StringFromDouble(val).c_str());
+	stopEle->SetText(StringFromDouble(stop).c_str());
 	element->InsertEndChild(stopEle);
 
 	tinyxml2::XMLElement* dtEle = doc->NewElement("dt");
-	val = _model->GetConstanValue("TIME STEP", 1);
-	dtEle->SetText(StringFromDouble(val).c_str());
+	dtEle->SetText(StringFromDouble(dt).c_str());
 	element->InsertEndChild(dtEle);
+
+	if (saveper > dt)
+	{
+		tinyxml2::XMLElement* spE = doc->NewElement("isee:save_interval");
+		spE->SetText(StringFromDouble(saveper).c_str());
+		element->InsertEndChild(spE);
+	}
 
 	_model->SetUnwanted("INITIAL TIME", "STARTTIME");
 	_model->SetUnwanted("FINAL TIME", "STOPTIME");
 	_model->SetUnwanted("TIME STEP", "DT");
 	_model->SetUnwanted("SAVEPER", "DT");
 }
+
+void XMILEGenerator::generateModelUnits(tinyxml2::XMLElement* element, std::vector<std::string>& errs)
+{
+	/*
+		<model_units>
+		<unit name="Dollar">
+      <eqn>$</eqn>/>
+			<alias>Dollars</alias>
+			<alias>$s</alias>
+    </unit>
+	</model_units>
+
+	*/
+
+	tinyxml2::XMLDocument* doc = element->GetDocument();
+
+	std::vector<std::string>& equivs = _model->UnitEquivs();
+
+	BOOST_FOREACH(std::string& equiv, equivs)
+	{
+		std::string name;
+		std::string eqn;
+		std::vector<std::string> aliases;
+		const char *cur = equiv.c_str();
+		while (*cur)
+		{
+			const char *tv = cur;
+			while (true)
+			{
+				if (*tv == ',' || !*tv)
+				{
+					std::string cur_e(cur, tv - cur);
+					if (cur_e == "$")
+						eqn = cur_e;
+					else if (name.empty())
+						name = cur_e;
+					else
+						aliases.push_back(cur_e);
+					if (*tv)
+						tv++;
+					break;
+				}
+				tv++;
+			}
+			cur = tv;
+		}
+		tinyxml2::XMLElement* xunit = doc->NewElement("unit");
+		xunit->SetAttribute("name", name.c_str());
+		if (!eqn.empty())
+		{
+			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
+			xeqn->SetText(eqn.c_str());
+			xunit->InsertEndChild(xeqn);
+		}
+		BOOST_FOREACH(std::string& alias, aliases)
+		{
+			tinyxml2::XMLElement* xalias = doc->NewElement("alias");
+			xalias->SetText(alias.c_str());
+			xunit->InsertEndChild(xalias);
+		}
+		element->InsertEndChild(xunit);
+	}
+}
+
 
 void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs)
 {

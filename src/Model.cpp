@@ -12,6 +12,7 @@
 Model::Model(void)
 {
    dLevel = dRate = dAux = NULL ;
+   iIntegrationType = Integration_Type_EULER;
 }
 
 
@@ -597,6 +598,17 @@ double Model::GetConstanValue(const char *str, double val)
 		}
 	}
 	return val;
+}
+
+UnitExpression* Model::GetUnits(const char *str)
+{
+	Symbol* s = mSymbolNameSpace.Find(str);
+	if (s && s->isType() == Symtype_Variable)
+	{
+		Variable* v = static_cast<Variable*>(s);
+		return v->Units();
+	}
+	return NULL;
 }
 
 void Model::SetUnwanted(const char *str, const char *defname)
