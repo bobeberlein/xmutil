@@ -33,9 +33,13 @@ bool Function::CheckComputed(ContextInfo *info,ExpressionList *arg)
 }
 void Function::OutputComputable(ContextInfo *info,ExpressionList *arg) 
 { 
-   *info << ComputableName() << "(" ;
-    arg->OutputComputable(info,0xffffffff) ;
-    *info << ")" ;
+	*info << ComputableName();
+	if (arg)
+	{
+		*info << "(";
+		arg->OutputComputable(info, 0xffffffff);
+		*info << ")";
+	}
 }
 
 void FunctionTimeBase::OutputComputable(ContextInfo *info, ExpressionList *arg)
