@@ -162,6 +162,28 @@ void FunctionRandomNormal::OutputComputable(ContextInfo *info, ExpressionList *a
 	Function::OutputComputable(info, arg);
 }
 
+void FunctionRandomPoisson::OutputComputable(ContextInfo *info, ExpressionList *arg)
+{
+	if (arg->Length() == 6)
+	{
+		*info << "POISSON((";
+		const_cast<Expression*>((*arg)[2])->OutputComputable(info); // OutputComputable should really be const
+		*info << ")/DT, ";
+		const_cast<Expression*>((*arg)[5])->OutputComputable(info); // OutputComputable should really be const
+		*info << ", ";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ", ";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") * ";
+		const_cast<Expression*>((*arg)[4])->OutputComputable(info); // OutputComputable should really be const
+		*info << " + ";
+		const_cast<Expression*>((*arg)[3])->OutputComputable(info); // OutputComputable should really be const
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
+
 
 void FunctionIfThenElse::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {

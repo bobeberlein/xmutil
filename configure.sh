@@ -13,7 +13,7 @@ gyp_ui=0
 
 usage() {
     cat <<EOF
-usage: $0 [--use-xcode] [--use-msvs] [-q] [-with-ui]
+usage: $0 [--use-xcode] [--use-msvs] [-q] [--with-ui]
 
 This bootstraps the gyp build system.
 EOF

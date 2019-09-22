@@ -191,6 +191,7 @@ FSubclassKeyword(FunctionTabbedArray, "TABBED ARRAY", 1)
 
 // functions that will never translate - but easier to catch error on other side
 FSubclass(FunctionGetDirectData, "GET DIRECT DATA", 4, "GET_DIRECT_DATA")
+FSubclass(FunctionGetDataMean, "GET DATA MEAN", 3, "GET_DATA_MEAN")
 
 /*
 class FunctionMin :
@@ -230,6 +231,16 @@ public:
 	FunctionRandomNormal(SymbolNameSpace *sns) : Function(sns, "RANDOM NORMAL", 5) {}
 	~FunctionRandomNormal(void) {}
 	std::string ComputableName(void) { return "RandomNormal"; }
+	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+private:
+};
+
+class FunctionRandomPoisson : public Function
+{
+public:
+	FunctionRandomPoisson(SymbolNameSpace *sns) : Function(sns, "RANDOM POISSON", 6) {}
+	~FunctionRandomPoisson(void) {}
+	std::string ComputableName(void) { return "RandomPoisson"; }
 	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
 private:
 };

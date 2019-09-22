@@ -70,6 +70,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionDelayConveyor(pSymbolNameSpace);
 		new FunctionVectorReorder(pSymbolNameSpace);
 		new FunctionRandomNormal(pSymbolNameSpace);
+		new FunctionRandomPoisson(pSymbolNameSpace);
 		new FunctionLookupArea(pSymbolNameSpace);
 		new FunctionLookupExtrapolate(pSymbolNameSpace);
 		new FunctionGetDataAtTime(pSymbolNameSpace);
@@ -98,6 +99,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionInterger(pSymbolNameSpace);
 
 		new FunctionGetDirectData(pSymbolNameSpace);
+		new FunctionGetDataMean(pSymbolNameSpace);
 
         pSymbolNameSpace->ConfirmAllAllocations();
 	}

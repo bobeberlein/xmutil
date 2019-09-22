@@ -45,7 +45,7 @@ void Main_Window::choose_file()
     {
         // mark variable types and potentially convert INTEG equations involving expressions
         // into flows (a single net flow on the first pass though this)
-        m.MarkVariableTypes();
+        m.MarkVariableTypes(NULL);
         
         // if there is a view then try to make sure everything is defined in the views
         // put unknowns in a heap in the first view at 20,20 but for things that have
