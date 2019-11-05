@@ -44,6 +44,7 @@ public:
    void SetMacroFunctions(std::vector<MacroFunction*> set) { mMacroFunctions = set; }
    void SetIntegrationType(Integration_Type type) { iIntegrationType = type; }
    Integration_Type IntegrationType() { return iIntegrationType; }
+   std::vector<ModelGroup>& Groups() { return vGroups; }
 
 
 private :
@@ -55,6 +56,7 @@ private :
 
 
    SymbolNameSpace mSymbolNameSpace ;
+   std::vector<ModelGroup> vGroups;
    std::vector<View*> vViews;
    std::vector<Variable *>vUnamedVars;
    //std::vector<Equation *>vConstantComps ; // actually just assignment

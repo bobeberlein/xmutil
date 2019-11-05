@@ -36,7 +36,6 @@ int VensimLex::GetEndToken(void)
 
 void VensimLex::GetReady(void)
 {
-   bInGroup = false ;
    iInUnitsComment = 0 ;
    bInUnits = false;
 }
@@ -178,12 +177,31 @@ int VensimLex::NextToken() // also sets token type
 
    toktype = c ; // default for many tokens 
    switch(c)  {
-      case '*' : // check for *** which toggles bInGroup
-         if(TestTokenMatch("**",false)) {
-            while((c = GetNextChar(true)) == '*')
+      case '*' : // check for *** which names groups - we are dropping group info for now
+         if(TestTokenMatch("**",false)) { 
+			 // look for 
+			 // ****
+			 // groupname.nested.with.d
+			 // ****
+			 sToken.clear();
+            while((c = GetNextChar(false)) == '*')
                ;
-            PushBack(c,true) ;
-            bInGroup = !bInGroup ;
+			while (c == '\r' || c == '\n' || c == ' ' || c == '\t')
+				c = GetNextChar(false);
+			do {
+				this->sToken.push_back(c);
+				if (c == '.')
+				{
+					sToken.pop_back();
+					if (!sToken.empty())
+						sToken.push_back('-'); // can't use . in a module name
+				}
+				c = GetNextChar(false);
+			} while (c != '\r' && c != '\n' && c != ' ' && c != '\t');
+			while ((c = GetNextChar(false)) != '*' && c != '|')
+				;
+			while (c  && c != '|')
+				c = GetNextChar(false);
             return VPTT_groupstar ;
          }
          break ; 
@@ -198,7 +216,14 @@ int VensimLex::NextToken() // also sets token type
 			  return '='; // we ignore the invariant == that Vensim supports
 		  break;
 	  case '/':
-		  break;
+		  // either / or ///---\\\      but skip last \ because continuation line chars will mess thigns up xxx
+		  if (TestTokenMatch("//---\\\\", false)) {
+			  assert(!sBuffer.length());
+			  sBuffer = "///---\\\\";
+			  iCurPos--; // back up - wont be a problem with continuation lines in this case
+			  return VPTT_eqend; // finished normal parse
+		  }
+		break;
 	  case '^':
 		  break;
 	  case '!':
@@ -253,21 +278,11 @@ int VensimLex::NextToken() // also sets token type
       case '9' : 
          // a number follow it through till it is no longer a number 
          if(c == '.') {
-            if(bInGroup) { // treat as a group definition
-               while(c = GetNextChar(true)) {
-                  if(c == '\n' || c == '\r')
-                     break ;
-               }
-               PushBack(c,true) ;
-               return VPTT_groupname ;
-            }
-            else {
-               c = GetNextChar(true) ;
-               if(c < '0' || c > '9') {
-                  PushBack(c,true) ;
-                  break ; // not a number return '.'
-               }
-            }
+			 c = GetNextChar(true);
+			 if (c < '0' || c > '9') {
+				 PushBack(c, true);
+				 break; // not a number return '.'
+			 }
          }
          else {
             GetDigits() ;
@@ -295,23 +310,56 @@ int VensimLex::NextToken() // also sets token type
          PushBack(c,true) ;
          return TestColonKeyword() ; // might return ':' 
       case '{' : // a comment, find matching }
-         { // nesting, len local in scope
-         int nesting = 1 ;
-         int len = 1 ;
-         MarkPosition() ;
-         while(c = GetNextChar(false)) {
-            len++ ;
-            if(len > 1028)
-               break ; // excessive comments not considered valid 
-            if(c == '}') {
-               nesting-- ;
-               if(!nesting) { // comment is in sToken right now 
-                  return NextToken() ; // just skip the comment for now - as if not there
-                  }
-            }
-         }
-         ReturnToMark() ; // failed to find pair give up
-         }
+	  { // nesting, len local in scope
+		  int nesting = 1;
+		  int len = 1;
+		  MarkPosition();
+		  while (c = GetNextChar(false)) {
+			  len++;
+			  if (len > 1028)
+				  break; // excessive comments not considered valid 
+			  if (c == '}') {
+				  nesting--;
+				  if (!nesting) { // comment is in sToken right now 
+					  return NextToken(); // just skip the comment for now - as if not there
+				  }
+			  }
+			  else if (c == '{')
+				  nesting++;
+			  else if (c == '*' && nesting == 1)
+			  {
+				  c = GetNextChar(false);
+				  if (c == '*') // treat this as a group - from the original dynamo format
+				  {
+					  while ((c = GetNextChar(false)) == '*')
+						  ;
+					  while (c == '\r' || c == '\n' || c == ' ' || c == '\t')
+						  c = GetNextChar(false);
+					  if (c == '}')
+						  return NextToken(); // no useful group name
+					  sToken.clear();
+					  do {
+						  this->sToken.push_back(c);
+						  if (c == '.')
+						  {
+							  sToken.pop_back();
+							  if (!sToken.empty())
+								  sToken.push_back('-'); // can't use . in a module name
+						  }
+						  c = GetNextChar(false);
+					  } while (c != '\r' && c != '\n' && c != '*' && c != '}');
+					  while (sToken.back() == ' ')
+						  sToken.pop_back();
+					  while (c && c != '}')
+						  c = GetNextChar(false);
+					  return VPTT_groupstar;
+				  }
+				  else
+					  PushBack(c, false);
+			  }
+		  }
+		 ReturnToMark(); // failed to find pair give up
+	  }
          break ; // give up and just return the one char - will throw error message 
 	  case '\'': // vensim literal - just look for matching ' 
 		{
@@ -344,6 +392,7 @@ int VensimLex::NextToken() // also sets token type
       case '\\' : // either \\\---/// or a continuation line or an error
          if(TestTokenMatch("\\\\---///",false)) {
             assert(!sBuffer.length()) ;
+			sBuffer = "\\\\\\---///";
             iCurPos-- ; // back up - wont be a problem with continuation lines in this case
             return VPTT_eqend ; // finished normal parse
          }
@@ -517,9 +566,28 @@ bool VensimLex::FindToken(const char *tok)
          SyncBuffers() ;
          return false ;
       }
+	  else if (c == '/')
+		  if (TestTokenMatch("//---\\\\", false)) {
+		  PushBack(c, false);
+		  SyncBuffers();
+		  return false;
+	  }
    }
    return false ;
 
+}
+
+bool VensimLex::BufferReadLine(char *buf, size_t buflen)
+{
+	const char *tv = sBuffer.c_str();
+	while (buflen > 0 && *tv)
+	{
+		*buf = *tv;
+		buf++;
+		buflen--;
+		tv++;
+	}
+	return ReadLine(buf, buflen);
 }
 bool VensimLex::ReadLine(char *buf,size_t buflen)
 {

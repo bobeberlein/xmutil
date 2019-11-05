@@ -45,7 +45,6 @@ extern void vpyyerror (char const *);
 %token <sym> VPTT_symbol
 %token <uni> VPTT_units_symbol
 %token <fnc> VPTT_function
-%token <sym> VPTT_groupname
 
 
 /* types for the different productions - note that there are quite  a few

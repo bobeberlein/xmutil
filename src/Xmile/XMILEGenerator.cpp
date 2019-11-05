@@ -562,6 +562,26 @@ void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, tinyxml2::XMLE
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 
 	std::vector<View*>& views = _model->Views();
+	if (views.empty())
+	{
+		std::vector<ModelGroup>& groups = _model->Groups();
+		if (!groups.empty())
+		{
+			BOOST_FOREACH(ModelGroup& group, groups)
+			{
+				tinyxml2::XMLElement* xgroup = doc->NewElement("group");
+				xgroup->SetAttribute("name", group.sName.c_str());
+				element->InsertEndChild(xgroup);
+				BOOST_FOREACH(Variable* var, group.vVariables)
+				{
+					tinyxml2::XMLElement* xvar = doc->NewElement("var");
+					xvar->SetText(SpaceToUnderBar(var->GetAlternateName()).c_str());
+					xgroup->InsertEndChild(xvar);
+				}
+			}
+		}
+		return;
+	}
 	int x, y;
 	// start at a reasonable distance from 0 - the x,y values are generally around hte center
 	// of the var

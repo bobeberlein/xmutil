@@ -129,7 +129,7 @@ public:
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
    std::vector<Equation*> GetAllEquations() { return pVariableContent?pVariableContent->GetAllEquations():std::vector<Equation*>(); }
    inline bool AddUnits(UnitExpression *un) { return pVariableContent->AddUnits(un); }
-   UnitExpression* Units() { return pVariableContent->Units(); }
+   UnitExpression* Units() { return pVariableContent?pVariableContent->Units():NULL; }
    inline void OutputComputable(ContextInfo *info) { if (pVariableContent)pVariableContent->OutputComputable(info); else *info << SpaceToUnderBar(GetName()); }
    inline double Eval(ContextInfo *info) { return pVariableContent->Eval(info) ;  }
    inline std::vector<Variable*>GetInputVars() { return pVariableContent ? pVariableContent->GetInputVars() : std::vector<Variable*>(); }

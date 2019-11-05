@@ -172,6 +172,8 @@ void VensimParse::AddFullEq(Equation *eq,UnitExpression *un)
 {
    pSymbolNameSpace->ConfirmAllAllocations() ; // now independently allocated
    pActiveVar = eq->GetVariable() ;
+   if (!_model->Groups().empty() && pActiveVar->GetAllEquations().empty() && !mInMacro)
+	   _model->Groups().back().vVariables.push_back(pActiveVar);
    pActiveVar->AddEq(eq) ;
    if(un) {
       if(!pActiveVar->AddUnits(un))
@@ -213,10 +215,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
              else if(rval == '|') {
              }
              else if(rval == VPTT_groupstar) {
-                if(yylex() == VPTT_groupname) {
-                }
-                if(!FindNextEq(false))
-                   break ;
+				 _model->Groups().push_back(ModelGroup(*mVensimLex.CurToken()));
              }
              else if(rval != endtok) {
                 std::cout << "Unknown terminal token " << rval << std::endl ;
@@ -246,9 +245,11 @@ bool VensimParse::ProcessFile(const std::string &filename)
        } while(rval != endtok) ;
 	   char buf[BUFLEN]; // plenty big for sketch info
 	   if (rval == endtok)
-		this->mVensimLex.ReadLine(buf, BUFLEN); // get the marker line
-	   while (rval == endtok)
+		this->mVensimLex.BufferReadLine(buf, BUFLEN); // get the marker line
+	   while (true)
 	   { // read in the sketch information
+		   if (strncmp(buf, "\\\\\\---///", 9) != 0)
+			   break;
 		   this->mVensimLex.ReadLine(buf, BUFLEN); // version line
 		   if (strncmp(buf, "V300 ", 5))
 		   {
@@ -265,10 +266,6 @@ bool VensimParse::ProcessFile(const std::string &filename)
 		   view->SetTitle(buf + 1); // skip the star - we can try to name modules with this eventually subject to name collisions
 		   this->mVensimLex.ReadLine(buf, BUFLEN); // default font info - we can try to grab this later
 		   view->ReadView(this, buf); // will return with buf populated at next view
-		   if (strncmp(buf, "\\\\\\---///", 9) == 0)
-			   rval = endtok;
-		   else
-			   rval = 0;
 	   }
 	   // there may be options at the end
 	   if (strncmp(buf, "///---\\\\\\", 9) == 0)

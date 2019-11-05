@@ -81,7 +81,8 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 			}
 			else if ((*op == '-' || *op == '+') && op[1] == '\0')
 			{
-				is_all_plus_minus(e->GetArg(0), fl, neg);
+				if (e->GetArg(0) != NULL) // unary plus or leading - still okay
+					is_all_plus_minus(e->GetArg(0), fl, neg);
 				if (*op == '-')
 					neg = !neg;
 				is_all_plus_minus(e->GetArg(1), fl, neg);

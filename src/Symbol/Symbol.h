@@ -10,6 +10,17 @@ class Model ; // forward declaration
 class Function ;
 class Variable ;
 
+
+class ModelGroup
+{
+public:
+	ModelGroup(const std::string& name) : sName(name) {}
+	std::string sName;
+	std::vector<Variable*> vVariables;
+};
+
+
+
 /* abstract class Symbol - used for model vairblaes, models, units
    and other things that may appear in the symbol table - these things
    share the same search space for lookup but are conceptually distinct */

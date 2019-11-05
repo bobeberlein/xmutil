@@ -66,7 +66,6 @@ public:
 
 private :
    bool FindNextEq(bool want_comment) ;
-
    Model* _model;
    std::string sFilename;
    boost::iostreams::mapped_file_source mfSource;

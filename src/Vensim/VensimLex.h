@@ -5,6 +5,7 @@
   indirectly throught the Bison generated parser and directly for 
   comments and group defs */
 #include <string>
+#include <vector>
 #include "../Symbol/Parse.h"
 
 class VensimLex
@@ -21,6 +22,7 @@ public:
    int Position(void) { return iCurPos - iLineStart ; }
    std::string GetComment(const char *tok);
    bool FindToken(const char *tok) ;
+   bool BufferReadLine(char *buf, size_t buflen); //start with buffer then read the line
    bool ReadLine(char *buf, size_t buflen); // read a line if enough room otherwise part of it
 private :
    char GetNextChar(bool store) ;
@@ -40,7 +42,6 @@ private :
    bool KeywordMatch(const char *target) ;
    void GetDigits(void) ;
    int iInUnitsComment ; // 0 no, 1 units, 2 comment
-   bool bInGroup ;
    int TestColonKeyword(void) ;
    int ReadTabbedArray(void) ;
    bool bInUnits;
