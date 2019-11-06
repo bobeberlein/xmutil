@@ -571,6 +571,8 @@ void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, tinyxml2::XMLE
 			{
 				tinyxml2::XMLElement* xgroup = doc->NewElement("group");
 				xgroup->SetAttribute("name", group.sName.c_str());
+				if (group.sOwner != group.sName)
+					xgroup->SetAttribute("owner", group.sOwner.c_str());
 				element->InsertEndChild(xgroup);
 				BOOST_FOREACH(Variable* var, group.vVariables)
 				{

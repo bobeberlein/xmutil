@@ -26,7 +26,7 @@ VensimParse::VensimParse(Model* model)
    VPObject = this ;
    _model = model;
    pSymbolNameSpace = model->GetNameSpace() ;
-
+   bLongName = false;
    ReadyFunctions();
 
 }
@@ -187,6 +187,36 @@ int VensimParse::yyerror(const char *str)
    throw mSyntaxError ;
 }
 
+static std::string compress_whitespace(const std::string& s)
+{
+	std::string rval;
+	const char *tv = s.c_str();
+	for (; *tv; tv++)
+	{
+		if (*tv != ' ' && *tv != '\t' && *tv != '\n' && *tv != '\r')
+			break;
+	}
+	for (; *tv; tv++)
+	{
+		if (*tv == '~')
+			break; // some comments have supplementary in them
+		if (*tv == ' ' || *tv == '\t' || *tv == '\n' || *tv == '\r')
+		{
+			rval.push_back('_');
+			for (; tv[1]; tv++)
+			{
+				if (tv[1] != ' ' && tv[1] != '\t' && tv[1] != '\n' && tv[1] != '\r')
+					break;
+			}
+		}
+		else if( (*tv >= 'A' && *tv <= 'Z') || (*tv >= 'a' && *tv <= 'z'))
+			rval.push_back(*tv); // otherwise ignore
+	}
+	while (rval.back() == '_')
+		rval.pop_back();
+	return rval;
+}
+
 bool VensimParse::ProcessFile(const std::string &filename)
 {
    sFilename = filename ;
@@ -215,7 +245,18 @@ bool VensimParse::ProcessFile(const std::string &filename)
              else if(rval == '|') {
              }
              else if(rval == VPTT_groupstar) {
-				 _model->Groups().push_back(ModelGroup(*mVensimLex.CurToken()));
+				printf("%s\n", mVensimLex.CurToken()->c_str());
+				// only change this if a new number
+				 std::string group_owner;
+				 char c = mVensimLex.CurToken()->at(0);
+				 if (_model->Groups().empty() ||
+					 (_model->Groups().back().sName[0] != c && c >= '0' && c <= '9'))
+					 group_owner = *mVensimLex.CurToken();
+				 else
+					 group_owner = _model->Groups().back().sOwner;
+				 {
+					 _model->Groups().push_back(ModelGroup(*mVensimLex.CurToken(),group_owner));
+				 }
              }
              else if(rval != endtok) {
                 std::cout << "Unknown terminal token " << rval << std::endl ;
@@ -314,6 +355,25 @@ bool VensimParse::ProcessFile(const std::string &filename)
 	   }
        mfSource.close() ;
 	   _model->SetMacroFunctions(mMacroFunctions);
+
+	   if (bLongName)
+	   {
+		   // try to replace variable names with long names from the documentaion
+		   std::vector<Variable*> vars = _model->GetVariables(NULL); // all symbols that are variables
+		   BOOST_FOREACH(Variable* var, vars)
+		   {
+			   std::string alt = compress_whitespace(var->Comment());
+			   if (alt == "Backlog")
+			   {
+				   bLongName = true;
+			   }
+			   if (!alt.empty() && alt.size() < 80 &&
+				   pSymbolNameSpace->Rename(var,alt))
+			   {
+				   var->SetAlternateName(alt);
+			   }
+		   }
+	   }
        return true ; // got something - try to put something out
     }
     else

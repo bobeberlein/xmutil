@@ -58,6 +58,25 @@ bool SymbolNameSpace::Remove(Symbol *sym)
    return false ;
 }
 
+bool SymbolNameSpace::Rename(Symbol *sym,const std::string& newname)
+{
+	std::string *s = ToLowerSpace(sym->GetName());
+	HashTable::iterator oldnode = mHashTable.find(*s);
+	delete s;
+	std::string* s2 = ToLowerSpace(newname);
+	HashTable::iterator newnode = mHashTable.find(*s2);
+	if (oldnode != mHashTable.end() && newnode == mHashTable.end()) {
+		mHashTable.erase(oldnode);
+		mHashTable[*s2] = sym;
+		delete s2;
+		sym->SetName(newname);
+		return true; /* already in place */
+	}
+	delete s2;
+	return false;
+}
+
+
 // Note GlobalUCaseMap has to have been set for this to wok - 
 // not sure if that is thread safe
 //

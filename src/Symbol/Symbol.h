@@ -14,8 +14,9 @@ class Variable ;
 class ModelGroup
 {
 public:
-	ModelGroup(const std::string& name) : sName(name) {}
+	ModelGroup(const std::string& name, const std::string& owner) : sName(name), sOwner(owner) {}
 	std::string sName;
+	std::string sOwner;
 	std::vector<Variable*> vVariables;
 };
 

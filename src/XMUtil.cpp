@@ -79,7 +79,19 @@ bool ParseVensimModel(int argc, char* argv[],Model *m)
    if(argc < 2)
       return false ;
    VensimParse vp(m) ;
-   if(!vp.ProcessFile(argv[1])) 
+   char *filename = 0;
+   for (int i = 1; i < argc; i++)
+   {
+	   char *arg = argv[i];
+	   if (*arg == '-')
+	   {
+		   if (StringMatch(arg, "--longnames"))
+			   vp.SetLongName(true);
+	   }
+	   else
+		   filename = arg;
+   }
+   if(!vp.ProcessFile(filename)) 
       return false ;
 	return true ;
 }

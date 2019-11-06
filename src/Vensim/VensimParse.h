@@ -64,6 +64,9 @@ public:
    char *GetIntChar(char *buf, int& val, char c);
    char *GetString(char* buf, std::string& s);
 
+   void SetLongName(bool set) { bLongName = set; }
+   bool LongName() const { return bLongName; }
+
 private :
    bool FindNextEq(bool want_comment) ;
    Model* _model;
@@ -75,6 +78,7 @@ private :
    SymbolNameSpace* pMainSymbolNameSpace;
    Variable *pActiveVar ;
    bool mInMacro;
+   bool bLongName;
    std::vector<MacroFunction*> mMacroFunctions;
 };
 

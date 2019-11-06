@@ -24,6 +24,7 @@ public:
    Symbol *Find(const std::string &name) ;
    void Insert(Symbol *sym) ;
    bool Remove(Symbol *sym) ;
+   bool Rename(Symbol* sym, const std::string& newname);
    void DeleteAllUnconfirmedAllocations(void) ;
    void ConfirmAllAllocations(void) ;
    void RemoveUnconfirmedAllocation(SymbolTableBase *s) { sUnconfirmedAllocations.erase(s) ; }
