@@ -2,7 +2,7 @@
 set -e
 
 PKG_VERSION=54.1
-SDK_VERSION=10.12
+SDK_VERSION=10.15
 OSX_VERSION=10.7
 
 ARCHIVE_NAME="icu4c-$(echo $PKG_VERSION | sed -e 's/\./_/')-src.zip"
