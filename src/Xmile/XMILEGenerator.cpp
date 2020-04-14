@@ -552,17 +552,17 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		}
 	}
 	tinyxml2::XMLElement* views = doc->NewElement("views");
-	this->generateViews(views, variables, errs);
+	this->generateViews(views, variables, errs, ns == NULL);
 	element->InsertEndChild(views);
 
 }
 
-void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, tinyxml2::XMLElement* xvars, std::vector<std::string>& errs)
+void XMILEGenerator::generateViews(tinyxml2::XMLElement* element, tinyxml2::XMLElement* xvars, std::vector<std::string>& errs, bool mainmodel)
 {
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 
 	std::vector<View*>& views = _model->Views();
-	if (views.empty())
+	if (views.empty() && mainmodel)
 	{
 		std::vector<ModelGroup>& groups = _model->Groups();
 		if (!groups.empty())

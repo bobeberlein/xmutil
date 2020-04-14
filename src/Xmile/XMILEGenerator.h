@@ -23,7 +23,7 @@ protected:
 	void generateModelUnits(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateModel(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns);
-	void generateViews(tinyxml2::XMLElement* views, tinyxml2::XMLElement* vars, std::vector<std::string>& errs);
+	void generateViews(tinyxml2::XMLElement* views, tinyxml2::XMLElement* vars, std::vector<std::string>& errs, bool mainmodel);
 	void generateView(VensimView* view, tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 
 private:
