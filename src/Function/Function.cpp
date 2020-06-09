@@ -142,6 +142,23 @@ void FunctionPulseTrain::OutputComputable(ContextInfo *info, ExpressionList *arg
 	Function::OutputComputable(info, arg);
 }
 
+void FunctionQuantum::OutputComputable(ContextInfo* info, ExpressionList* arg)
+{
+	if (arg->Length() == 2)
+	{
+		*info << "(";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << ")*INT((";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ")/(";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << "))";
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
+
 void FunctionRandomNormal::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
 	if (arg->Length() == 5)

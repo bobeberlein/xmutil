@@ -49,6 +49,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionSampleIfTrue(pSymbolNameSpace);
 		new FunctionPulse(pSymbolNameSpace);
 		new FunctionPulseTrain(pSymbolNameSpace);
+		new FunctionQuantum(pSymbolNameSpace);
 		new FunctionIfThenElse(pSymbolNameSpace);
 		new FunctionLog(pSymbolNameSpace);
 		new FunctionZidz(pSymbolNameSpace);

@@ -225,6 +225,15 @@ public:
 	virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
 private:
 };
+class FunctionQuantum : public Function
+{
+public:
+	FunctionQuantum(SymbolNameSpace* sns) : Function(sns, "QUANTUM", 2) {}
+	~FunctionQuantum(void) {}
+	std::string ComputableName(void) { return "Quantum"; }
+	virtual void OutputComputable(ContextInfo* info, ExpressionList* arg);
+private:
+};
 class FunctionRandomNormal : public Function
 {
 public:
