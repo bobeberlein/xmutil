@@ -3,7 +3,7 @@ if [ ! -e ./tinyxml2 ]; then
 fi
 
 cd tinyxml2
-git checkout 5.0.1
+git checkout 8.0.0
 
 MSBuild.exe $PWD/tinyxml2/tinyxml2.sln /t:tinyxml2:rebuild /property:Configuration=Release-Lib
 

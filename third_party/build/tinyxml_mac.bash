@@ -2,7 +2,7 @@
 
 git clone https://github.com/leethomason/tinyxml2.git
 cd tinyxml2
-git checkout 5.0.1
+git checkout 8.0.0
 make -j4
 
 
