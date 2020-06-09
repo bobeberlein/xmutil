@@ -635,5 +635,5 @@ void VensimLex::SyncBuffers(void)
 {
    int i = sBuffer.length() ;
    iCurPos -= i ;
-   sBuffer.empty() ;
+   sBuffer.clear() ;
 }

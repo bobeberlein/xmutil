@@ -10,6 +10,9 @@ msvs=no
 xcode=no
 ui=no
 gyp_ui=0
+arch_id=32
+x86=yes
+
 
 usage() {
     cat <<EOF
@@ -27,6 +30,14 @@ do
     ;;
     --use-msvs)
     msvs=yes
+	;;
+	--32bit)
+		arch_id=32
+		x86=yes
+	;;
+	--64bit)
+		arch_id=64
+		x86=no
     ;;
     --with-ui)
     ui=yes
@@ -53,11 +64,16 @@ elif [ $msvs = 'yes' ]; then
 else
     generator=ninja
 fi
+if [ $x86 = 'yes' ]; then
+    export CC="$CC -m32 -march=prescott"
+    export CXX="$CXX -m32 -march=prescott"
+fi
+
 
 export GYP_GENERATORS=$generator 
 export GYPDEFS="-Dqtdir=$QTDIR -Dwith_ui=$gyp_ui"
 
-"./build/bin/gyp" -Dcwd=`pwd` $GYPDEFS $gypfile --toplevel-dir=`pwd` --depth=0
+"./build/bin/gyp" -Darch_id=$arch_id  -Dcwd=`pwd` $GYPDEFS $gypfile --toplevel-dir=`pwd` --depth=0
 result=$?
 
 
@@ -66,6 +82,7 @@ if [ $quiet = 'no' ]; then
     echo "  xcode generation:        $xcode"
     echo "  msvs generation:         $msvs"
     echo "  with ui:                 $ui"
+    echo "  x86:                     $x86"
     echo "  CC:                      ${CC:-<default>}"
     echo "  CXX:                     ${CXX:-<default>}"
 fi

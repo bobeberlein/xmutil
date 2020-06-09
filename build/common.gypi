@@ -98,12 +98,12 @@
                 }, 
                 'copies': [{
                     'files': [
-                        '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icuin59.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icudt59.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icuio59.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icutu59.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icuuc59.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icudt67.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuin67.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icudt67.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuio67.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icutu67.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuuc67.dll',
                     ],
                     'destination': '$(SolutionDir)$(CONFIGURATION)',
                 }]

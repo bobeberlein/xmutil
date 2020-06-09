@@ -35,7 +35,7 @@ private :
    off_t iCurPos,iHoldPos ;
    off_t iLineStart,iHoldStart ;
    void MarkPosition(void) {iHoldPos=iCurPos;iHoldStart=iLineStart;}
-   void ReturnToMark(void) {iCurPos=iHoldPos;iLineStart=iHoldStart;sBuffer.empty();}
+   void ReturnToMark(void) {iCurPos=iHoldPos;iLineStart=iHoldStart;sBuffer.clear();}
    int iLineNumber ;
    off_t iFileLength ;
    int NextToken(void) ;

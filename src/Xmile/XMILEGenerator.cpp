@@ -77,12 +77,10 @@ bool XMILEGenerator::Generate(const std::string& path, std::vector<std::string>&
 	tinyxml2::XMLError err = doc.SaveFile(path.c_str());
 	if (err != tinyxml2::XML_SUCCESS)
 	{
-		if (doc.GetErrorStr1())
-			errs.push_back("TinyXML2 Error #1 " + std::string(doc.GetErrorStr1()));
+ 		if (doc.ErrorStr())
+			errs.push_back("TinyXML2 Error: " + std::string(doc.ErrorStr()));
 		else
 			errs.push_back("File error opening document");
-		if (doc.GetErrorStr2())
-			errs.push_back("TinyXML2 Error #2 " + std::string(doc.GetErrorStr2()));
 
 		return false;
 	}
