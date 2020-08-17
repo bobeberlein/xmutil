@@ -28,7 +28,7 @@ Variable *Equation::GetVariable(void)
 
 ExpressionTable* Equation::GetTable(void)
 {
-	return pExpression->GetTable(); 
+	return pExpression?pExpression->GetTable():NULL;
 }
 
 
@@ -39,6 +39,8 @@ void Equation::CheckPlaceholderVars(Model *m)
 
 std::string Equation::RHSFormattedXMILE(const std::vector<Symbol*>& subs, const std::vector<Symbol*>& dims, bool init)
 {
+	if (!pExpression)
+		return "{empty}";
 	ContextInfo info;
 	if (init)
 		info.SetInitEqn(true);
@@ -51,7 +53,7 @@ std::string Equation::RHSFormattedXMILE(const std::vector<Symbol*>& subs, const 
 
 bool Equation::IsActiveInit()
 {
-	return pExpression->IsActiveInit();
+	return pExpression && pExpression->IsActiveInit();
 }
 
 void Equation::GetSubscriptElements(std::vector<Symbol*>& vals, Symbol* s)

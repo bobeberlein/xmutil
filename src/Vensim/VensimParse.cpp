@@ -246,7 +246,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
              else if(rval == '|') {
              }
              else if(rval == VPTT_groupstar) {
-				printf("%s\n", mVensimLex.CurToken()->c_str());
+				//printf("%s\n", mVensimLex.CurToken()->c_str());
 				// only change this if a new number
 				 std::string group_owner;
 				 char c = mVensimLex.CurToken()->at(0);
