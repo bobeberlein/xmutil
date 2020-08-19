@@ -64,7 +64,9 @@ void VensimParse::ReadyFunctions()
 		new FunctionSmooth3(pSymbolNameSpace);
 		new FunctionTrend(pSymbolNameSpace);
 		new FunctionDelay1(pSymbolNameSpace);
+		new FunctionDelay1I(pSymbolNameSpace);
 		new FunctionDelay3(pSymbolNameSpace);
+		new FunctionDelay3I(pSymbolNameSpace);
 		new FunctionDelay(pSymbolNameSpace);
 		new FunctionDelayN(pSymbolNameSpace);
 		new FunctionSmoothN(pSymbolNameSpace);
@@ -627,6 +629,7 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
    case '>':
    case VPTT_le:
    case VPTT_ge:
+   case VPTT_ne:
    case VPTT_and:
    case VPTT_or:
    case '=':

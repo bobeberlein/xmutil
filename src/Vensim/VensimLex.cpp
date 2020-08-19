@@ -258,6 +258,8 @@ int VensimLex::NextToken() // also sets token type
             return VPTT_equiv ;
 		 if (TestTokenMatch("=", true))
 			 return VPTT_le;
+         if (TestTokenMatch(">", true))
+             return VPTT_ne;
 		 break;
       case '1' :
 		  if (bInUnits)

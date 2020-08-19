@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.1.  */
+/* A Bison parser, made by GNU Bison 3.3.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,8 +31,11 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_VPYY_D_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
-# define YY_VPYY_D_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
+#ifndef YY_VPYY_VYACC_TAB_HPP_INCLUDED
+# define YY_VPYY_VYACC_TAB_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -66,13 +70,14 @@ extern int vpyydebug;
     VPTT_implies = 276,
     VPTT_ge = 277,
     VPTT_le = 278,
-    VPTT_tabbed_array = 279,
-    VPTT_eqend = 280,
-    VPTT_number = 281,
-    VPTT_literal = 282,
-    VPTT_symbol = 283,
-    VPTT_units_symbol = 284,
-    VPTT_function = 285
+    VPTT_ne = 279,
+    VPTT_tabbed_array = 280,
+    VPTT_eqend = 281,
+    VPTT_number = 282,
+    VPTT_literal = 283,
+    VPTT_symbol = 284,
+    VPTT_units_symbol = 285,
+    VPTT_function = 286
   };
 #endif
 
@@ -83,4 +88,4 @@ extern YYSTYPE vpyylval;
 
 int vpyyparse (void);
 
-#endif /* !YY_VPYY_D_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED  */
+#endif /* !YY_VPYY_VYACC_TAB_HPP_INCLUDED  */

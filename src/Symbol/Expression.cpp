@@ -181,6 +181,9 @@ void ExpressionLogical::OutputComputable(ContextInfo *info)
 	case VPTT_ge:
 		*info << " >= ";
 		break;
+	case VPTT_ne:
+		*info << " <> ";
+		break;
 	case VPTT_and:
 		*info << " and ";
 		break;

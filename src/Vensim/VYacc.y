@@ -34,6 +34,7 @@ extern void vpyyerror (char const *);
 %token <tok> VPTT_implies
 %token <tok> VPTT_ge
 %token <tok> VPTT_le
+%token <tok> VPTT_ne
 %token <exn> VPTT_tabbed_array
 %token <tol> VPTT_eqend /* the end of equations  */
 
@@ -69,7 +70,7 @@ extern void vpyyerror (char const *);
 /* precedence - low to high */     
 %left '-' '+'
 %left VPTT_or
-%left '=' '<' '>' VPTT_le VPTT_ge
+%left '=' '<' '>' VPTT_le VPTT_ge VPTT_ne
 %left VPTT_and
 %left '*' '/'
 %left VPTT_not
@@ -191,10 +192,12 @@ maplist :
 	| VPTT_map mapsymlist { $$ =  $2 ; }
 	;
 
-
+   // number lists can use ; to end a line
 exprlist :
    exp {$$ = vpyy_chain_exprlist(NULL,$1) ;}
    | exprlist ',' exp {$$ = vpyy_chain_exprlist($1,$3) ; }
+   | exprlist ';' exp {$$ = vpyy_chain_exprlist($1,$3) ; }
+   | exprlist ';' {$$ = $1 ; }
    ;
     
 exp:
@@ -214,6 +217,7 @@ exp:
      | exp VPTT_le exp    { $$ = vpyy_operator_expression(VPTT_le,$1,$3) ; }
      | exp '>' exp        { $$ = vpyy_operator_expression('>',$1,$3) ; }
      | exp VPTT_ge exp    { $$ = vpyy_operator_expression(VPTT_ge,$1,$3) ; }
+     | exp VPTT_ne exp    { $$ = vpyy_operator_expression(VPTT_ne,$1,$3) ; }
      | exp VPTT_or exp    { $$ = vpyy_operator_expression(VPTT_or,$1,$3) ; }
      | exp VPTT_and exp    { $$ = vpyy_operator_expression(VPTT_and,$1,$3) ; }
 	 | VPTT_not exp		  { $$ = vpyy_operator_expression(VPTT_not,$2,NULL) ; }
