@@ -122,6 +122,23 @@ void FunctionSampleIfTrue::OutputComputable(ContextInfo *info, ExpressionList *a
 	Function::OutputComputable(info, arg);
 }
 
+
+void FunctionPulse::OutputComputable(ContextInfo* info, ExpressionList* arg)
+{
+	if (arg->Length() == 2)
+	{
+		*info << "( IF TIME >= (";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") AND TIME < ((";
+		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		*info << ") + MAX(DT,";
+		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
+		*info << ")) THEN 1 ELSE 0 )";
+		return;
+	}
+	Function::OutputComputable(info, arg);
+}
+
 void FunctionPulseTrain::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
 	if (arg->Length() == 4)

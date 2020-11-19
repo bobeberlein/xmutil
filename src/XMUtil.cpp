@@ -50,6 +50,27 @@ std::string SpaceToUnderBar(const std::string& s)
 	return rval;
 }
 
+std::string QuotedSpaceToUnderBar(const std::string& s)
+{
+	std::string rval;
+	bool needquote = false;
+	for (const char* tv = s.c_str(); *tv; tv++)
+	{
+		if (*tv == ' ')
+			rval.push_back('_');
+		else
+		{
+			if (*tv == '.')
+				needquote = true;
+			rval.push_back(*tv);
+		}
+	}
+	if (needquote)
+		rval = "\"" + rval + "\"";
+	return rval;
+}
+
+
 bool StringMatch(const std::string& f, const std::string& s)
 {
 	if (f.size() != s.size())

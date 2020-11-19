@@ -145,6 +145,12 @@ public:
    int Nelm() const { return iNelm; }
    void SetNelm(int set) { iNelm = set; }
 
+   // for flowing
+   bool HasUpstream() const { return _hasUpstream; }
+   void SetHasUpstream(bool set) { _hasUpstream = set; }
+   bool HasDownstream() const { return _hasDownstream; }
+   void SetHasDownstream(bool set) { _hasDownstream = set; }
+
    // for other function calles
    inline VariableContent *Content(void) { return pVariableContent ; }
    void SetContent(VariableContent *v) { pVariableContent = v ; } 
@@ -160,6 +166,8 @@ private :
    int iNelm; // used for subscript owners
    View* _view; // view defined in
    bool _unwanted;
+   bool _hasUpstream;
+   bool _hasDownstream;
 } ;
 
 

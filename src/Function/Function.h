@@ -146,6 +146,7 @@ FSubclass(FunctionRandomUniform, "RANDOM UNIFORM", 3, "UNIFORM");
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
 FSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
 FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH3")
+FSubclass(FunctionSmooth3I, "SMOOTH3I", 3, "SMTH3")
 FSubclass(FunctionTrend,"TREND", 3, "TREND")
 FSubclass(FunctionDelay1, "DELAY1", 2, "DELAY1")
 FSubclass(FunctionDelay1I, "DELAY1I", 3, "DELAY1")
@@ -186,7 +187,6 @@ FSubclass(FunctionReInitial, "REINITIAL", 1, "INIT")
 
 FSubclassTime(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclass(FunctionLn, "LN", 1, "LN")
-FSubclassTime(FunctionPulse, "PULSE", 2, "pulse")
 FSubclassTime(FunctionStep, "STEP", 2, "step")
 
 FSubclassKeyword(FunctionTabbedArray, "TABBED ARRAY", 1)
@@ -218,6 +218,15 @@ public:
 private:
 };
 
+class FunctionPulse : public Function
+{
+public:
+	FunctionPulse(SymbolNameSpace* sns) : Function(sns, "PULSE", 2) {}
+	~FunctionPulse(void) {}
+	std::string ComputableName(void) { return "Pulse"; }
+	virtual void OutputComputable(ContextInfo* info, ExpressionList* arg);
+private:
+};
 class FunctionPulseTrain : public Function
 {
 public:

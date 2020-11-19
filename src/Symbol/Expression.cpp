@@ -65,10 +65,27 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 		fl->SetValid(false);
 	else if (e->GetType() == EXPTYPE_Variable) {
 		ExpressionVariable *ev = static_cast<ExpressionVariable*>(e);
+		Variable* var = ev->GetVariable();
 		if (neg)
-			fl->AddOutflow(ev->GetVariable());
+		{
+			if (var->HasUpstream())
+				fl->SetValid(false);
+			else
+			{
+				fl->AddOutflow(var);
+				var->SetHasUpstream(true);
+			}
+		}
 		else
-			fl->AddInflow(ev->GetVariable());
+		{
+			if (var->HasDownstream())
+				fl->SetValid(false);
+			else
+			{
+				fl->AddInflow(var);
+				var->SetHasDownstream(true);
+			}
+		}
 	}
 	else if (e->GetType() == EXPTYPE_Operator)
 	{

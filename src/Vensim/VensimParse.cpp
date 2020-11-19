@@ -62,6 +62,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionSmooth(pSymbolNameSpace);
 		new FunctionSmoothI(pSymbolNameSpace);
 		new FunctionSmooth3(pSymbolNameSpace);
+		new FunctionSmooth3I(pSymbolNameSpace);
 		new FunctionTrend(pSymbolNameSpace);
 		new FunctionDelay1(pSymbolNameSpace);
 		new FunctionDelay1I(pSymbolNameSpace);

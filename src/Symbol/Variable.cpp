@@ -18,6 +18,7 @@ Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, n
    mVariableType = XMILE_Type_UNKNOWN; // till typed
    iNelm = 0;
    _unwanted = false;
+   _hasUpstream = _hasDownstream = false;
 }
 
 

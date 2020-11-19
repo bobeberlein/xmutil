@@ -801,11 +801,11 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 						}
 						else
 						{
-							xfrom->SetText(SpaceToUnderBar(from->GetVariable()->GetAlternateName()).c_str());
+							xfrom->SetText(QuotedSpaceToUnderBar(from->GetVariable()->GetAlternateName()).c_str());
 						}
 						tinyxml2::XMLElement* xto = doc->NewElement("to");
 						xconnector->InsertEndChild(xto);
-						xto->SetText(SpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
+						xto->SetText(QuotedSpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
 					}
 				}
 			}
