@@ -34,8 +34,8 @@
 /* Undocumented macros, especially those whose name start with YY_,
    are private implementation details.  Do not rely on them.  */
 
-#ifndef YY_VPYY_VYACC_TAB_HPP_INCLUDED
-# define YY_VPYY_VYACC_TAB_HPP_INCLUDED
+#ifndef YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
+# define YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -88,4 +88,4 @@ extern YYSTYPE vpyylval;
 
 int vpyyparse (void);
 
-#endif /* !YY_VPYY_VYACC_TAB_HPP_INCLUDED  */
+#endif /* !YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED  */

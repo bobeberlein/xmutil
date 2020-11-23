@@ -73,6 +73,8 @@ void VensimParse::ReadyFunctions()
 		new FunctionSmoothN(pSymbolNameSpace);
 		new FunctionDelayConveyor(pSymbolNameSpace);
 		new FunctionVectorReorder(pSymbolNameSpace);
+		new FunctionVectorLookup(pSymbolNameSpace);
+		new FunctionElmCount(pSymbolNameSpace);
 		new FunctionRandomNormal(pSymbolNameSpace);
 		new FunctionRandomPoisson(pSymbolNameSpace);
 		new FunctionLookupArea(pSymbolNameSpace);

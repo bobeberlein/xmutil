@@ -39,6 +39,7 @@ private :
    int iLineNumber ;
    off_t iFileLength ;
    int NextToken(void) ;
+   bool IsGetXLS(void);
    bool KeywordMatch(const char *target) ;
    void GetDigits(void) ;
    int iInUnitsComment ; // 0 no, 1 units, 2 comment

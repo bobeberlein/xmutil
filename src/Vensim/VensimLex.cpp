@@ -400,6 +400,12 @@ int VensimLex::NextToken() // also sets token type
          }
          break ;
       default : // a variable name or an unrecognizable token
+		  if (c == 'G' || c == 'g')
+		  {
+			  // the GET XLS functins don't really translat so we return the entire expression as a quoted variable name
+			  if (IsGetXLS())
+				  return VPTT_symbol;
+		  }
          if(isalpha(c) || c > 127 || ((iInUnitsComment == 1) && c == '$')) { // a variable
             while(c = GetNextChar(true)) {
                if(!isalnum(c) && c != ' ' && c != '_' && c != '$' && c != '\t' && c != '\'' && c  < 128) {
@@ -437,6 +443,33 @@ NULL} ;
    PushBack(c,true) ;
    return ':' ;
 }
+
+// treat the GET XLS functions as varialbles to make it easier to figure out what to do on the other side
+bool VensimLex::IsGetXLS()
+{
+	if (KeywordMatch("ET XLS"))
+	{
+		sToken = "\"GET XLS";
+		char c;
+		while (c = GetNextChar(true))
+		{
+			if (c == '(')
+				break;
+		}
+		int nesting = 1;
+		while (nesting && (c = GetNextChar(true)))
+		{
+			if (c == '(')
+				nesting++;
+			else if (c == ')')
+				nesting--;
+		}
+		sToken.push_back('\"');
+		return true;
+	}
+	return false;
+}
+
 // target assumed upper case 
 bool VensimLex::KeywordMatch(const char *target)
 {

@@ -88,8 +88,11 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 			{
 				ExpressionNumberTable* t = static_cast<ExpressionNumberTable*>(exp);
 				const std::vector<double>& vals = t->GetVals();
-				assert(vals.size() == elms.size());
-				if (vals.size() == elms.size())
+				if (vals.size() != elms.size())
+				{
+					std::cout << "Error the number of entries does not match array size for \"" << this->GetName() << std::endl;
+				}
+				else
 				{
 					equations.erase(equations.begin() + i);
 					size_t n2 = vals.size();

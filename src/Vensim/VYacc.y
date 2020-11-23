@@ -109,6 +109,7 @@ eqn :
    | lhs VPTT_dataequals exp {$$ = vpyy_addeq($1,$3,NULL,VPTT_dataequals) ; }
    | lhs { $$ = vpyy_add_lookup($1,NULL,NULL, 0) ; } // treat as if a lookup on time - don't have numbers
    | VPTT_symbol ':' subdef maplist {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,NULL),NULL,NULL),(Expression *)vpyy_symlist_expression($3,$4),NULL,':') ; }
+   | VPTT_symbol VPTT_equiv VPTT_symbol  {$$ = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression($1,NULL),NULL,NULL),(Expression *)vpyy_symlist_expression(vpyy_symlist(NULL,$3,0,NULL),NULL),NULL,VPTT_equiv) ; }
    | lhs '=' VPTT_tabbed_array { $$ = vpyy_addeq($1,$3,NULL,'=') ; }
    ;
 

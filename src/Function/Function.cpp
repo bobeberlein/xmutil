@@ -42,6 +42,14 @@ void Function::OutputComputable(ContextInfo *info,ExpressionList *arg)
 	}
 }
 
+void FunctionVectorLookup::OutputComputable(ContextInfo* info, ExpressionList* arg)
+{
+	// could try to figure this one out - 
+	*info << "{try INTERPORATE or just used arrays with variable arguments for indices}";
+	Function::OutputComputable(info, arg);
+}
+
+
 void FunctionTimeBase::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
 	if (arg->Length() == 2)

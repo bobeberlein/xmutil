@@ -159,6 +159,16 @@ FSubclass(FunctionNPV,"NPV",4,"NPV")
 FSubclass(FunctionDelayConveyor,"DELAY CONVEYOR", 6, "DELAY_CONVEYOR")
 // - this one is fake - return NaN
 FSubclass(FunctionVectorReorder,"VECTOR REORDER", 2, "VECTOR_REORDER")
+class FunctionVectorLookup : public Function
+{
+public:
+	FunctionVectorLookup(SymbolNameSpace* sns) : Function(sns, "VECTOR LOOKUP", 5) {}
+	~FunctionVectorLookup(void) {}
+	std::string ComputableName(void) { return "VECTOR LOOKUP"; }
+	virtual void OutputComputable(ContextInfo* info, ExpressionList* arg);
+private:
+};
+FSubclass(FunctionElmCount, "ELMCOUNT", 1, "SIZE");
 FSubclass(FunctionModulo,"MODULO",2,"MODULO")
 FSubclass(FunctionGetDataAtTime, "GET DATA AT TIME", 2, "GET_DATA_AT_TIME")
 FSubclass(FunctionGetDataLastTime, "GET DATA LAST TIME", 1, "GET_DATA_LAST_TIME")
