@@ -21,14 +21,14 @@
 #===============================================================================
 
 PKG_NAME='boost'
-PKG_VERSION_A=1.58.0
-PKG_VERSION_B=boost_1_58_0
+PKG_VERSION_A=1.73.0
+PKG_VERSION_B=boost_1_73_0
 ARCHIVE_NAME="${PKG_VERSION_B}.tar.gz"
 DOWNLOAD_URL="http://downloads.sourceforge.net/project/boost/boost/${PKG_VERSION_A}/${ARCHIVE_NAME}"
 
 : ${BOOST_LIBS:="thread filesystem system date_time random chrono program_options iostreams"}
-: ${OSX_SDKVERSION:=10.15}
-: ${OSX_VERSION:=10.7}
+: ${OSX_SDKVERSION:=11.0}
+: ${OSX_VERSION:=10.15}
 : ${XCODE_ROOT:=`xcode-select -print-path`}
 : ${EXTRA_CPPFLAGS:="-DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS -std=c++11 -stdlib=libc++"}
 

@@ -1,12 +1,13 @@
 #!/bin/bash
 set -e
 
-PKG_VERSION=54.1
-SDK_VERSION=10.15
-OSX_VERSION=10.7
+PKG_VERSION=54-2
+SDK_VERSION=11.0
+OSX_VERSION=10.15
 
-ARCHIVE_NAME="icu4c-$(echo $PKG_VERSION | sed -e 's/\./_/')-src.zip"
-DOWNLOAD_URL="http://download.icu-project.org/files/icu4c/${PKG_VERSION}/${ARCHIVE_NAME}"
+ARCHIVE_NAME="icu4c-$(echo $PKG_VERSION | sed -e 's/\-/_/')-src.zip"
+DOWNLOAD_URL="https://github.com/unicode-org/icu/releases/download/release-${PKG_VERSION}/${ARCHIVE_NAME}"
+
 PKG_NAME='icu'
 LIB_NAME="lib${PKG_NAME}.a"
 
