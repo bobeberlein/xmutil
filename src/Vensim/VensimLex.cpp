@@ -403,7 +403,7 @@ int VensimLex::NextToken() // also sets token type
 		  if (c == 'G' || c == 'g')
 		  {
 			  // the GET XLS functins don't really translat so we return the entire expression as a quoted variable name
-			  if (IsGetXLS())
+			  if (IsGetXLSorVDF())
 				  return VPTT_symbol;
 		  }
          if(isalpha(c) || c > 127 || ((iInUnitsComment == 1) && c == '$')) { // a variable
@@ -445,12 +445,22 @@ NULL} ;
 }
 
 // treat the GET XLS functions as varialbles to make it easier to figure out what to do on the other side
-bool VensimLex::IsGetXLS()
+bool VensimLex::IsGetXLSorVDF()
 {
-	if (KeywordMatch("ET XLS"))
+    bool isXLS = KeywordMatch("ET XLS");
+    bool isVDF = KeywordMatch("ET VDF");
+    bool isData = KeywordMatch("ET DATA");
+    
+	if (isXLS || isVDF || isData)
 	{
-		sToken = "\"GET XLS";
-		char c;
+        if (isXLS)
+            sToken = "\"GET XLS";
+		else if (isVDF)
+            sToken = "\"GET VDF";
+        else if (isData)
+            sToken = "\"GET DATA";
+        
+        char c;
 		while (c = GetNextChar(true))
 		{
 			if (c == '(')

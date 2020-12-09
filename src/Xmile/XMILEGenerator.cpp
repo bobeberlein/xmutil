@@ -799,7 +799,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 							xfrom->InsertEndChild(xalias);
 							xalias->SetAttribute("uid", view->UIDOffset() + cele->From());
 						}
-						else
+						else if (from->GetVariable())
 						{
 							xfrom->SetText(QuotedSpaceToUnderBar(from->GetVariable()->GetAlternateName()).c_str());
 						}
