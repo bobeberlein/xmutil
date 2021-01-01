@@ -42,6 +42,14 @@ void Function::OutputComputable(ContextInfo *info,ExpressionList *arg)
 	}
 }
 
+void UnknownFunction::OutputComputable(ContextInfo* info, ExpressionList* arg)
+{
+	*info << "{Untranslated function used}";
+	*info << sName;
+	Function::OutputComputable(info, arg);
+}
+
+
 void FunctionVectorLookup::OutputComputable(ContextInfo* info, ExpressionList* arg)
 {
 	// could try to figure this one out - 

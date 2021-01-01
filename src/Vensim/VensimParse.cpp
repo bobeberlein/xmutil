@@ -16,7 +16,6 @@
 
 VensimParse *VPObject = NULL ;
 
-
 VensimParse::VensimParse(Model* model)
 {
 #if YYDEBUG
@@ -28,7 +27,6 @@ VensimParse::VensimParse(Model* model)
    pSymbolNameSpace = model->GetNameSpace() ;
    bLongName = false;
    ReadyFunctions();
-
 }
 VensimParse:: ~VensimParse(void)
 {
@@ -275,7 +273,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
              std::cout << e.str << std::endl ;
              std::cout << "Error at line " << mVensimLex.LineNumber() << " position " << mVensimLex.Position() 
                 << " in file " << sFilename << std::endl ;
-			 std::cout << ".... skipping the associated variable and looking for the next usable content.";
+			 std::cout << ".... skipping the associated variable and looking for the next usable content.\n";
              pSymbolNameSpace->DeleteAllUnconfirmedAllocations() ;
              noerr = false ;
              if(!FindNextEq(false)) 
@@ -657,9 +655,14 @@ Expression *VensimParse::FunctionExpression(Function *func,ExpressionList *eargs
        return new ExpressionFunction(pSymbolNameSpace,func,eargs) ;
    return new ExpressionFunctionMemory(pSymbolNameSpace,func,eargs) ;
 }
-Expression *VensimParse::LookupExpression(ExpressionVariable *var,Expression *exp) 
+Expression *VensimParse::LookupExpression(ExpressionVariable *var, ExpressionList *args)
 {
-   return new ExpressionLookup(pSymbolNameSpace,var,exp) ;
+	if (args->Length() == 1)
+		return new ExpressionLookup(pSymbolNameSpace,var,args->GetExp(0));
+	// really an error so we use uknown function
+	const std::string& name = var->GetVariable()->GetName();
+	Function* f = new UnknownFunction(new SymbolNameSpace(), name, args->Length());
+	return new ExpressionFunction(pSymbolNameSpace, f, args);
 }
 
 ExpressionTable *VensimParse::TablePairs(ExpressionTable *table,double x,double y) 

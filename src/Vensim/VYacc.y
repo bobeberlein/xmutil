@@ -1,5 +1,8 @@
 /* 
-d:\tools\bison\bin\win_bison -o $(ProjectDir)src\Vensim\VYacc.tab.cpp -p vpyy -d $(ProjectDir)src\Vensim\VYacc.y
+c:\tools\bison\bin\win_bison -o VYacc.tab.cpp -p vpyy -d VYacc.y
+
+
+c:\tools\bison\bin\win_bison -o $(ProjectDir)src\Vensim\VYacc.tab.cpp -p vpyy -d $(ProjectDir)src\Vensim\VYacc.y
 Converting VYacc.y
 Outputs: VYacc.tab.cpp VYacc.tab.hpp 
 */
@@ -206,7 +209,7 @@ exp:
 	 | VPTT_na			  { $$ = vpyy_num_expression(-1E38);}
      | var                { $$ = (Expression *)$1 ; } /* ExpressionVariable is subclassed from Expression */
 	 | VPTT_literal       { $$ = vpyy_literal_expression($1) ; } // not part of XMILE - just dumped directly for editing afterward
-	 | var '(' exp ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
+	 | var '(' exprlist ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
 	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,NULL) ; }
      | VPTT_function '(' exprlist ')'   { $$ = vpyy_function_expression($1,$3) ;}
      | VPTT_function '(' ')'   { $$ = vpyy_function_expression($1,NULL) ;}

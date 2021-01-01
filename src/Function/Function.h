@@ -33,6 +33,16 @@ protected :
    int iNumberArgs ;
 };
 
+class UnknownFunction : public Function
+{
+public:
+	UnknownFunction(SymbolNameSpace* sns, const std::string& name, int narg) : Function(sns, name, narg), sName(name) {}
+	~UnknownFunction() {}
+	virtual void OutputComputable(ContextInfo* info, ExpressionList* arg);
+private:
+	std::string sName;
+};
+
 
 class FunctionMemoryBase : public Function {
 public:

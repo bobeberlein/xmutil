@@ -402,7 +402,7 @@ int VensimLex::NextToken() // also sets token type
       default : // a variable name or an unrecognizable token
 		  if (c == 'G' || c == 'g')
 		  {
-			  // the GET XLS functins don't really translat so we return the entire expression as a quoted variable name
+			  // the GET XLS functins don't really translat so we return 0 and the entire expression as a comment
 			  if (IsGetXLSorVDF())
 				  return VPTT_symbol;
 		  }
@@ -447,37 +447,35 @@ NULL} ;
 // treat the GET XLS functions as varialbles to make it easier to figure out what to do on the other side
 bool VensimLex::IsGetXLSorVDF()
 {
-    bool isXLS = KeywordMatch("ET XLS");
-    bool isVDF = KeywordMatch("ET VDF");
-    bool isData = KeywordMatch("ET DATA");
-    
-	if (isXLS || isVDF || isData)
+	// Vensim has a bunch of GET functions that use strings and aren't worth translating 
+	if (KeywordMatch("ET 123"))
+		sToken = "0{GET 123";
+	else if (KeywordMatch("ET DATA"))
+		sToken = "0{GET DATA";
+	else if (KeywordMatch("ET DIRECT"))
+		sToken = "0{GET DIRECT";
+	else if (KeywordMatch("ET VDF"))
+		sToken = "0{GET VDF";
+	else if (KeywordMatch("ET XLS"))
+		sToken = "0{GET XLS";
+	else
+		return false;
+	char c;
+	while (c = GetNextChar(true))
 	{
-        if (isXLS)
-            sToken = "\"GET XLS";
-		else if (isVDF)
-            sToken = "\"GET VDF";
-        else if (isData)
-            sToken = "\"GET DATA";
-        
-        char c;
-		while (c = GetNextChar(true))
-		{
-			if (c == '(')
-				break;
-		}
-		int nesting = 1;
-		while (nesting && (c = GetNextChar(true)))
-		{
-			if (c == '(')
-				nesting++;
-			else if (c == ')')
-				nesting--;
-		}
-		sToken.push_back('\"');
-		return true;
+		if (c == '(')
+			break;
 	}
-	return false;
+	int nesting = 1;
+	while (nesting && (c = GetNextChar(true)))
+	{
+		if (c == '(')
+			nesting++;
+		else if (c == ')')
+			nesting--;
+	}
+	sToken.push_back('}');
+	return true;
 }
 
 // target assumed upper case 
