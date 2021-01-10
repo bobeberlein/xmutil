@@ -33,7 +33,7 @@ class Symbol;
 class ContextInfo :  public std::ostringstream
 {
 public:
-	ContextInfo(void) { iComputeType = 0; bInitEqn = false;  pEquations = NULL; }
+	ContextInfo(void) { iComputeType = 0; bInitEqn = false;  bInSubList = false;  pEquations = NULL; }
    ~ContextInfo(void) { }
    friend class Model ;
   // ContextInfo& operator << (const char *s) { std::cout << s ; return *this; }
@@ -55,6 +55,8 @@ public:
    inline double GetDT(void) { return dDT ; }
    inline void SetLHSElms(const std::vector<Symbol*>* generic, const std::vector<Symbol*>* specific) { assert(specific->size() == generic->size()); pLHSElmsGeneric = generic; pLHSElmsSpecific = specific; }
    Symbol* GetLHSSpecific(Symbol* generic);
+   bool InSubList() const { return bInSubList; }
+   void SetInSubList(bool set) { bInSubList = set; }
 private:
    double dTime,dDT ;
    double *pBaseLevel,*pCurLevel ;
@@ -67,7 +69,7 @@ private:
    int iComputeType ; // CF_... as above
    unsigned char cDynamicDependencyFlag ; // DDF_... as above
    bool bInitEqn; // for xmile
-
+   bool bInSubList;
 };
 
 #endif

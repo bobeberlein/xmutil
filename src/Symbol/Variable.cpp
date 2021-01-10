@@ -76,6 +76,18 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 			std::string name = this->GetName();
 			symlist->SetOwner(this); // this can recur
 			mVariableType = XMILE_Type_ARRAY;
+			// anything untyped in the symlist should be marked an elm - may contain other arrays
+			int n = symlist->Length();
+			for (int i = 0; i < n; i++)
+			{
+				const SymbolList::SymbolListEntry& sle = (*symlist)[i];
+				if (sle.eType == SymbolList::EntryType_SYMBOL)
+				{
+					const Variable* elm = static_cast<const Variable*>(sle.u.pSymbol);
+					if (elm->mVariableType == XMILE_Type_UNKNOWN)
+						const_cast<Variable*>(elm)->mVariableType = XMILE_Type_ARRAY_ELM;
+				}
+			}
 			return mVariableType;
 		}
 		if (exp->GetType() == EXPTYPE_NumberTable)
@@ -250,6 +262,18 @@ void Variable::AddEq(Equation *eq)
       }
    }
   pVariableContent->AddEq(eq) ; 
+}
+
+void Variable::OutputComputable(ContextInfo* info)
+{
+	if (pVariableContent)
+		pVariableContent->OutputComputable(info);
+	else
+	{
+		if (mVariableType == XMILE_Type_ARRAY_ELM && !info->InSubList())
+			*info << SpaceToUnderBar(this->Owner()->GetName()) << ".";
+		*info << SpaceToUnderBar(GetName());
+	}
 }
 
 VariableContent::VariableContent(void)

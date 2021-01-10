@@ -83,6 +83,8 @@ void VensimParse::ReadyFunctions()
 		new FunctionNPV(pSymbolNameSpace);
 		new FunctionSum(pSymbolNameSpace);
 		new FunctionProd(pSymbolNameSpace);
+		new FunctionVMax(pSymbolNameSpace);
+		new FunctionVMin(pSymbolNameSpace);
 		new FunctionTimeBase(pSymbolNameSpace);
 		new FunctionVectorSelect(pSymbolNameSpace);
 		new FunctionVectorElmMap(pSymbolNameSpace);

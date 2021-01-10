@@ -66,6 +66,7 @@ void SymbolList::OutputComputable(ContextInfo *info)
 {
 	if (vSymbols.empty())
 		return;
+	info->SetInSubList(true);
 	*info << "[";
 	for (size_t i = 0; i < vSymbols.size(); i++)
 	{
@@ -125,4 +126,5 @@ void SymbolList::OutputComputable(ContextInfo *info)
 		}
 	}
 	*info << "]";
+	info->SetInSubList(false);
 }

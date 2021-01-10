@@ -145,6 +145,8 @@ FSubclass(FunctionXidz, "XIDZ", 3, "SAFEDIV")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionSum, "SUM", 1, "SUM");
 FSubclass(FunctionProd, "PROD", 1, "PROD");
+FSubclass(FunctionVMax, "VMAX", 1, "MAX");
+FSubclass(FunctionVMin, "VMIN", 1, "MIN");
 FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
 FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
