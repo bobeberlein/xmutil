@@ -387,27 +387,32 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 					eq_pos = 0;
 					elms.clear();
 					eqn->SubscriptExpand(elms, subs);
-					assert(!elms.empty());
-					BOOST_FOREACH(std::vector<Symbol*> elm, elms)
+					if (!elms.empty())
 					{
-						for (int i = 0; i < dim_count; i++)
+						BOOST_FOREACH(std::vector<Symbol*> elm, elms)
 						{
-							entries[i].insert(elm[i]);
+							for (int i = 0; i < dim_count; i++)
+							{
+								entries[i].insert(elm[i]);
+							}
 						}
 					}
 				}
-				dims = elms[eq_pos];
-				std::string s;
-				int dim_count = dims.size();
-				for (int j = 0; j < dim_count; j++)
+				if (!elms.empty())
 				{
-					if (j)
-						s += ", ";
-					s += dims[j]->GetName();
+					dims = elms[eq_pos];
+					std::string s;
+					int dim_count = dims.size();
+					for (int j = 0; j < dim_count; j++)
+					{
+						if (j)
+							s += ", ";
+						s += dims[j]->GetName();
+					}
+					xelement = doc->NewElement("element");
+					xelement->SetAttribute("subscript", s.c_str());
+					xvar->InsertEndChild(xelement);
 				}
-				xelement = doc->NewElement("element");
-				xelement->SetAttribute("subscript", s.c_str());
-				xvar->InsertEndChild(xelement);
 			}
 			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 			xelement->InsertEndChild(xeqn);
@@ -752,7 +757,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 						}
 						if (count < 2 || toind < 0)
 						{
-							xpt[0] = vele->X() - 25;
+							xpt[0] = vele->X() - 150;
 							xpt[1] = vele->X() + 25;
 							ypt[0] = ypt[1] = vele->Y();
 							toind = 1;
