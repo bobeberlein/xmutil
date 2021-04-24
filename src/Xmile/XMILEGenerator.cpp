@@ -305,7 +305,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 	element->InsertEndChild(variables);
 
 	std::vector<Variable*> vars = _model->GetVariables(ns); // all symbols that are variables
-	BOOST_FOREACH(Variable* var, vars)
+	BOOST_FOREACH(Variable * var, vars)
 	{
 		if (var->Unwanted())
 			continue;
@@ -352,13 +352,13 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		}
 		if (type == XMILE_Type_STOCK)
 		{
-			BOOST_FOREACH(Variable* in, var->Inflows())
+			BOOST_FOREACH(Variable * in, var->Inflows())
 			{
 				tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
 				xvar->InsertEndChild(inflow);
 				inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
 			}
-			BOOST_FOREACH(Variable* out, var->Outflows())
+			BOOST_FOREACH(Variable * out, var->Outflows())
 			{
 				tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
 				xvar->InsertEndChild(outflow);
@@ -372,7 +372,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		int eq_pos = 0;
 		std::vector<Symbol*> subs; // [ship,location]
 		std::vector<std::vector<Symbol*> > elms; // [s1,l1]
-		std::vector<std::set<Symbol *> > entries;
+		std::vector<std::set<Symbol*> > entries;
 		std::vector<Symbol*> dims;
 		while (eq_ind < eq_count)
 		{
@@ -414,68 +414,73 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 					xvar->InsertEndChild(xelement);
 				}
 			}
-			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
-			xelement->InsertEndChild(xeqn);
-			xeqn->SetText(eqn->RHSFormattedXMILE(subs,dims, false).c_str());
-
-
-			// it it is active init we need to store that separately
-			if (eqn->IsActiveInit())
+			// skip it altogether if it is an A FUNCTION OF equation
+			std::string rhs = eqn->RHSFormattedXMILE(subs, dims, false);
+			if (rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
 			{
-				tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
-				xelement->InsertEndChild(xieqn);
-				xieqn->SetText(eqn->RHSFormattedXMILE(subs, dims, true).c_str());
-			}
+				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
+				xelement->InsertEndChild(xeqn);
+				xeqn->SetText(rhs.c_str());
 
-			// if it has a lookup we need to store that separately
-			ExpressionTable* et = eqn->GetTable();
-			if (et)
-			{
-				assert(type == XMILE_Type_AUX || type == XMILE_Type_FLOW);
-				std::vector<double>* xvals = et->GetXVals();
-				std::vector<double>* yvals = et->GetYVals();
-				tinyxml2::XMLElement* gf = doc->NewElement("gf");
-				if (et->Extrapolate())
-					gf->SetAttribute("type", "extrapolate");
-				xelement->InsertEndChild(gf);
-				tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
-				gf->InsertEndChild(yscale);
-				tinyxml2::XMLElement* xpts = doc->NewElement("xpts");
-				gf->InsertEndChild(xpts);
-				tinyxml2::XMLElement* ypts = doc->NewElement("ypts");
-				gf->InsertEndChild(ypts);
 
-				std::string xstr;
-				for (size_t i = 0; i < xvals->size(); i++)
+				// it it is active init we need to store that separately
+				if (eqn->IsActiveInit())
 				{
-					if (i)
-						xstr += ",";
-					xstr += StringFromDouble((*xvals)[i]);
+					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
+					xelement->InsertEndChild(xieqn);
+					xieqn->SetText(eqn->RHSFormattedXMILE(subs, dims, true).c_str());
 				}
-				xpts->SetText(xstr.c_str());
 
-				std::string ystr;
-				double ymin, ymax;
-				for (size_t i = 0; i < yvals->size(); i++)
+				// if it has a lookup we need to store that separately
+				ExpressionTable* et = eqn->GetTable();
+				if (et)
 				{
-					if (i)
+					assert(type == XMILE_Type_AUX || type == XMILE_Type_FLOW);
+					std::vector<double>* xvals = et->GetXVals();
+					std::vector<double>* yvals = et->GetYVals();
+					tinyxml2::XMLElement* gf = doc->NewElement("gf");
+					if (et->Extrapolate())
+						gf->SetAttribute("type", "extrapolate");
+					xelement->InsertEndChild(gf);
+					tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
+					gf->InsertEndChild(yscale);
+					tinyxml2::XMLElement* xpts = doc->NewElement("xpts");
+					gf->InsertEndChild(xpts);
+					tinyxml2::XMLElement* ypts = doc->NewElement("ypts");
+					gf->InsertEndChild(ypts);
+
+					std::string xstr;
+					for (size_t i = 0; i < xvals->size(); i++)
 					{
-						ystr += ",";
-						if ((*yvals)[i] < ymin)
-							ymin = (*yvals)[i];
-						else if ((*yvals)[i] > ymax)
-							ymax = (*yvals)[i];
+						if (i)
+							xstr += ",";
+						xstr += StringFromDouble((*xvals)[i]);
 					}
-					else
-						ymin = ymax = (*yvals)[i];
-					ystr += StringFromDouble((*yvals)[i]);
-				}
-				ypts->SetText(ystr.c_str());
+					xpts->SetText(xstr.c_str());
 
-				if (ymin == ymax)
-					ymax = ymin + 1;
-				yscale->SetAttribute("min", StringFromDouble(ymin).c_str());
-				yscale->SetAttribute("max", StringFromDouble(ymax).c_str());
+					std::string ystr;
+					double ymin, ymax;
+					for (size_t i = 0; i < yvals->size(); i++)
+					{
+						if (i)
+						{
+							ystr += ",";
+							if ((*yvals)[i] < ymin)
+								ymin = (*yvals)[i];
+							else if ((*yvals)[i] > ymax)
+								ymax = (*yvals)[i];
+						}
+						else
+							ymin = ymax = (*yvals)[i];
+						ystr += StringFromDouble((*yvals)[i]);
+					}
+					ypts->SetText(ystr.c_str());
+
+					if (ymin == ymax)
+						ymax = ymin + 1;
+					yscale->SetAttribute("min", StringFromDouble(ymin).c_str());
+					yscale->SetAttribute("max", StringFromDouble(ymax).c_str());
+				}
 			}
 			if (eq_count > 1)
 			{
@@ -517,7 +522,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 					Symbol* best = parent;
 					if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
 					{
-						BOOST_FOREACH(Symbol* subrange, *parent->Subranges())
+						BOOST_FOREACH(Symbol * subrange, *parent->Subranges())
 						{
 							if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
 								static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
@@ -526,7 +531,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 								bool complete = true;
 								std::vector<Symbol*> telms;
 								Equation::GetSubscriptElements(telms, subrange);
-								BOOST_FOREACH(Symbol* elm, entries[i])
+								BOOST_FOREACH(Symbol * elm, entries[i])
 								{
 									if (std::find(telms.begin(), telms.end(), elm) == telms.end())
 									{
@@ -713,7 +718,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 							VensimConnectorElement* cele = static_cast<VensimConnectorElement*>(elements[i]);
 							if (cele && cele->Type() == VensimViewElement::ElementTypeCONNECTOR)
 							{
-								if (cele->From() == uid - 1)
+								if (cele->From() == local_uid - 1)
 								{
 									// check to see what to is
 									VensimVariableElement* stock = static_cast<VensimVariableElement*>(elements[cele->To()]);
