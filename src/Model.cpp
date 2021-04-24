@@ -420,6 +420,7 @@ bool Model::MarkVariableTypes(SymbolNameSpace* ns)
 		// 
 		BOOST_FOREACH(Variable* var, vars)
 		{
+            var->PurgeAFOEq();
 			var->MarkFlows(ns); // may change number of entries so can't be in above loop
 		}
 		// don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();

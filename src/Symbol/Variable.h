@@ -36,6 +36,7 @@ public :
    virtual void AddEq(Equation *eq) { }
    virtual Equation *GetEquation(int pos) { return NULL ; }
    virtual std::vector<Equation*> GetAllEquations() { return std::vector<Equation*>(); }
+   virtual void DropEquation(int pos) {}
    virtual void SetAllEquations(std::vector<Equation*> set) { assert(false); }
    virtual std::vector<Variable*> GetInputVars() { return std::vector<Variable*>(); }
    virtual bool AddUnits(UnitExpression *un) { return false; }
@@ -84,6 +85,7 @@ public :
    void AddEq(Equation *eq) { vEquations.push_back(eq) ; }
    virtual Equation *GetEquation(int pos) { return vEquations[pos] ; }
    virtual std::vector<Equation*> GetAllEquations() { return vEquations; }
+   virtual void DropEquation(int pos) { vEquations.erase(vEquations.begin()+pos); }
    virtual void SetAllEquations(std::vector<Equation*> set) { vEquations=set; }
    virtual std::vector<Variable*> GetInputVars();
    bool AddUnits(UnitExpression *un) { if (!pUnits) { pUnits = un; return true; } return false; }
@@ -138,6 +140,7 @@ public:
    inline void SetAlternateName(const std::string &altname) { pVariableContent->SetAlternateName(altname) ; }
    std::string GetAlternateName(void);
 
+   void PurgeAFOEq();
    XMILE_Type MarkFlows(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
    XMILE_Type VariableType() { return mVariableType; }
    void SetVariableType(XMILE_Type t) { mVariableType = t; }

@@ -416,7 +416,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 			}
 			// skip it altogether if it is an A FUNCTION OF equation
 			std::string rhs = eqn->RHSFormattedXMILE(subs, dims, false);
-			if (rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
+			if (eq_count <= 1 || rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
 			{
 				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 				xelement->InsertEndChild(xeqn);

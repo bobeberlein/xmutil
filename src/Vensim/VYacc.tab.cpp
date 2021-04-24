@@ -74,7 +74,7 @@
 #define yychar          vpyychar
 
 /* First part of user prologue.  */
-#line 7 "VYacc.y" /* yacc.c:337  */
+#line 10 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:337  */
 
 #include "../Symbol/Parse.h"
 #include "VensimParseFunctions.h"
@@ -82,7 +82,7 @@ extern int vpyylex (void);
 extern void vpyyerror (char const *);
 #define YYSTYPE ParseUnion
 
-#line 86 "VYacc.tab.cpp" /* yacc.c:337  */
+#line 86 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:337  */
 # ifndef YY_NULLPTR
 #  if defined __cplusplus
 #   if 201103L <= __cplusplus
@@ -105,8 +105,8 @@ extern void vpyyerror (char const *);
 
 /* In a future release of Bison, this section will be replaced
    by #include "VYacc.tab.hpp".  */
-#ifndef YY_VPYY_VYACC_TAB_HPP_INCLUDED
-# define YY_VPYY_VYACC_TAB_HPP_INCLUDED
+#ifndef YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
+# define YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -159,7 +159,7 @@ extern YYSTYPE vpyylval;
 
 int vpyyparse (void);
 
-#endif /* !YY_VPYY_VYACC_TAB_HPP_INCLUDED  */
+#endif /* !YY_VPYY_C_SDEV_XMUTIL_SRC_VENSIM_VYACC_TAB_HPP_INCLUDED  */
 
 
 
@@ -394,16 +394,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  17
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   307
+#define YYLAST   318
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  52
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  25
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  98
+#define YYNRULES  99
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  230
+#define YYNSTATES  232
 
 #define YYUNDEFTOK  2
 #define YYMAXUTOK   286
@@ -450,18 +450,18 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    83,    83,    84,    85,    86,    87,    88,    89,    90,
-      94,    94,    98,   105,   106,   107,   108,   109,   110,   111,
-     112,   113,   118,   119,   120,   124,   125,   129,   133,   134,
-     135,   136,   139,   140,   141,   142,   146,   147,   148,   149,
-     150,   154,   155,   158,   159,   160,   164,   165,   166,   167,
-     172,   173,   174,   175,   179,   180,   184,   185,   186,   187,
-     192,   193,   198,   199,   200,   201,   205,   206,   207,   208,
-     209,   210,   211,   212,   213,   214,   215,   216,   217,   218,
-     219,   220,   221,   222,   223,   224,   225,   226,   227,   228,
-     232,   233,   235,   240,   241,   246,   247,   252,   253
+       0,    86,    86,    87,    88,    89,    90,    91,    92,    93,
+      97,    97,   101,   108,   109,   110,   111,   112,   113,   114,
+     115,   116,   121,   122,   123,   127,   128,   132,   136,   137,
+     138,   139,   142,   143,   144,   145,   149,   150,   151,   152,
+     153,   157,   158,   161,   162,   163,   167,   168,   169,   170,
+     175,   176,   177,   178,   182,   183,   187,   188,   189,   190,
+     195,   196,   201,   202,   203,   204,   208,   209,   210,   211,
+     212,   213,   214,   215,   216,   217,   218,   219,   220,   221,
+     222,   223,   224,   225,   226,   227,   228,   229,   230,   231,
+     232,   236,   237,   239,   244,   245,   250,   251,   256,   257
 };
 #endif
 
@@ -501,10 +501,10 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF -159
+#define YYPACT_NINF -160
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-159)))
+  (!!((Yystate) == (-160)))
 
 #define YYTABLE_NINF -1
 
@@ -515,29 +515,30 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-       4,  -159,  -159,  -159,  -159,    -3,    17,  -159,  -159,   -18,
-       2,   201,     6,    37,   -22,    46,  -159,  -159,   234,   228,
-     113,   226,  -159,  -159,     3,  -159,  -159,  -159,    98,    94,
-    -159,  -159,   116,     1,   100,     7,  -159,  -159,  -159,    11,
-     -19,   -24,    24,   228,  -159,  -159,  -159,     3,   114,   228,
-     228,   228,   118,   168,   127,  -159,    25,   168,  -159,   144,
-     150,    38,   143,  -159,   140,   145,   142,   149,  -159,     3,
-     228,   161,    -7,    -6,  -159,  -159,   167,  -159,   134,  -159,
-     156,  -159,  -159,  -159,    11,    11,   -19,   169,   208,   189,
-     189,   128,   228,   228,   228,   228,   228,   228,   228,   228,
-     228,   228,   228,   228,   228,   228,   228,   228,   228,  -159,
-    -159,   176,    38,  -159,  -159,    38,   179,  -159,   -25,   194,
-    -159,   205,   193,  -159,   212,   216,  -159,   -19,  -159,  -159,
-     213,  -159,    48,  -159,   109,   141,   209,    21,    21,    21,
-     189,   189,    21,    21,    21,   169,   169,   169,    45,   168,
-     168,    38,   221,  -159,    38,  -159,   210,   222,    -4,   236,
-    -159,    50,   -19,  -159,  -159,   229,   230,    38,   233,  -159,
-      46,  -159,   246,   250,   -19,  -159,    75,    31,  -159,   238,
-      38,    43,   237,   240,   232,   -19,  -159,   242,   243,   252,
-     244,  -159,    46,  -159,  -159,   241,    38,   247,   249,  -159,
-      52,  -159,   245,  -159,    38,  -159,    38,   248,   251,    38,
-     260,   253,   255,    76,    38,   256,   257,   258,    86,    92,
-      38,   259,   142,   149,   261,   256,   110,   149,   262,   256
+      13,  -160,  -160,  -160,  -160,    -3,    10,  -160,  -160,    -6,
+       2,   203,    -5,    -2,   -22,    26,  -160,  -160,   101,   250,
+      25,    69,  -160,  -160,    20,  -160,  -160,  -160,    52,    27,
+    -160,  -160,    89,     1,    71,    90,  -160,  -160,  -160,   -17,
+     -16,   -25,    61,   250,  -160,  -160,  -160,    20,    86,   250,
+     250,   250,   136,   170,   141,  -160,   -36,   170,  -160,   162,
+     169,    37,   154,  -160,   159,   168,   153,   178,  -160,    20,
+     250,   190,   -15,    64,  -160,  -160,   196,  -160,    75,  -160,
+     222,  -160,  -160,  -160,   -17,   -17,   -16,   214,   210,   191,
+     191,   128,   250,   250,   250,   250,   250,   250,   250,   250,
+     250,   250,   250,   250,   250,   250,   250,   250,   250,  -160,
+    -160,   223,    37,  -160,  -160,    37,   193,  -160,   109,   227,
+    -160,   240,   225,  -160,   242,   226,  -160,   -16,  -160,  -160,
+     231,  -160,   129,  -160,   131,   117,   211,    22,    22,    22,
+     191,   191,    22,    22,    22,   214,   214,   214,    87,   170,
+     170,    37,   235,  -160,    37,  -160,   228,   236,    70,   249,
+    -160,    92,   -16,  -160,   230,  -160,   243,   244,    37,   245,
+    -160,    26,  -160,   258,   260,   -16,  -160,   138,  -160,    59,
+    -160,   247,    37,    97,   246,   251,   248,   -16,  -160,   254,
+     255,   264,   256,  -160,    26,  -160,  -160,   253,    37,   259,
+     261,  -160,   126,  -160,   257,  -160,    37,  -160,    37,   262,
+     265,    37,   271,   266,   263,   143,    37,   268,   267,   269,
+     195,    31,    37,   270,   153,   178,   272,   268,   215,   178,
+     273,   268
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -551,31 +552,32 @@ static const yytype_uint8 yydefact[] =
       20,    32,     0,    60,    28,     0,    46,     9,     8,     0,
        0,     0,    36,     0,    67,    66,    69,    25,     0,     0,
        0,     0,    68,    17,     0,    21,    13,    62,    43,     0,
-       0,     0,     0,    95,     0,     0,    93,    90,    54,     0,
+       0,     0,     0,    96,     0,     0,    94,    91,    54,     0,
        0,     0,     0,     0,    19,    29,     0,    27,     0,    42,
-       0,    41,     7,     6,     0,     0,     0,    85,     0,    87,
-      88,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,    41,     7,     6,     0,     0,     0,    86,     0,    88,
+      89,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,    65,    44,
       45,     0,     0,    14,    15,     0,     0,    55,     0,     0,
       56,     0,    61,    34,     0,    30,    49,     0,    48,    47,
-       0,    73,     0,    71,     0,    84,    83,    81,    79,    82,
-      75,    74,    86,    78,    80,    76,    77,    89,     0,    63,
-      64,     0,     0,    96,     0,    11,     0,     0,     0,     0,
-      31,     0,     0,    72,    70,     0,     0,     0,     0,    33,
-       0,    58,     0,     0,     0,    39,     0,     0,    97,     0,
-       0,     0,     0,     0,     0,     0,    37,     0,     0,     0,
-       0,    57,     0,    35,    40,     0,     0,     0,     0,    98,
-       0,    38,     0,    16,     0,    59,     0,     0,     0,     0,
+       0,    74,     0,    71,     0,    85,    84,    82,    80,    83,
+      76,    75,    87,    79,    81,    77,    78,    90,     0,    63,
+      64,     0,     0,    97,     0,    11,     0,     0,     0,     0,
+      31,     0,     0,    72,     0,    70,     0,     0,     0,     0,
+      33,     0,    58,     0,     0,     0,    39,     0,    73,     0,
+      98,     0,     0,     0,     0,     0,     0,     0,    37,     0,
+       0,     0,     0,    57,     0,    35,    40,     0,     0,     0,
+       0,    99,     0,    38,     0,    16,     0,    59,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    94,    91,     0,     0,     0,    92,     0,     0
+       0,     0,     0,     0,    95,    92,     0,     0,     0,    93,
+       0,     0
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -159,  -159,  -159,  -159,  -159,  -159,  -159,   296,   -20,  -158,
-    -159,  -159,   -85,   -21,   -37,  -159,  -159,  -159,  -159,   -60,
-       8,   123,  -159,    82,   -97
+    -160,  -160,  -160,  -160,  -160,  -160,  -160,   294,   -20,  -159,
+    -160,  -160,   -70,   -21,   -37,  -160,  -160,  -160,  -160,   -19,
+     -18,   134,  -160,    96,   -72
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
@@ -591,72 +593,74 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-      63,   130,    78,    13,    68,    19,    72,    31,    58,    82,
-     118,     1,   181,     2,     3,    59,    60,    17,    83,   155,
-     107,    32,   120,   123,    18,   171,   108,    53,   132,    93,
-       4,    79,   134,     5,   200,    29,   121,   124,    20,   172,
-     111,    36,   161,    14,    15,    21,    73,   128,   129,   117,
-      15,    87,    76,    93,    39,    77,    94,    89,    90,    91,
-     103,   104,   105,    84,    85,    58,    30,    95,    96,    97,
-     107,    86,    59,    60,    61,    34,   108,   176,   187,    98,
-      99,   100,   101,   102,   103,   104,   105,   191,    76,   184,
-     165,   152,   163,   107,   153,   174,   205,    76,   175,   108,
-     195,   135,   136,   137,   138,   139,   140,   141,   142,   143,
-     144,   145,   146,   147,   148,   149,   150,    54,   218,    58,
-     185,   215,   223,   186,   216,    43,    59,    60,   227,    44,
-     166,   116,   223,   168,   221,    61,    93,    70,    55,    94,
-      45,    46,    47,    69,    48,    71,   179,    49,    50,    75,
-      95,    96,    97,   164,   107,   215,    51,    88,   228,   190,
-     108,    92,    98,    99,   100,   101,   102,   103,   104,   105,
-     106,   109,   133,    84,    85,   202,    93,   110,   126,    94,
-     103,   104,   105,   207,   113,   208,   112,   115,   211,   114,
-      95,    96,    97,   217,   116,   119,   125,    93,    63,   224,
-      94,   127,    98,    99,   100,   101,   102,   103,   104,   105,
-     105,    95,    96,    97,    22,    23,    24,    93,    25,    26,
-      43,   151,   154,   156,    44,   100,   101,   102,   103,   104,
-     105,    95,    96,    97,   157,    45,    46,    47,   158,    48,
-      43,   159,    49,    50,    44,   100,   101,   102,   103,   104,
-     105,    51,   131,    58,   169,    45,    46,    47,   162,    48,
-      59,    60,    49,    50,    36,   160,   167,    37,   170,    61,
-     173,    51,   177,    62,   178,   182,    38,    39,   180,   183,
-     194,    40,   189,   192,   193,   196,   198,   197,   199,   201,
-     206,   203,   204,   209,   212,   210,    11,   213,   214,    61,
-     188,   222,   219,   220,   225,   226,     0,   229
+      63,    53,    78,    13,    68,    19,    72,    31,    82,   107,
+      17,    58,   183,    36,   120,   108,   130,    83,    59,    60,
+       1,    32,     2,     3,    29,    87,    39,    30,   121,    54,
+      93,    89,    90,    91,    79,   202,    18,    43,    20,     4,
+     111,    44,     5,    14,    15,    21,    73,   128,   129,   117,
+      55,   118,    45,    46,    47,    34,    48,   161,    58,    49,
+      50,   103,   104,   105,    58,    59,    60,    15,    51,   132,
+      70,    59,    60,   134,    61,   135,   136,   137,   138,   139,
+     140,   141,   142,   143,   144,   145,   146,   147,   148,   149,
+     150,   152,   177,   123,   153,    93,    58,    69,    94,   172,
+      84,    85,    61,    59,    60,   186,   189,   124,    86,    95,
+      96,    97,    61,   173,    84,    85,    62,   197,    71,   126,
+      75,    98,    99,   100,   101,   102,   103,   104,   105,    88,
+     167,    36,   166,   169,    37,    76,    93,   175,    77,    94,
+     176,   193,    76,    38,    39,   220,   149,   181,    40,   225,
+      95,    96,    97,   155,   107,   229,   103,   104,   105,   225,
+     108,   192,    98,    99,   100,   101,   102,   103,   104,   105,
+     207,    76,   133,   163,   164,   165,   107,   204,    93,    92,
+     108,    94,   108,   187,   106,   209,   188,   210,   217,   109,
+     213,   218,    95,    96,    97,   219,   110,   112,   115,    93,
+      63,   226,    94,   113,    98,    99,   100,   101,   102,   103,
+     104,   105,   114,    95,    96,    97,    22,    23,    24,    93,
+      25,    26,    43,   116,   119,   125,    44,   100,   101,   102,
+     103,   104,   105,    95,    96,    97,   154,    45,    46,    47,
+     116,    48,    43,   223,    49,    50,    44,   100,   101,   102,
+     103,   104,   105,    51,   131,   105,   156,    45,    46,    47,
+     217,    48,    43,   230,    49,    50,    44,   127,   151,   157,
+     158,   159,   170,    51,   178,   160,   162,    45,    46,    47,
+     168,    48,   171,   174,    49,    50,   179,   184,   180,   185,
+     182,   191,   194,    51,    11,   195,   196,   198,   200,   199,
+     201,   203,   208,   205,   206,   214,   216,   211,     0,   212,
+     215,    61,   221,   190,   222,   227,   228,   224,   231
 };
 
 static const yytype_int16 yycheck[] =
 {
-      21,    86,    39,     6,    24,     3,     5,    29,    27,    33,
-      70,     7,   170,     9,    10,    34,    35,     0,    42,    44,
-      45,    43,    29,    29,    42,    29,    51,    19,    88,     8,
-      26,    50,    92,    29,   192,    29,    43,    43,    36,    43,
-      61,    30,   127,    46,    47,    43,    45,    84,    85,    69,
-      47,    43,    45,     8,    43,    48,    11,    49,    50,    51,
-      39,    40,    41,    39,    40,    27,    29,    22,    23,    24,
-      45,    47,    34,    35,    43,    29,    51,   162,    47,    34,
-      35,    36,    37,    38,    39,    40,    41,    44,    45,   174,
-      45,   112,    44,    45,   115,    45,    44,    45,    48,    51,
-     185,    93,    94,    95,    96,    97,    98,    99,   100,   101,
-     102,   103,   104,   105,   106,   107,   108,     4,   215,    27,
-      45,    45,   219,    48,    48,    12,    34,    35,   225,    16,
-     151,    45,   229,   154,    48,    43,     8,    43,    25,    11,
-      27,    28,    29,    45,    31,    29,   167,    34,    35,    49,
-      22,    23,    24,    44,    45,    45,    43,    43,    48,   180,
-      51,    43,    34,    35,    36,    37,    38,    39,    40,    41,
-      43,    27,    44,    39,    40,   196,     8,    27,    44,    11,
-      39,    40,    41,   204,    44,   206,    43,    45,   209,    44,
-      22,    23,    24,   214,    45,    34,    29,     8,   219,   220,
-      11,    45,    34,    35,    36,    37,    38,    39,    40,    41,
-      41,    22,    23,    24,    13,    14,    15,     8,    17,    18,
-      12,    45,    43,    29,    16,    36,    37,    38,    39,    40,
-      41,    22,    23,    24,    29,    27,    28,    29,    45,    31,
-      12,    29,    34,    35,    16,    36,    37,    38,    39,    40,
-      41,    43,    44,    27,    44,    27,    28,    29,    45,    31,
-      34,    35,    34,    35,    30,    49,    45,    33,    46,    43,
-      34,    43,    43,    47,    44,    29,    42,    43,    45,    29,
-      48,    47,    44,    46,    44,    43,    34,    44,    44,    48,
-      45,    44,    43,    45,    34,    44,     0,    44,    43,    43,
-     177,   219,    45,    45,    45,    44,    -1,    45
+      21,    19,    39,     6,    24,     3,     5,    29,    33,    45,
+       0,    27,   171,    30,    29,    51,    86,    42,    34,    35,
+       7,    43,     9,    10,    29,    43,    43,    29,    43,     4,
+       8,    49,    50,    51,    50,   194,    42,    12,    36,    26,
+      61,    16,    29,    46,    47,    43,    45,    84,    85,    69,
+      25,    70,    27,    28,    29,    29,    31,   127,    27,    34,
+      35,    39,    40,    41,    27,    34,    35,    47,    43,    88,
+      43,    34,    35,    92,    43,    93,    94,    95,    96,    97,
+      98,    99,   100,   101,   102,   103,   104,   105,   106,   107,
+     108,   112,   162,    29,   115,     8,    27,    45,    11,    29,
+      39,    40,    43,    34,    35,   175,    47,    43,    47,    22,
+      23,    24,    43,    43,    39,    40,    47,   187,    29,    44,
+      49,    34,    35,    36,    37,    38,    39,    40,    41,    43,
+     151,    30,    45,   154,    33,    45,     8,    45,    48,    11,
+      48,    44,    45,    42,    43,   217,   164,   168,    47,   221,
+      22,    23,    24,    44,    45,   227,    39,    40,    41,   231,
+      51,   182,    34,    35,    36,    37,    38,    39,    40,    41,
+      44,    45,    44,    44,    45,    44,    45,   198,     8,    43,
+      51,    11,    51,    45,    43,   206,    48,   208,    45,    27,
+     211,    48,    22,    23,    24,   216,    27,    43,    45,     8,
+     221,   222,    11,    44,    34,    35,    36,    37,    38,    39,
+      40,    41,    44,    22,    23,    24,    13,    14,    15,     8,
+      17,    18,    12,    45,    34,    29,    16,    36,    37,    38,
+      39,    40,    41,    22,    23,    24,    43,    27,    28,    29,
+      45,    31,    12,    48,    34,    35,    16,    36,    37,    38,
+      39,    40,    41,    43,    44,    41,    29,    27,    28,    29,
+      45,    31,    12,    48,    34,    35,    16,    45,    45,    29,
+      45,    29,    44,    43,    44,    49,    45,    27,    28,    29,
+      45,    31,    46,    34,    34,    35,    43,    29,    44,    29,
+      45,    44,    46,    43,     0,    44,    48,    43,    34,    44,
+      44,    48,    45,    44,    43,    34,    43,    45,    -1,    44,
+      44,    43,    45,   179,    45,    45,    44,   221,    45
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -679,13 +683,14 @@ static const yytype_uint8 yystos[] =
       64,    44,    71,    44,    71,    72,    72,    72,    72,    72,
       72,    72,    72,    72,    72,    72,    72,    72,    72,    72,
       72,    45,    65,    65,    43,    44,    29,    29,    45,    29,
-      49,    64,    45,    44,    44,    45,    65,    45,    65,    44,
-      46,    29,    43,    34,    45,    48,    64,    43,    44,    65,
-      45,    61,    29,    29,    64,    45,    48,    47,    73,    44,
-      65,    44,    46,    44,    48,    64,    43,    44,    34,    44,
-      61,    48,    65,    44,    43,    44,    45,    65,    65,    45,
-      44,    65,    34,    44,    43,    45,    48,    65,    76,    45,
-      45,    48,    75,    76,    65,    45,    44,    76,    48,    45
+      49,    64,    45,    44,    45,    44,    45,    65,    45,    65,
+      44,    46,    29,    43,    34,    45,    48,    64,    44,    43,
+      44,    65,    45,    61,    29,    29,    64,    45,    48,    47,
+      73,    44,    65,    44,    46,    44,    48,    64,    43,    44,
+      34,    44,    61,    48,    65,    44,    43,    44,    45,    65,
+      65,    45,    44,    65,    34,    44,    43,    45,    48,    65,
+      76,    45,    45,    48,    75,    76,    65,    45,    44,    76,
+      48,    45
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
@@ -700,7 +705,7 @@ static const yytype_uint8 yyr1[] =
       70,    70,    71,    71,    71,    71,    72,    72,    72,    72,
       72,    72,    72,    72,    72,    72,    72,    72,    72,    72,
       72,    72,    72,    72,    72,    72,    72,    72,    72,    72,
-      73,    73,    73,    74,    74,    75,    75,    76,    76
+      72,    73,    73,    73,    74,    74,    75,    75,    76,    76
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -713,9 +718,9 @@ static const yytype_uint8 yyr2[] =
        7,     1,     1,     1,     2,     2,     1,     3,     3,     3,
        1,     1,     1,     1,     2,     3,     1,     5,     3,     7,
        0,     2,     1,     3,     3,     2,     1,     1,     1,     1,
-       4,     3,     4,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     3,     2,     3,     2,     2,     3,
-       1,    15,    17,     1,    15,     1,     3,     5,     7
+       4,     3,     4,     5,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     3,     3,     2,     3,     2,     2,
+       3,     1,    15,    17,     1,    15,     1,     3,     5,     7
 };
 
 
@@ -1401,589 +1406,595 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 83 "VYacc.y" /* yacc.c:1652  */
+#line 86 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { return VPTT_eqend ; }
-#line 1407 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1412 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 3:
-#line 84 "VYacc.y" /* yacc.c:1652  */
+#line 87 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { return VPTT_groupstar ; }
-#line 1413 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1418 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 4:
-#line 85 "VYacc.y" /* yacc.c:1652  */
+#line 88 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { return '|'; }
-#line 1419 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1424 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 5:
-#line 86 "VYacc.y" /* yacc.c:1652  */
+#line 89 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {return '|'; }
-#line 1425 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1430 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 6:
-#line 87 "VYacc.y" /* yacc.c:1652  */
+#line 90 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {vpyy_addfulleq((yyvsp[-3].eqn),(yyvsp[-1].uni)) ; return '~' ; }
-#line 1431 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1436 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 7:
-#line 88 "VYacc.y" /* yacc.c:1652  */
+#line 91 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {vpyy_addfulleq((yyvsp[-3].eqn),(yyvsp[-1].uni)) ; return '|' ; }
-#line 1437 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1442 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 8:
-#line 89 "VYacc.y" /* yacc.c:1652  */
+#line 92 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {vpyy_addfulleq((yyvsp[-2].eqn),NULL) ; return '~' ;}
-#line 1443 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1448 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 9:
-#line 90 "VYacc.y" /* yacc.c:1652  */
+#line 93 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {vpyy_addfulleq((yyvsp[-2].eqn),NULL) ; return '|' ;}
-#line 1449 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1454 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 10:
-#line 94 "VYacc.y" /* yacc.c:1652  */
+#line 97 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { vpyy_macro_start(); }
-#line 1455 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1460 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 11:
-#line 94 "VYacc.y" /* yacc.c:1652  */
+#line 97 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { vpyy_macro_expression((yyvsp[-3].sym),(yyvsp[-1].exl)) ;}
-#line 1461 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1466 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 12:
-#line 98 "VYacc.y" /* yacc.c:1652  */
+#line 101 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.tok) = (yyvsp[0].tok); vpyy_macro_end(); }
-#line 1467 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1472 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 13:
-#line 105 "VYacc.y" /* yacc.c:1652  */
+#line 108 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.eqn) = vpyy_addeq((yyvsp[-2].lhs),NULL,(yyvsp[0].exl),'=') ; }
-#line 1473 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1478 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 14:
-#line 106 "VYacc.y" /* yacc.c:1652  */
+#line 109 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.eqn) = vpyy_add_lookup((yyvsp[-3].lhs),NULL,(yyvsp[-1].tbl), 0) ; }
-#line 1479 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1484 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 15:
-#line 107 "VYacc.y" /* yacc.c:1652  */
+#line 110 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.eqn) = vpyy_add_lookup((yyvsp[-3].lhs),NULL,(yyvsp[-1].tbl), 1) ; }
-#line 1485 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1490 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 16:
-#line 108 "VYacc.y" /* yacc.c:1652  */
+#line 111 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.eqn) = vpyy_add_lookup((yyvsp[-9].lhs),(yyvsp[-5].exn),(yyvsp[-2].tbl), 0) ; }
-#line 1491 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1496 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 17:
-#line 109 "VYacc.y" /* yacc.c:1652  */
+#line 112 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.eqn) = vpyy_addeq((yyvsp[-2].lhs),(yyvsp[0].exn),NULL,VPTT_dataequals) ; }
-#line 1497 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1502 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 18:
-#line 110 "VYacc.y" /* yacc.c:1652  */
+#line 113 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.eqn) = vpyy_add_lookup((yyvsp[0].lhs),NULL,NULL, 0) ; }
-#line 1503 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1508 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 19:
-#line 111 "VYacc.y" /* yacc.c:1652  */
+#line 114 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-3].sym),NULL),NULL,NULL),(Expression *)vpyy_symlist_expression((yyvsp[-1].sml),(yyvsp[0].sml)),NULL,':') ; }
-#line 1509 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1514 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 20:
-#line 112 "VYacc.y" /* yacc.c:1652  */
+#line 115 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-2].sym),NULL),NULL,NULL),(Expression *)vpyy_symlist_expression(vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL),NULL),NULL,VPTT_equiv) ; }
-#line 1515 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1520 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 21:
-#line 113 "VYacc.y" /* yacc.c:1652  */
+#line 116 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.eqn) = vpyy_addeq((yyvsp[-2].lhs),(yyvsp[0].exn),NULL,'=') ; }
-#line 1521 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1526 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 22:
-#line 118 "VYacc.y" /* yacc.c:1652  */
+#line 121 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[0].var),NULL,NULL) ; }
-#line 1527 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1532 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 23:
-#line 119 "VYacc.y" /* yacc.c:1652  */
+#line 122 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[-1].var),(yyvsp[0].sll),NULL) ;}
-#line 1533 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1538 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 24:
-#line 120 "VYacc.y" /* yacc.c:1652  */
+#line 123 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[-1].var),NULL,(yyvsp[0].tok)) ;}
-#line 1539 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1544 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 25:
-#line 124 "VYacc.y" /* yacc.c:1652  */
+#line 127 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.var) = vpyy_var_expression((yyvsp[0].sym),NULL);}
-#line 1545 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1550 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 26:
-#line 125 "VYacc.y" /* yacc.c:1652  */
+#line 128 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.var) = vpyy_var_expression((yyvsp[-1].sym),(yyvsp[0].sml)) ;}
-#line 1551 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1556 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 27:
-#line 129 "VYacc.y" /* yacc.c:1652  */
+#line 132 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.sml) = (yyvsp[-1].sml) ;}
-#line 1557 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1562 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 28:
-#line 133 "VYacc.y" /* yacc.c:1652  */
+#line 136 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL) ; }
-#line 1563 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1568 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 29:
-#line 134 "VYacc.y" /* yacc.c:1652  */
+#line 137 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[-1].sym),1,NULL) ; }
-#line 1569 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1574 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 30:
-#line 135 "VYacc.y" /* yacc.c:1652  */
+#line 138 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist((yyvsp[-2].sml),(yyvsp[0].sym),0,NULL) ;}
-#line 1575 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1580 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 31:
-#line 136 "VYacc.y" /* yacc.c:1652  */
+#line 139 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist((yyvsp[-3].sml),(yyvsp[-1].sym),1,NULL) ;}
-#line 1581 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1586 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 32:
-#line 139 "VYacc.y" /* yacc.c:1652  */
+#line 142 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL) ; }
-#line 1587 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1592 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 33:
-#line 140 "VYacc.y" /* yacc.c:1652  */
+#line 143 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.sml) = vpyy_symlist(NULL,(yyvsp[-3].sym),0,(yyvsp[-1].sym)) ;}
-#line 1593 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1598 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 34:
-#line 141 "VYacc.y" /* yacc.c:1652  */
+#line 144 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist((yyvsp[-2].sml),(yyvsp[0].sym),0,NULL) ; }
-#line 1599 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1604 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 35:
-#line 142 "VYacc.y" /* yacc.c:1652  */
+#line 145 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.sml) = vpyy_symlist((yyvsp[-6].sml),(yyvsp[-3].sym),0,(yyvsp[-1].sym)) ; }
-#line 1605 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1610 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 36:
-#line 146 "VYacc.y" /* yacc.c:1652  */
+#line 149 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = (yyvsp[0].uni) ; }
-#line 1611 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1616 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 37:
-#line 147 "VYacc.y" /* yacc.c:1652  */
+#line 150 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = vpyy_unitsrange((yyvsp[-5].uni),(yyvsp[-3].num),(yyvsp[-1].num),-1) ; }
-#line 1617 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1622 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 38:
-#line 148 "VYacc.y" /* yacc.c:1652  */
+#line 151 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = vpyy_unitsrange((yyvsp[-7].uni),(yyvsp[-5].num),(yyvsp[-3].num),(yyvsp[-1].num)) ; }
-#line 1623 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1628 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 39:
-#line 149 "VYacc.y" /* yacc.c:1652  */
+#line 152 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = vpyy_unitsrange(NULL,(yyvsp[-3].num),(yyvsp[-1].num),-1) ; }
-#line 1629 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1634 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 40:
-#line 150 "VYacc.y" /* yacc.c:1652  */
+#line 153 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = vpyy_unitsrange(NULL,(yyvsp[-5].num),(yyvsp[-3].num),(yyvsp[-1].num)) ; }
-#line 1635 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1640 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 41:
-#line 154 "VYacc.y" /* yacc.c:1652  */
+#line 157 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.num) = (yyvsp[0].num) ; }
-#line 1641 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1646 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 42:
-#line 155 "VYacc.y" /* yacc.c:1652  */
+#line 158 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.num) = -1e30 ; }
-#line 1647 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1652 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 43:
-#line 158 "VYacc.y" /* yacc.c:1652  */
+#line 161 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.num) = (yyvsp[0].num) ; }
-#line 1653 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1658 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 44:
-#line 159 "VYacc.y" /* yacc.c:1652  */
+#line 162 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.num) = -(yyvsp[0].num) ;}
-#line 1659 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1664 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 45:
-#line 160 "VYacc.y" /* yacc.c:1652  */
+#line 163 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.num) = (yyvsp[0].num) ;}
-#line 1665 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1670 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 46:
-#line 164 "VYacc.y" /* yacc.c:1652  */
+#line 167 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = (yyvsp[0].uni) ; }
-#line 1671 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1676 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 47:
-#line 165 "VYacc.y" /* yacc.c:1652  */
+#line 168 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.uni) = vpyy_unitsdiv((yyvsp[-2].uni),(yyvsp[0].uni));}
-#line 1677 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1682 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 48:
-#line 166 "VYacc.y" /* yacc.c:1652  */
+#line 169 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.uni) = vpyy_unitsmult((yyvsp[-2].uni),(yyvsp[0].uni));}
-#line 1683 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1688 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 49:
-#line 167 "VYacc.y" /* yacc.c:1652  */
+#line 170 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.uni) = (yyvsp[-1].uni) ; }
-#line 1689 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1694 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 50:
-#line 172 "VYacc.y" /* yacc.c:1652  */
+#line 175 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1695 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1700 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 51:
-#line 173 "VYacc.y" /* yacc.c:1652  */
+#line 176 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1701 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1706 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 52:
-#line 174 "VYacc.y" /* yacc.c:1652  */
+#line 177 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1707 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1712 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 53:
-#line 175 "VYacc.y" /* yacc.c:1652  */
+#line 178 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1713 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1718 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 54:
-#line 179 "VYacc.y" /* yacc.c:1652  */
+#line 182 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sll) = vpyy_chain_sublist(NULL,(yyvsp[0].sml)) ; }
-#line 1719 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1724 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 55:
-#line 180 "VYacc.y" /* yacc.c:1652  */
+#line 183 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { vpyy_chain_sublist((yyvsp[-2].sll),(yyvsp[0].sml)) ; (yyval.sll) = (yyvsp[-2].sll) ; }
-#line 1725 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1730 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 56:
-#line 184 "VYacc.y" /* yacc.c:1652  */
+#line 187 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL) ; }
-#line 1731 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1736 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 57:
-#line 185 "VYacc.y" /* yacc.c:1652  */
+#line 188 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_mapsymlist(NULL, (yyvsp[-3].sym), (yyvsp[-1].sml)); }
-#line 1737 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1742 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 58:
-#line 186 "VYacc.y" /* yacc.c:1652  */
+#line 189 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_symlist((yyvsp[-2].sml),(yyvsp[0].sym),0,NULL) ;}
-#line 1743 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1748 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 59:
-#line 187 "VYacc.y" /* yacc.c:1652  */
+#line 190 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = vpyy_mapsymlist((yyvsp[-6].sml), (yyvsp[-3].sym), (yyvsp[-1].sml));}
-#line 1749 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1754 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 60:
-#line 192 "VYacc.y" /* yacc.c:1652  */
+#line 195 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) = NULL ; }
-#line 1755 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1760 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 61:
-#line 193 "VYacc.y" /* yacc.c:1652  */
+#line 196 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.sml) =  (yyvsp[0].sml) ; }
-#line 1761 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1766 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 62:
-#line 198 "VYacc.y" /* yacc.c:1652  */
+#line 201 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.exl) = vpyy_chain_exprlist(NULL,(yyvsp[0].exn)) ;}
-#line 1767 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1772 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 63:
-#line 199 "VYacc.y" /* yacc.c:1652  */
+#line 202 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.exl) = vpyy_chain_exprlist((yyvsp[-2].exl),(yyvsp[0].exn)) ; }
-#line 1773 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1778 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 64:
-#line 200 "VYacc.y" /* yacc.c:1652  */
+#line 203 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.exl) = vpyy_chain_exprlist((yyvsp[-2].exl),(yyvsp[0].exn)) ; }
-#line 1779 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1784 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 65:
-#line 201 "VYacc.y" /* yacc.c:1652  */
+#line 204 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.exl) = (yyvsp[-1].exl) ; }
-#line 1785 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1790 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 66:
-#line 205 "VYacc.y" /* yacc.c:1652  */
+#line 208 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = vpyy_num_expression((yyvsp[0].num)) ; }
-#line 1791 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1796 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 67:
-#line 206 "VYacc.y" /* yacc.c:1652  */
+#line 209 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = vpyy_num_expression(-1E38);}
-#line 1797 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1802 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 68:
-#line 207 "VYacc.y" /* yacc.c:1652  */
+#line 210 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = (Expression *)(yyvsp[0].var) ; }
-#line 1803 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1808 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 69:
-#line 208 "VYacc.y" /* yacc.c:1652  */
+#line 211 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = vpyy_literal_expression((yyvsp[0].lit)) ; }
-#line 1809 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1814 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 70:
-#line 209 "VYacc.y" /* yacc.c:1652  */
+#line 212 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = vpyy_lookup_expression((yyvsp[-3].var),(yyvsp[-1].exl)) ; }
-#line 1815 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1820 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 71:
-#line 210 "VYacc.y" /* yacc.c:1652  */
+#line 213 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = vpyy_operator_expression('(',(yyvsp[-1].exn),NULL) ; }
-#line 1821 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1826 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 72:
-#line 211 "VYacc.y" /* yacc.c:1652  */
+#line 214 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     { (yyval.exn) = vpyy_function_expression((yyvsp[-3].fnc),(yyvsp[-1].exl)) ;}
-#line 1827 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1832 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 73:
-#line 212 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_function_expression((yyvsp[-2].fnc),NULL) ;}
-#line 1833 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 215 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_function_expression((yyvsp[-4].fnc),vpyy_chain_exprlist((yyvsp[-2].exl),vpyy_literal_expression("?"))) ;}
+#line 1838 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 74:
-#line 213 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1839 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 216 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_function_expression((yyvsp[-2].fnc),NULL) ;}
+#line 1844 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 75:
-#line 214 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1845 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 217 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1850 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 76:
-#line 215 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('*',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1851 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 218 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1856 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 77:
-#line 216 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('/',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1857 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 219 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('*',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1862 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 78:
-#line 217 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('<',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1863 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 220 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('/',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1868 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 79:
-#line 218 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression(VPTT_le,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1869 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 221 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('<',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1874 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 80:
-#line 219 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('>',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1875 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 222 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression(VPTT_le,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1880 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 81:
-#line 220 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression(VPTT_ge,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1881 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 223 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('>',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1886 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 82:
-#line 221 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression(VPTT_ne,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1887 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 224 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression(VPTT_ge,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1892 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 83:
-#line 222 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression(VPTT_or,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1893 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 225 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression(VPTT_ne,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1898 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 84:
-#line 223 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression(VPTT_and,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1899 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 226 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression(VPTT_or,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1904 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 85:
-#line 224 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression(VPTT_not,(yyvsp[0].exn),NULL) ; }
-#line 1905 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 227 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression(VPTT_and,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1910 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 86:
-#line 225 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('=',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1911 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 228 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression(VPTT_not,(yyvsp[0].exn),NULL) ; }
+#line 1916 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 87:
-#line 226 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('-',NULL, (yyvsp[0].exn)) ; }
-#line 1917 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 229 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('=',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1922 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 88:
-#line 227 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('+',NULL, (yyvsp[0].exn)) ; }
-#line 1923 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 230 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('-',NULL, (yyvsp[0].exn)) ; }
+#line 1928 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 89:
-#line 228 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.exn) = vpyy_operator_expression('^',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1929 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 231 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('+',NULL, (yyvsp[0].exn)) ; }
+#line 1934 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 90:
-#line 232 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = (yyvsp[0].tbl) ; }
-#line 1935 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 232 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.exn) = vpyy_operator_expression('^',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
+#line 1940 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 91:
-#line 234 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-12].num),(yyvsp[-10].num),(yyvsp[-6].num),(yyvsp[-4].num)) ; }
-#line 1941 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 236 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = (yyvsp[0].tbl) ; }
+#line 1946 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 92:
-#line 236 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-14].num),(yyvsp[-12].num),(yyvsp[-8].num),(yyvsp[-6].num)) ; }
-#line 1947 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 238 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-12].num),(yyvsp[-10].num),(yyvsp[-6].num),(yyvsp[-4].num)) ; }
+#line 1952 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 93:
-#line 240 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = (yyvsp[0].tbl) ; }
-#line 1953 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 240 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-14].num),(yyvsp[-12].num),(yyvsp[-8].num),(yyvsp[-6].num)) ; }
+#line 1958 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 94:
-#line 242 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-12].num),(yyvsp[-10].num),(yyvsp[-6].num),(yyvsp[-4].num)) ; }
-#line 1959 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 244 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = (yyvsp[0].tbl) ; }
+#line 1964 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 95:
-#line 246 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = vpyy_tablevec(NULL,(yyvsp[0].num)) ;}
-#line 1965 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 246 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-12].num),(yyvsp[-10].num),(yyvsp[-6].num),(yyvsp[-4].num)) ; }
+#line 1970 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 96:
-#line 247 "VYacc.y" /* yacc.c:1652  */
-    {(yyval.tbl) = vpyy_tablevec((yyvsp[-2].tbl),(yyvsp[0].num)) ;}
-#line 1971 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 250 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = vpyy_tablevec(NULL,(yyvsp[0].num)) ;}
+#line 1976 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 97:
-#line 252 "VYacc.y" /* yacc.c:1652  */
-    { (yyval.tbl) = vpyy_tablepair(NULL,(yyvsp[-3].num),(yyvsp[-1].num)) ;}
-#line 1977 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 251 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    {(yyval.tbl) = vpyy_tablevec((yyvsp[-2].tbl),(yyvsp[0].num)) ;}
+#line 1982 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
   case 98:
-#line 253 "VYacc.y" /* yacc.c:1652  */
+#line 256 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
+    { (yyval.tbl) = vpyy_tablepair(NULL,(yyvsp[-3].num),(yyvsp[-1].num)) ;}
+#line 1988 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
+    break;
+
+  case 99:
+#line 257 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1652  */
     {(yyval.tbl) = vpyy_tablepair((yyvsp[-6].tbl),(yyvsp[-3].num),(yyvsp[-1].num)) ;}
-#line 1983 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1994 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
     break;
 
 
-#line 1987 "VYacc.tab.cpp" /* yacc.c:1652  */
+#line 1998 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.tab.cpp" /* yacc.c:1652  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2214,5 +2225,5 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 259 "VYacc.y" /* yacc.c:1918  */
+#line 263 "C:\\sdev\\xmutil\\\\src\\Vensim\\VYacc.y" /* yacc.c:1918  */
 

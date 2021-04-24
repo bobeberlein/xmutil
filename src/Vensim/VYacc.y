@@ -212,6 +212,7 @@ exp:
 	 | var '(' exprlist ')'    { $$ = vpyy_lookup_expression($1,$3) ; }
 	 | '(' exp ')'        { $$ = vpyy_operator_expression('(',$2,NULL) ; }
      | VPTT_function '(' exprlist ')'   { $$ = vpyy_function_expression($1,$3) ;}
+     | VPTT_function '(' exprlist ',' ')'   { $$ = vpyy_function_expression($1,vpyy_chain_exprlist($3,vpyy_literal_expression("?"))) ;}
      | VPTT_function '(' ')'   { $$ = vpyy_function_expression($1,NULL) ;}
      | exp '+' exp        { $$ = vpyy_operator_expression('+',$1,$3) ; }
      | exp '-' exp        { $$ = vpyy_operator_expression('-',$1,$3) ; }

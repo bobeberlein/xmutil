@@ -41,6 +41,26 @@ std::string Variable::GetAlternateName(void)
 	return name;
 }
 
+void Variable::PurgeAFOEq()
+{
+	if (!pVariableContent)
+		return;
+	std::vector<Equation*>equations = pVariableContent->GetAllEquations();
+	if (equations.size() <= 1)
+		return;
+	// if the first equation is an A FUNCTION OF equation then delete it
+	Equation* eq = equations[0];
+	Expression* exp = eq->GetExpression();
+	if (exp->GetType() == EXPTYPE_Function)
+	{
+		Function* f = exp->GetFunction();
+		if (f->GetName() == "A FUNCTION OF")
+			pVariableContent->DropEquation(0);
+	}
+
+
+}
+
 
 XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 {

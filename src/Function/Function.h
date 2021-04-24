@@ -154,6 +154,8 @@ FSubclass(FunctionGame, "GAME", 1, ""); // don't need this
 FSubclass(FunctionRandom01, "RANDOM 0 1", 0, "UNIFORM(0,1)");
 FSubclass(FunctionRandomUniform, "RANDOM UNIFORM", 3, "UNIFORM");
 
+FSubclass(FunctionNAN, "A FUNCTION OF", -1, "NAN");
+
 // actually memory but no init - or init - does not matter for translation
 FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
 FSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
