@@ -36,7 +36,11 @@ VensimVariableElement::VensimVariableElement(VensimView* view, char *curpos, cha
 		if (_variable->GetView())
 			_ghost = true; // only allow 1 definition
 		else if (!_ghost)
+		{
 			_variable->SetView(view);
+			if (_attached)
+				_variable->MarkAsFlow();
+		}
 	}
 	else
 		printf("Can't find - %s\n", name.c_str());

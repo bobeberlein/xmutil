@@ -19,6 +19,7 @@ Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, n
    iNelm = 0;
    _unwanted = false;
    _hasUpstream = _hasDownstream = false;
+   bAsFlow = false;
 }
 
 
@@ -172,7 +173,13 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	if (!gotone)
 	{
 		if (mVariableType == XMILE_Type_UNKNOWN)
-			mVariableType = XMILE_Type_AUX;
+		{
+			// check to see if this is decorated as a flow
+			if (this->AsFlow())
+				mVariableType = XMILE_Type_FLOW;
+			else
+				mVariableType = XMILE_Type_AUX;
+		}
 		return mVariableType;
 	}
 	mVariableType = XMILE_Type_STOCK;

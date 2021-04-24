@@ -145,6 +145,9 @@ public:
    XMILE_Type VariableType() { return mVariableType; }
    void SetVariableType(XMILE_Type t) { mVariableType = t; }
 
+   void MarkAsFlow() { bAsFlow = true; }
+   bool AsFlow() const { return bAsFlow; }
+
    int Nelm() const { return iNelm; }
    void SetNelm(int set) { iNelm = set; }
 
@@ -171,6 +174,7 @@ private :
    bool _unwanted;
    bool _hasUpstream;
    bool _hasDownstream;
+   bool bAsFlow;
 } ;
 
 
