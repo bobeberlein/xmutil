@@ -27,3 +27,6 @@ DerivedData/
 **/.DS_Store
 .vs/*
 out/*
+*~
+/.idea
+/cmake-*
