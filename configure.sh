@@ -1,4 +1,5 @@
 #!/bin/sh
+set -euo pipefail
 
 gypfile="${GYPFILE:-XMUtil.gyp}"
 rmout="${rmout:-yes}"
@@ -10,7 +11,7 @@ msvs=no
 xcode=no
 ui=no
 gyp_ui=0
-arch_id=32
+arch_id=64
 x86=yes
 
 
@@ -64,9 +65,9 @@ elif [ $msvs = 'yes' ]; then
 else
     generator=ninja
 fi
-if [ $x86 = 'yes' ]; then
-    export CC="$CC -m32 -march=prescott"
-    export CXX="$CXX -m32 -march=prescott"
+if [[ $arch_id = '32' &&  $x86 = 'yes' ]]; then
+    export CC="${CC:-cc} -m32 -march=prescott"
+    export CXX="${CXX:-cxx} -m32 -march=prescott"
 fi
 
 
