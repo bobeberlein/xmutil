@@ -43,12 +43,14 @@ void ExpressionFunction::CheckPlaceholderVars(Model *m,bool isfirst)
 
 void ExpressionFunction::GetVarsUsed(std::vector<Variable*>& vars)
 {
-    if (!pArgs)
+    if (!pArgs) {
         return;
+    }
     
-	int n = pArgs->Length();
-	for (int i = 0; i < n; i++)
-		pArgs->GetExp(i)->GetVarsUsed(vars);
+    int n = pArgs->Length();
+    for (int i = 0; i < n; i++) {
+        pArgs->GetExp(i)->GetVarsUsed(vars);
+    }
 }
 
 void ExpressionFunctionMemory::CheckPlaceholderVars(Model *m,bool isfirst) 

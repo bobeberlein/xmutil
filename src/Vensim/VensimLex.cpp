@@ -267,6 +267,7 @@ int VensimLex::NextToken() // also sets token type
 			  vpyylval.uni = VPObject->InsertUnitExpression(VPObject->InsertUnits("1"));
 			  return VPTT_units_symbol;
 		  }
+		  /* fallthrough */
       case '.' : // maybe a number check next digit
       case '0' :
 

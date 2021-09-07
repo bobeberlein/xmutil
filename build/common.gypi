@@ -134,8 +134,6 @@
                         '-Wno-unused-function',
                         '-Wno-unknown-pragmas',
                         '-Wno-parentheses',
-                        '-Wno-invalid-offsetof', # FIXME - fix
-                        '-Wno-switch', # FIXME - fix
                         '-Wno-invalid-source-encoding',
                     ],
                     'OTHER_LDFLAGS': [
@@ -209,10 +207,6 @@
                     '-Wno-unknown-pragmas',
                     '-Wno-parentheses',
                     '-std=c++11',
-                    '-Wno-invalid-offsetof', # FIXME - fix
-                    '-Wno-switch', # FIXME - fix
-                    '-Wno-ignored-qualifiers', # fix
-                    '-Wno-deprecated-declarations',
                     '-fPIC',
                 ],
                 'libraries': [

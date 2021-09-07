@@ -461,7 +461,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 					xpts->SetText(xstr.c_str());
 
 					std::string ystr;
-					double ymin, ymax;
+					double ymin = 0;
+					double ymax = 0;
 					for (size_t i = 0; i < yvals->size(); i++)
 					{
 						if (i)
@@ -683,6 +684,8 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					case XMILE_Type_FLOW:
 						tag = "flow";
 						break;
+					default:
+						fprintf(stderr, "unknown view element type %d\n", type);
 					}
 					if (tag.empty())
 						continue;
