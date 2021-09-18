@@ -59,7 +59,7 @@ void Main_Window::choose_file()
         std::vector<std::string> errs;
         m.WriteToXMILE(p.string(), errs);
         
-        BOOST_FOREACH(const std::string& err, errs)
+        for (const std::string& err: errs)
         {
             ui->log->append(StdString_to_QString(err));
         }
