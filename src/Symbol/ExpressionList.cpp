@@ -1,5 +1,4 @@
 #include "ExpressionList.h"
-#include <boost/foreach.hpp>
 #include "../XMUtil.h"
 
 
@@ -13,7 +12,7 @@ ExpressionList::ExpressionList(SymbolNameSpace *sns)
 ExpressionList::~ExpressionList(void)
 {
    if(this->HasGoodAlloc()) {
-      BOOST_FOREACH(Expression *e,vExpressions) {
+      for (Expression *e: vExpressions) {
          delete e ;
       }
    }
@@ -21,7 +20,7 @@ ExpressionList::~ExpressionList(void)
 
 void ExpressionList::CheckPlaceholderVars(Model *m) 
 {
-   BOOST_FOREACH(Expression *e,vExpressions) {
+   for (Expression *e: vExpressions) {
       e->CheckPlaceholderVars(m,false) ;
    }
 }
@@ -29,7 +28,7 @@ void ExpressionList::CheckPlaceholderVars(Model *m)
 bool ExpressionList::CheckComputed(ContextInfo *info,unsigned wantargs) 
 {
    int i = 1 ;
-   BOOST_FOREACH(Expression *e,vExpressions) {
+   for (Expression *e: vExpressions) {
       if(i&wantargs) {
          if(!e->CheckComputed(info))
             return false ;
@@ -43,7 +42,7 @@ void ExpressionList::OutputComputable(ContextInfo *info,unsigned wantargs)
 {
    int i = 1 ;
    int j = 0 ;
-   BOOST_FOREACH(Expression *e,vExpressions) {
+   for (Expression *e: vExpressions) {
       if(i&wantargs) {
          if(j++)
             *info << ", " ;

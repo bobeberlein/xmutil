@@ -1,8 +1,10 @@
+#include <assert.h>
+#include <string.h>
+
+#include "unicode/ucasemap.h"
+
 #include "SymbolNameSpace.h"
 #include "Symbol.h"
-#include <assert.h>
-#include "unicode/ucasemap.h"
-#include <boost/foreach.hpp>
 #include "../XMUtil.h"
 
 
@@ -16,7 +18,7 @@ SymbolNameSpace::SymbolNameSpace(void)
 SymbolNameSpace::~SymbolNameSpace(void)
 {
    /* delete the symbols which will in turn delete equations etc */
-  // BOOST_FOREACH(iterator node,mHashTable) {
+  // for (iterator node: mHashTable) {
   //    delete SNSitToSymbol(node) ;
   // }
 
@@ -151,7 +153,7 @@ void SymbolNameSpace::DeleteAllUnconfirmedAllocations(void)
 
 void SymbolNameSpace::ConfirmAllAllocations(void) 
 {
-   BOOST_FOREACH(std::set<SymbolTableBase*>::value_type i,sUnconfirmedAllocations) {
+   for (std::set<SymbolTableBase*>::value_type i: sUnconfirmedAllocations) {
       i->MarkGoodAlloc() ;
    }
    sUnconfirmedAllocations.clear() ;
