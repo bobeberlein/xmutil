@@ -134,8 +134,6 @@
                         '-Wno-unused-function',
                         '-Wno-unknown-pragmas',
                         '-Wno-parentheses',
-                        '-Wno-invalid-offsetof', # FIXME - fix
-                        '-Wno-switch', # FIXME - fix
                         '-Wno-invalid-source-encoding',
                     ],
                     'OTHER_LDFLAGS': [
@@ -179,14 +177,17 @@
                         '-L./third_party/linux/lib',
                     ],
                     'libraries': [
-                        '<(cwd)/third_party/linux/lib/libboost_filesystem.a',
-                        '<(cwd)/third_party/linux/lib/libboost_system.a',
-                        '<(cwd)/third_party/linux/lib/libboost_chrono.a',
-                        '<(cwd)/third_party/linux/lib/libboost_thread.a',
-                        '<(cwd)/third_party/linux/lib/libboost_date_time.a',
-                        '<(cwd)/third_party/linux/lib/libboost_random.a',
-                        '-lpthread',
+                        '-lboost_chrono',
+                        '-lboost_date_time',
+                        '-lboost_filesystem',
+                        '-lboost_iostreams',
+                        '-lboost_random',
+                        '-lboost_system',
+                        '-lboost_thread',
                         '-ldl',
+                        '-licuuc',
+                        '-lpthread',
+                        '-ltinyxml2',
                     ],
                 },
                 'cflags': [
@@ -206,10 +207,6 @@
                     '-Wno-unknown-pragmas',
                     '-Wno-parentheses',
                     '-std=c++11',
-                    '-Wno-invalid-offsetof', # FIXME - fix
-                    '-Wno-switch', # FIXME - fix
-                    '-Wno-ignored-qualifiers', # fix
-                    '-Wno-deprecated-declarations',
                     '-fPIC',
                 ],
                 'libraries': [

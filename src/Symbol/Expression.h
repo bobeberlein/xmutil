@@ -261,7 +261,13 @@ public :
    bool CheckComputed(ContextInfo *info) { if(pE1 && !pE1->CheckComputed(info))return false ;if(pE2 && !pE2->CheckComputed(info)) return false; return true ; }
    virtual void OutputComputable(ContextInfo *info) { }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
-	   if (pE1 && pE1->TestMarkFlows(sns, fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns, fl, eq); return false;
+      if (pE1 && pE1->TestMarkFlows(sns, fl, eq)) {
+         return true;
+      }
+      if (pE2) {
+         return pE2->TestMarkFlows(sns, fl, eq);
+      }
+      return false;
    }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pE1)pE1->GetVarsUsed(vars); if (pE2)pE2->GetVarsUsed(vars); } // list of variables used
    virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
@@ -301,7 +307,13 @@ public:
 	void CheckPlaceholderVars(Model *m, bool isfirst) { if (pE1) pE1->CheckPlaceholderVars(m, false); if (pE2)pE2->CheckPlaceholderVars(m, false); }
 	void OutputComputable(ContextInfo *info);
 	virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
-		if (pE1 && pE1->TestMarkFlows(sns,fl, eq)) return true; if (pE2) return pE2->TestMarkFlows(sns,fl, eq); return false;
+		if (pE1 && pE1->TestMarkFlows(sns,fl, eq)) {
+			return true;
+		}
+		if (pE2) {
+			return pE2->TestMarkFlows(sns,fl, eq);
+		}
+		return false;
 	}
 	virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pE1)pE1->GetVarsUsed(vars); if (pE2)pE2->GetVarsUsed(vars); } // list of variables used
 	virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }

@@ -1,6 +1,8 @@
 #ifndef _XMUTIL_XMUTIL_H
 #define _XMUTIL_XMUTIL_H
 
+#include <string>
+
 #ifdef WIN32
 // XMUtil.h - globally included - generally for help with 
 // memory leak detection
