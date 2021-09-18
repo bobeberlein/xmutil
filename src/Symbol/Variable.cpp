@@ -1,8 +1,6 @@
 #include <assert.h>
 #include <iostream>
 
-#include "boost/lexical_cast.hpp"
-
 #include "Variable.h"
 #include "../Symbol/Expression.h"
 #include "../Symbol/LeftHandSide.h"
@@ -223,7 +221,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	while (sns->Find(name))
 	{
 		++i;
-		name = basename + "_" + boost::lexical_cast<std::string>(i);
+		name = basename + "_" + std::to_string(i);
 	}
 	Variable* v = new Variable(sns, name);
 	v->SetVariableType(XMILE_Type_FLOW);
