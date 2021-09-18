@@ -1,7 +1,6 @@
 #ifndef _XMUTIL_SYMBOL_FUNCTION_H
 #define _XMUTIL_SYMBOL_FUNCTION_H
 #include "../Symbol/Symbol.h"
-#include <boost/utility.hpp>
 #include "State.h"
 
 class Expression ; /* forward declaration */
@@ -202,8 +201,8 @@ public:
 };
 
 
-FSubclassMemory(FunctionInteg, "INTEG", 2, BOOST_BINARY(10), BOOST_BINARY(01), "integ_active", "integ_init")
-FSubclassMemoryStart(FunctionActiveInitial, "ACTIVE INITIAL", 2, BOOST_BINARY(10), BOOST_BINARY(01), "ai_active", "ai_init")
+FSubclassMemory(FunctionInteg, "INTEG", 2, 0b10, 0b01, "integ_active", "integ_init")
+FSubclassMemoryStart(FunctionActiveInitial, "ACTIVE INITIAL", 2, 0b10, 0b01, "ai_active", "ai_init")
 virtual bool IsActiveInit() override { return true; }
 };
 FSubclass(FunctionInitial, "INITIAL", 1, "INIT")
