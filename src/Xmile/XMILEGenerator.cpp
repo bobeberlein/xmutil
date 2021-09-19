@@ -336,7 +336,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		xvar->SetAttribute("name", var->GetAlternateName().c_str());
 
 		std::vector<Equation*> eqns = var->GetAllEquations();
-		int eq_count = eqns.size();
+		size_t eq_count = eqns.size();
 
 
 		// dimensions
@@ -368,8 +368,8 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 
 		tinyxml2::XMLElement* xelement = xvar; // usually these are the same - but for non a2a we have element entries
-		int eq_ind = 0;
-		int eq_pos = 0;
+		size_t eq_ind = 0;
+		size_t eq_pos = 0;
 		std::vector<Symbol*> subs; // [ship,location]
 		std::vector<std::vector<Symbol*> > elms; // [s1,l1]
 		std::vector<std::set<Symbol*> > entries;
