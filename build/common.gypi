@@ -129,7 +129,6 @@
                         '-Wno-sign-compare',
                         '-Wno-unused-parameter',
                         '-Wno-unused-function',
-                        '-Wno-parentheses',
                         '-Wno-invalid-source-encoding',
                     ],
                     'OTHER_LDFLAGS': [
@@ -184,7 +183,6 @@
                     '-Wno-sign-compare',
                     '-Wno-unused-parameter',
                     '-Wno-unused-function',
-                    '-Wno-parentheses',
                     '-std=c++14',
                     '-fPIC',
                 ],
