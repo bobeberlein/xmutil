@@ -178,9 +178,7 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement* element, std::vector
 
 	if (saveper > dt)
 	{
-		tinyxml2::XMLElement* spE = doc->NewElement("isee:save_interval");
-		spE->SetText(StringFromDouble(saveper).c_str());
-		element->InsertEndChild(spE);
+		element->SetAttribute("isee:save_interval", std::to_string(saveper).c_str());
 	}
 
 	_model->SetUnwanted("INITIAL TIME", "STARTTIME");
