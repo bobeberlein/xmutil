@@ -1409,13 +1409,13 @@ yyreduce:
 
   case 19: /* eqn: VPTT_symbol ':' subdef maplist  */
 #line 114 "VYacc.y"
-                                    {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-3].sym),NULL),NULL,NULL),(Expression *)vpyy_symlist_expression((yyvsp[-1].sml),(yyvsp[0].sml)),NULL,':') ; }
+                                    {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-3].sym),NULL),NULL,0),(Expression *)vpyy_symlist_expression((yyvsp[-1].sml),(yyvsp[0].sml)),NULL,':') ; }
 #line 1414 "VYacc.tab.cpp"
     break;
 
   case 20: /* eqn: VPTT_symbol VPTT_equiv VPTT_symbol  */
 #line 115 "VYacc.y"
-                                         {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-2].sym),NULL),NULL,NULL),(Expression *)vpyy_symlist_expression(vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL),NULL),NULL,VPTT_equiv) ; }
+                                         {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-2].sym),NULL),NULL,0),(Expression *)vpyy_symlist_expression(vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL),NULL),NULL,VPTT_equiv) ; }
 #line 1420 "VYacc.tab.cpp"
     break;
 
@@ -1427,13 +1427,13 @@ yyreduce:
 
   case 22: /* lhs: var  */
 #line 121 "VYacc.y"
-        { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[0].var),NULL,NULL) ; }
+        { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[0].var),NULL,0) ; }
 #line 1432 "VYacc.tab.cpp"
     break;
 
   case 23: /* lhs: var exceptlist  */
 #line 122 "VYacc.y"
-                     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[-1].var),(yyvsp[0].sll),NULL) ;}
+                     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[-1].var),(yyvsp[0].sll),0) ;}
 #line 1438 "VYacc.tab.cpp"
     break;
 

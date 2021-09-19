@@ -644,26 +644,26 @@ bool VensimLex::ReadLine(char *buf,size_t buflen)
 		if (off >= buflen)
 		{
 			iCurPos--;
-			buf[off] = NULL;
+			buf[off] = '\0';
 			return true;
 		}
 		if (c == '\n')
 		{
-			buf[off] = NULL;
+			buf[off] = '\0';
 			if (iCurPos < iFileLength && ucContent[iCurPos] == '\r')
 				iCurPos++;
 			return true;
 		}
 		if (c == '\r')
 		{
-			buf[off] = NULL;
+			buf[off] = '\0';
 			if (iCurPos < iFileLength && ucContent[iCurPos] == '\n')
 				iCurPos++;
 			return true;
 		}
 		buf[off++] = c;
 	}
-	buf[0] = NULL;
+	buf[0] = '\0';
 	return false;
 }
 
