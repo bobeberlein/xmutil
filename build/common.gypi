@@ -127,7 +127,6 @@
                         '-Wno-reorder',
                         '-Wno-sign-compare',
                         '-Wno-unused-parameter',
-                        '-Wno-unused-function',
                         '-Wno-invalid-source-encoding',
                     ],
                     'OTHER_LDFLAGS': [
@@ -180,7 +179,6 @@
                     '-Wno-reorder',
                     '-Wno-sign-compare',
                     '-Wno-unused-parameter',
-                    '-Wno-unused-function',
                     '-std=c++14',
                     '-fPIC',
                 ],
