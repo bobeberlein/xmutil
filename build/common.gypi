@@ -174,14 +174,12 @@
                     'libraries': [
                         '-lboost_filesystem',
                         '-lboost_iostreams',
-                        '-ldl',
                         '-licuuc',
-                        '-lpthread',
                         '-ltinyxml2',
                     ],
                 },
                 'cflags': [
-                     '-O3',
+                    '-O3',
                     '-Wall',
                     '-Wextra',
                     '-Wwrite-strings',
