@@ -181,7 +181,6 @@
                     '-Wno-conversion-null',
                     '-Wno-unused-variable',
                     '-Wno-reorder',
-                    '-Wno-unused-but-set-variable',
                     '-Wno-sign-compare',
                     '-Wno-unused-parameter',
                     '-Wno-unused-function',

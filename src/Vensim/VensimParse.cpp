@@ -380,6 +380,9 @@ bool VensimParse::ProcessFile(const std::string &filename)
 			   }
 		   }
 	   }
+       if (!noerr) {
+          fprintf(stderr, "warning: writing output file, but we had errors. check the result carefully.\n");
+       }
        return true ; // got something - try to put something out
     }
     else
