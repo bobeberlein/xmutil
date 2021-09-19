@@ -115,7 +115,7 @@
                 'xcode_settings': {
                     'MACOSX_DEPLOYMENT_TARGET':'10.7',
                     'CLANG_CXX_LIBRARY': 'libc++',
-                    'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++11',
+                    'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++14',
                     'SDKROOT': 'macosx',
                     'GCC_OPTIMIZATION_LEVEL': '0',
                     'OTHER_CFLAGS': [
@@ -206,7 +206,7 @@
                     '-Wno-unused-function',
                     '-Wno-unknown-pragmas',
                     '-Wno-parentheses',
-                    '-std=c++11',
+                    '-std=c++14',
                     '-fPIC',
                 ],
                 'libraries': [

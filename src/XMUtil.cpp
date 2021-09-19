@@ -1,7 +1,6 @@
 // XMUtil.cpp : Defines the entry point for the console application.
 //
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
 
 #include "Vensim/VensimParse.h"
 #include "unicode/utypes.h"
@@ -140,7 +139,7 @@ int main(int argc, char* argv[])
 	   // into flows (a single net flow on the first pass though this)
 	   m->MarkVariableTypes(NULL);
 
-	   BOOST_FOREACH(MacroFunction* mf, m->MacroFunctions())
+	   for (MacroFunction* mf: m->MacroFunctions())
 	   {
 		   m->MarkVariableTypes(mf->NameSpace());
 	   }
@@ -158,7 +157,7 @@ int main(int argc, char* argv[])
 	   std::vector<std::string> errs;
 	   m->WriteToXMILE(p.string(), errs);
 
-        BOOST_FOREACH(const std::string& err, errs)
+        for (const std::string& err: errs)
         {
             std::cout << err << std::endl;
         }

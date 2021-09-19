@@ -2,7 +2,6 @@
 #define _XMUTIL_SYMBOL_NAMESPACE_H
 #include <string>
 #include <unordered_map>
-#include <boost/foreach.hpp>
 #include <set>
 class Symbol ;
 class SymbolTableBase ; // forward declaration 
@@ -30,7 +29,7 @@ public:
    void RemoveUnconfirmedAllocation(SymbolTableBase *s) { sUnconfirmedAllocations.erase(s) ; }
    inline void AddUnconfirmedAllocation(SymbolTableBase *s) { sUnconfirmedAllocations.insert(s) ; }
    typedef std::unordered_map<std::string, Symbol*> HashTable ;
-   typedef HashTable::value_type iterator ; // allows iterator type to be used directly with BOOST_FOREACH
+   typedef HashTable::value_type iterator ; // allows iterator type to be used directly with C++11 range-based for loops
    inline HashTable *GetHashTable(void) { return &mHashTable ; } 
 
 private :

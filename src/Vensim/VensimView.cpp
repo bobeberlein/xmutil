@@ -197,7 +197,7 @@ int VensimView::SetViewStart(int startx, int starty, int uid_start)
 		return _uid_offset;
 	int min_x = INT32_MAX;
 	int min_y = INT32_MAX;
-	BOOST_FOREACH(VensimViewElement *ele, vElements)
+	for (VensimViewElement *ele: vElements)
 	{
 		if (ele)
 		{
@@ -209,7 +209,7 @@ int VensimView::SetViewStart(int startx, int starty, int uid_start)
 	}
 	int off_x = startx - min_x;
 	int off_y = starty - min_y;
-	BOOST_FOREACH(VensimViewElement *ele, vElements)
+	for (VensimViewElement *ele: vElements)
 	{
 		if (ele)
 		{
@@ -225,7 +225,7 @@ int VensimView::GetViewMaxX(int defval)
 	if (this->vElements.empty())
 		return defval;
 	int max_x = -INT32_MAX;
-	BOOST_FOREACH(VensimViewElement *ele, vElements)
+	for (VensimViewElement *ele: vElements)
 	{
 		if (ele)
 		{
@@ -240,7 +240,7 @@ int VensimView::GetViewMaxY(int defval)
 	if (this->vElements.empty())
 		return defval;
 	int max_y = -INT32_MAX;
-	BOOST_FOREACH(VensimViewElement *ele, vElements)
+	for (VensimViewElement *ele: vElements)
 	{
 		if (ele)
 		{
@@ -253,7 +253,7 @@ int VensimView::GetViewMaxY(int defval)
 
 bool VensimView::UpgradeGhost(Variable *var)
 {
-	BOOST_FOREACH(VensimViewElement *ele, vElements)
+	for (VensimViewElement *ele: vElements)
 	{
 		if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE)
 		{
@@ -278,7 +278,7 @@ bool VensimView::AddFlowDefinition(Variable* var, Variable* upstream, Variable* 
 	xstart = ystart = xend = yend = 0;
 	bool startfound = false;
 	bool endfound = false;
-	BOOST_FOREACH(VensimViewElement *ele, vElements)
+	for (VensimViewElement *ele: vElements)
 	{
 		if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE)
 		{
@@ -346,7 +346,7 @@ void VensimView::CheckLinksIn()
 			if (var && var->VariableType() != XMILE_Type_STOCK && !vele->Ghost())
 			{
 				std::vector<Variable*>ins = var->GetInputVars();
-				BOOST_FOREACH(Variable* in, ins)
+				for (Variable* in: ins)
 				{
 					if (!this->FindInArrow(in, uid) && in->VariableType() != XMILE_Type_ARRAY && in->VariableType() != XMILE_Type_ARRAY_ELM && in->VariableType() != XMILE_Type_UNKNOWN)
 					{
@@ -366,7 +366,7 @@ void VensimView::CheckLinksIn()
 
 bool VensimView::FindInArrow(Variable *in, int target)
 {
-	BOOST_FOREACH(VensimViewElement* ele, this->vElements)
+	for (VensimViewElement* ele: this->vElements)
 	{
 		if (ele && ele->Type() == VensimViewElement::ElementTypeCONNECTOR)
 		{
@@ -390,7 +390,7 @@ bool VensimView::FindInArrow(Variable *in, int target)
 
 void VensimView::RemoveExtraArrowsIn(std::vector<Variable*>ins, int target)
 {
-	BOOST_FOREACH(VensimViewElement* ele, this->vElements)
+	for (VensimViewElement* ele: this->vElements)
 	{
 		if (ele && ele->Type() == VensimViewElement::ElementTypeCONNECTOR)
 		{
@@ -405,7 +405,7 @@ void VensimView::RemoveExtraArrowsIn(std::vector<Variable*>ins, int target)
 				if (from && from->Type() == VensimViewElement::ElementTypeVALVE && tele->Attached() && static_cast<VensimValveElement*>(vElements[cele->From()])->Attached())
 					from = static_cast<VensimVariableElement*>(vElements[cele->From() + 1]);
 				bool found = false;
-				BOOST_FOREACH(Variable* in, ins)
+				for (Variable* in: ins)
 				{
 					if (from->GetVariable() == in)
 					{
@@ -423,7 +423,7 @@ void VensimView::RemoveExtraArrowsIn(std::vector<Variable*>ins, int target)
 int VensimView::FindVariable(Variable *in, int x, int y)
 {
 	int uid = 0;
-	BOOST_FOREACH(VensimViewElement* ele, this->vElements)
+	for (VensimViewElement* ele: this->vElements)
 	{
 		if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE)
 		{

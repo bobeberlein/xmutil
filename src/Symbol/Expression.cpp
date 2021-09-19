@@ -122,7 +122,7 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 }
 void ExpressionVariable::GetVarsUsed(std::vector<Variable*>& vars)
 { 
-	BOOST_FOREACH(Variable* var, vars)
+	for (Variable* var: vars)
 	{
 		if (var == pVariable)
 			return;

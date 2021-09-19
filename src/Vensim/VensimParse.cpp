@@ -7,7 +7,6 @@
 #include "../Symbol/Variable.h"
 #include "../Symbol/LeftHandSide.h"
 #include "../Symbol/ExpressionList.h"
-#include <boost/lexical_cast.hpp>
 #define YYSTYPE VensimParse
 #include "VYacc.tab.hpp"
 #include "../XMUtil.h"
@@ -367,7 +366,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
 	   {
 		   // try to replace variable names with long names from the documentaion
 		   std::vector<Variable*> vars = _model->GetVariables(NULL); // all symbols that are variables
-		   BOOST_FOREACH(Variable* var, vars)
+		   for (Variable* var: vars)
 		   {
 			   std::string alt = compress_whitespace(var->Comment());
 			   if (alt == "Backlog")
@@ -537,7 +536,7 @@ SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,bool bang,Variable
       }
       start.erase(i,std::string::npos) ;
       for(i=low+1;i<high;i++) {
-         finish = start + boost::lexical_cast<std::string>(i) ;
+         finish = start + std::to_string(i) ;
          v = static_cast<Variable *>(pSymbolNameSpace->Find(finish)) ;
          if(!v)
             v = new Variable(pSymbolNameSpace,finish) ;
