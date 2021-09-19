@@ -341,7 +341,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 		// dimensions
 		std::vector<Variable*> elmlist;
-		int dim_count = var->SubscriptCount(elmlist);
+		int dim_count = var->SubscriptCountVars(elmlist);
 
 		std::string comment = var->Comment();
 		if (!comment.empty())

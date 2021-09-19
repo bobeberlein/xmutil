@@ -27,7 +27,7 @@ std::string MacroFunction::ComputableName(void)
 }
 
 
-bool Function::CheckComputed(ContextInfo *info,ExpressionList *arg) 
+bool Function::CheckComputedList(ContextInfo *info,ExpressionList *arg)
 { 
     return arg->CheckComputed(info,0xffffffff) ;
 }
@@ -76,7 +76,7 @@ void FunctionTimeBase::OutputComputable(ContextInfo *info, ExpressionList *arg)
 }
 
 
-bool FunctionMemoryBase::CheckComputed(ContextInfo *info,ExpressionList *arg) 
+bool FunctionMemoryBase::CheckComputedList(ContextInfo *info,ExpressionList *arg)
 { 
    if(info->GetComputeType() == CF_initial) 
       return arg->CheckComputed(info,iInitArgMark) ;

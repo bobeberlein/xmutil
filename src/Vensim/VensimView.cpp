@@ -23,6 +23,7 @@ VensimVariableElement::VensimVariableElement(VensimView* view, char *curpos, cha
 		_ghost = false;
 	else
 		_ghost = true;
+
 #ifndef NDEBUG
 	if (name == "P100")
 		curpos = curpos;

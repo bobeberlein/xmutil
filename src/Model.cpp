@@ -80,7 +80,7 @@ bool Model::OrganizeSubscripts(void)
       SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable() ;
       for (const SymbolNameSpace::iterator &it: *ht) {
          siwc.v = static_cast<Variable *>SNSitToSymbol(it) ;
-         if(siwc.count = siwc.v->SubscriptCount(subelm)) {
+         if(siwc.count = siwc.v->SubscriptCountVars(subelm)) {
             sublist.push_back(siwc) ;
          }
       }
