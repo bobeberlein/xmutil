@@ -7,9 +7,8 @@ Symbol* ContextInfo::GetLHSSpecific(Symbol* dim)
 {
 	if (!pLHSElmsGeneric || dim->isType() != Symtype_Variable)
 		return dim;
-	int n = pLHSElmsGeneric->size();
-	int i;
-	for (i = 0; i < n; i++)
+	size_t n = pLHSElmsGeneric->size();
+	for (size_t i = 0; i < n; i++)
 	{
 		if ((*pLHSElmsGeneric)[i] == dim)
 			return (*pLHSElmsSpecific)[i];
@@ -30,24 +29,24 @@ Symbol* ContextInfo::GetLHSSpecific(Symbol* dim)
 			{
 				// I believe we are missing the case where the mapping is explicitly laid out in a list, but I don't remember the syntax for this
 				// walk through the things mapped to
-				int count = map->Length();
-				for (int j = 0; j < count; j++)
+				size_t count = map->Length();
+				for (size_t j = 0; j < count; j++)
 				{
 					const SymbolList::SymbolListEntry& sle = (*map)[j];
 					if (sle.eType == SymbolList::EntryType_SYMBOL) // only type know how to deal with
 					{
 						Symbol* owner = sle.u.pSymbol; // shoulw be  asubscript range
-						for (i = 0; i < n; i++)
+						for (size_t i = 0; i < n; i++)
 						{
 							if ((*pLHSElmsGeneric)[i] == owner)
 							{
 								// look for pLHSElmsSpecific in the entries for owner as subscript definition - use that position from
 								// v above
-								Variable* mv = static_cast<Variable*>(owner);
+								// Variable* mv = static_cast<Variable*>(owner);
 
 								std::vector<Symbol*> list;
 								Equation::GetSubscriptElements(list, owner);
-								for (int k = 0; k < list.size(); k++)
+								for (size_t k = 0; k < list.size(); k++)
 								{
 									if (list[k] == (*pLHSElmsSpecific)[i])
 									{

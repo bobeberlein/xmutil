@@ -1,12 +1,14 @@
 #ifndef _XMUTIL_SYMBOL_VARIABLE_H
 #define _XMUTIL_SYMBOL_VARIABLE_H
+#include <cstddef>
+#include <vector>
+
 #include "Symbol.h"
 #include "Equation.h"
 #include "UnitExpression.h"
 #include "../Function/State.h"
 #include "../Function/Function.h"
 #include "../XMUtil.h"
-#include <vector>
 class View;
 
 /* varibale content - the true stuff for variables without the associated symbol
@@ -69,7 +71,6 @@ public :
    ~VariableContentElm(void) {}
 private:
    Variable *pFamily ;
-   int iValue ; /* 1 based value */
 } ;
 class VariableContentVar : public VariableContent
 {
@@ -125,7 +126,7 @@ public:
    bool CheckComputed(ContextInfo *info,bool first) {if(pVariableContent)return pVariableContent->CheckComputed(this,info,first) ; return false ; }  
    void CheckPlaceholderVars(Model *m) {if(pVariableContent)pVariableContent->CheckPlaceholderVars(m) ;}
    void SetupState(ContextInfo *info) {if(pVariableContent)pVariableContent->SetupState(info) ;} 
-   int SubscriptCount(std::vector<Variable *> &elmlist) { return pVariableContent ? pVariableContent->SubscriptCount(elmlist) : 0; }
+   int SubscriptCountVars(std::vector<Variable *> &elmlist) { return pVariableContent ? pVariableContent->SubscriptCount(elmlist) : 0; }
    // passthrough calls - many of these are virtual in VariableContent or passed through to yet another class
    void AddEq(Equation *eq) ;
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
@@ -148,8 +149,8 @@ public:
    void MarkAsFlow() { bAsFlow = true; }
    bool AsFlow() const { return bAsFlow; }
 
-   int Nelm() const { return iNelm; }
-   void SetNelm(int set) { iNelm = set; }
+   size_t Nelm() const { return iNelm; }
+   void SetNelm(size_t set) { iNelm = set; }
 
    // for flowing
    bool HasUpstream() const { return _hasUpstream; }
@@ -169,7 +170,7 @@ private :
 	std::vector<Variable*> mOutflows;
    VariableContent *pVariableContent ; // dependent on variable type which is not known on instantiation
    XMILE_Type mVariableType;
-   int iNelm; // used for subscript owners
+   size_t iNelm; // used for subscript owners
    View* _view; // view defined in
    bool _unwanted;
    bool _hasUpstream;

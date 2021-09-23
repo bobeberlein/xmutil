@@ -22,7 +22,7 @@ public:
    virtual bool IsMemoryless(void) { return true ; }
    virtual bool IsTimeDependent(void) { return false ; }
    virtual double Eval(Expression *ex, ExpressionList *arg, ContextInfo *info) { return 0; } // make this pure virtual if finishing engine is required
-   virtual bool CheckComputed(ContextInfo *info,ExpressionList *arg) ;
+   virtual bool CheckComputedList(ContextInfo *info,ExpressionList *arg) ;
    virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
    virtual std::string ComputableName(void) { return "" ; }
    virtual std::string ComputableNameInit(void) { return "" ; }
@@ -48,9 +48,9 @@ public:
    FunctionMemoryBase(SymbolNameSpace *sns,const std::string &name,int narg,unsigned actarg,unsigned iniarg) : Function(sns,name,narg) {iActiveArgMark=BitFlip(actarg) ; iInitArgMark = BitFlip(iniarg) ;}
    ~FunctionMemoryBase(void) {}
    unsigned BitFlip(unsigned bits) ;
-   bool IsMemoryless(void) { return false ; }
-   bool CheckComputed(ContextInfo *info,ExpressionList *arg) ;
-   void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
+   virtual bool IsMemoryless(void) override { return false ; }
+   virtual bool CheckComputedList(ContextInfo *info,ExpressionList *arg) override;
+   virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) override;
 private :
    unsigned iInitArgMark ;
    unsigned iActiveArgMark ;
@@ -107,8 +107,8 @@ class name : public FunctionMemoryBase {\
 public :\
    name(SymbolNameSpace *sns) : FunctionMemoryBase(sns,xname,narg,actarg,iniarg) { }\
    ~name(void) {}\
-   std::string ComputableName(void) { return cnamea ; }\
-   std::string ComputableNameInit(void) { return cnamei ; }\
+   std::string ComputableName(void) override { return cnamea ; }\
+   std::string ComputableNameInit(void) override { return cnamei ; }\
 private :
 
 #define FSubclassMemory(name,xname,narg,actarg,iniarg,cnamea,cnamei) FSubclassMemoryStart(name,xname,narg,actarg,iniarg,cnamea,cnamei) };

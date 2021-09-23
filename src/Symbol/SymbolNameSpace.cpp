@@ -100,7 +100,7 @@ std::string *SymbolNameSpace::ToLowerSpace(const std::string &sin)
       memcpy(ws,sin.c_str()+1,n-2) ;
       n-= 2 ;
    }
-   ws[n] = NULL ;
+   ws[n] = '\0';
 
    int i,j ;
    for(i=j=0;i<n;i++) // remove leading blanks
@@ -127,7 +127,7 @@ std::string *SymbolNameSpace::ToLowerSpace(const std::string &sin)
       if(ws[j-1] != ' ' && ws[j-1] != '_' && ws[j-1] != '\t' && ws[j-1] != '\n' && ws[j-1] != '\r')
          break ;
    }
-   ws[j] = NULL ;
+   ws[j] = '\0';
    ucasemap_utf8ToLower(GlobalUCaseMap, ws2, n + 1, ws, j, &ec);
    if(ec != U_ZERO_ERROR) {
       delete[] ws ;

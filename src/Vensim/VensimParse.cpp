@@ -305,7 +305,6 @@ bool VensimParse::ProcessFile(const std::string &filename)
 			   break;
 		   }
 		   VensimView* view = new VensimView;
-		   VensimViewElements& elements = view->Elements(); // we populate this directly
 		   
 		   _model->AddView(view);
 		   // next the title
@@ -380,6 +379,9 @@ bool VensimParse::ProcessFile(const std::string &filename)
 			   }
 		   }
 	   }
+       if (!noerr) {
+          fprintf(stderr, "warning: writing output file, but we had errors. check the result carefully.\n");
+       }
        return true ; // got something - try to put something out
     }
     else
@@ -393,7 +395,7 @@ char *VensimParse::GetIntChar(char *s, int& val, char c)
 	{
 		if (*tv == c)
 		{
-			*tv++ = NULL;
+			*tv++ = '\0';
 			break;
 		}
 	}
@@ -407,7 +409,7 @@ char *VensimParse::GetInt(char *s, int& val)
 	{
 		if (*tv == ',')
 		{
-			*tv++ = NULL;
+			*tv++ = '\0';
 			break;
 		}
 	}
@@ -425,7 +427,7 @@ char *VensimParse::GetString(char *s, std::string& name)
 			{
 				tv++;
 				assert(*tv == ','); 
-				*tv++ = NULL;
+				*tv++ = '\0';
 				break;
 			}
 			else if (*tv == '\\' && tv[1] == '\"')
@@ -438,7 +440,7 @@ char *VensimParse::GetString(char *s, std::string& name)
 		{
 			if (*tv == ',')
 			{
-				*tv++ = NULL;
+				*tv++ = '\0';
 				break;
 			}
 		}

@@ -452,10 +452,10 @@ void  VariableContentVar::SetupState(ContextInfo *info)
 
 int VariableContentVar::SubscriptCount(std::vector<Variable *> &elmlist)
 {
-   int count ;
    if(vEquations.empty())
       return 0 ;
-   if(count = vEquations[0]->SubscriptCount(elmlist)) {
+   int count = vEquations[0]->SubscriptCount(elmlist);
+   if (count > 0) {
 	   if (vEquations.size() != 1)
 	   {
 		   for (size_t i = 1; i < vEquations.size(); i++)

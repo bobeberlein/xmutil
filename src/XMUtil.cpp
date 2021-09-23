@@ -77,7 +77,7 @@ bool StringMatch(const std::string& f, const std::string& s)
 	const char *tv1 = f.c_str();
 	const char *tv2 = s.c_str();
 	char c1, c2;
-	for (; c1 = *tv1; tv1++, tv2++)
+	for (; (c1 = *tv1); tv1++, tv2++)
 	{
 		c2 = *tv2;
 		if (c1 != c2)

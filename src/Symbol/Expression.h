@@ -161,18 +161,18 @@ class ExpressionFunction :
 public :
    ExpressionFunction(SymbolNameSpace *sns,Function *f,ExpressionList *args) : Expression(sns) {pFunction =f;pArgs = args;}
    ~ExpressionFunction(void) ;
-   virtual EXPTYPE GetType(void) { return EXPTYPE_Function ; }
-   virtual double Eval(ContextInfo *info) { return pFunction->Eval(this,pArgs,info) ; }
-   virtual Function *GetFunction(void) { return pFunction ; }
+   virtual EXPTYPE GetType(void) override { return EXPTYPE_Function ; }
+   virtual double Eval(ContextInfo *info) override { return pFunction->Eval(this,pArgs,info) ; }
+   virtual Function *GetFunction(void) override { return pFunction ; }
    virtual ExpressionList *GetArgs(void) { return pArgs ; }
-   void CheckPlaceholderVars(Model *m,bool isfirst) ;
-   bool CheckComputed(ContextInfo *info) { return pFunction->CheckComputed(info,pArgs) ; }
-   void RemoveFunctionArgs(void) { pArgs = NULL ; }
-   virtual void OutputComputable(ContextInfo *info)  { pFunction->OutputComputable(info, pArgs); }
+   virtual void CheckPlaceholderVars(Model *m,bool isfirst) override;
+   virtual bool CheckComputed(ContextInfo *info) override { return pFunction->CheckComputed(info,pArgs) ; }
+   virtual void RemoveFunctionArgs(void) override { pArgs = NULL ; }
+   virtual void OutputComputable(ContextInfo *info) override { pFunction->OutputComputable(info, pArgs); }
    virtual bool IsActiveInit() override { return pFunction->IsActiveInit(); }
-   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) { return false; }
-   virtual void GetVarsUsed(std::vector<Variable*>& vars); // list of variables used
-   virtual void MarkType(XMILE_Type type) {}
+   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) override { return false; }
+   virtual void GetVarsUsed(std::vector<Variable*>& vars) override; // list of variables used
+   virtual void MarkType(XMILE_Type type) override {}
 
 private :
    Function *pFunction ; // not allocated here
@@ -243,7 +243,7 @@ public :
 private :
    std::vector<double> vXVals ;
    std::vector<double> vYVals ;
-   double dX1,dY1,dX2,dY2 ;
+   double dY1,dX2,dY2 ;
    bool bHasRange;
    bool bExtrapolate;
 } ;
