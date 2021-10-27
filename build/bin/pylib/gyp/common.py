@@ -12,6 +12,12 @@ import re
 import tempfile
 import sys
 
+# Python 3.10 requires using collections.abc directly
+try:
+    MutableSet = collections.MutableSet
+except AttributeError:
+    import collections.abc
+    MutableSet = collections.abc.MutableSet
 
 # A minimal memoizing decorator. It'll blow up if the args aren't immutable,
 # among other "problems".
@@ -494,7 +500,7 @@ def uniquer(seq, idfun=None):
 
 
 # Based on http://code.activestate.com/recipes/576694/.
-class OrderedSet(collections.MutableSet):
+class OrderedSet(MutableSet):
   def __init__(self, iterable=None):
     self.end = end = []
     end += [None, end, end]         # sentinel node for doubly linked list
