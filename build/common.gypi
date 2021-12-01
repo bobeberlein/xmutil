@@ -41,7 +41,7 @@
                 'conditions': [
                     ['OS=="mac"', {
                        'xcode_settings': {
-                            'ONLY_ACTIVE_ARCH': 'NO',
+                            'ONLY_ACTIVE_ARCH': 'YES',
                             'GCC_OPTIMIZATION_LEVEL': 's',
                             'SKIP_INSTALL': 'YES',
                         },
@@ -113,7 +113,7 @@
                     'HAVE_SYS_MALLOC_H'
                 ],
                 'xcode_settings': {
-                    'MACOSX_DEPLOYMENT_TARGET':'10.7',
+                    'MACOSX_DEPLOYMENT_TARGET':'10.9',
                     'CLANG_CXX_LIBRARY': 'libc++',
                     'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++14',
                     'SDKROOT': 'macosx',

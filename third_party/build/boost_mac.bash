@@ -20,14 +20,31 @@
 # same directory as this script, and run "./boost.sh". Grab a cuppa. And voila.
 #===============================================================================
 
+ARCH_GENERIC=x86
+ARCH=x86_64
+
+for arg in "$@"
+do
+    case $arg in
+    --mac-arm)
+        ARCH_GENERIC=arm
+        ARCH=arm64
+    ;;
+    --mac-x86_64)
+        ARCH_GENERIC=x86
+        ARCH=x86_64
+    ;;
+    esac
+done
+
 PKG_NAME='boost'
-PKG_VERSION_A=1.73.0
-PKG_VERSION_B=boost_1_73_0
+PKG_VERSION_A=1.76.0
+PKG_VERSION_B=boost_1_76_0
 ARCHIVE_NAME="${PKG_VERSION_B}.tar.gz"
 DOWNLOAD_URL="http://downloads.sourceforge.net/project/boost/boost/${PKG_VERSION_A}/${ARCHIVE_NAME}"
 
 : ${BOOST_LIBS:="thread filesystem system date_time random chrono program_options iostreams"}
-: ${OSX_SDKVERSION:=11.0}
+: ${OSX_SDKVERSION:=12.0}
 : ${OSX_VERSION:=10.15}
 : ${XCODE_ROOT:=`xcode-select -print-path`}
 : ${EXTRA_CPPFLAGS:="-DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS -std=c++11 -stdlib=libc++"}
@@ -83,8 +100,7 @@ updateBoost()
 {
     echo Updating boost into $BOOST_SRC...
 
-    PLATFORM="MacOSX"
-    OSX_SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/${PLATFORM}.platform/Developer/SDKs/${PLATFORM}${OSX_SDKVERSION}.sdk"
+    OSX_SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SDKVERSION}.sdk"
 
     if [ ! -e $BOOST_SRC ]; then
         echo "Downloading ${DOWNLOAD_URL}"
@@ -94,9 +110,9 @@ updateBoost()
 
         cat >> $BOOST_SRC/tools/build/v2/user-config.jam <<EOF
 using darwin : ${OSX_SDKVERSION}~mac
-   : $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$COMPILER -arch x86_64 -fvisibility=hidden -fvisibility-inlines-hidden $EXTRA_CPPFLAGS -isysroot $OSX_SYSROOT -mmacosx-version-min=$OSX_VERSION
+   : $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$COMPILER -arch ${ARCH} -fvisibility=hidden -fvisibility-inlines-hidden $EXTRA_CPPFLAGS -isysroot $OSX_SYSROOT -mmacosx-version-min=$OSX_VERSION
    : <striper> <root>$XCODE_ROOT/Platforms/MacOSX.platform/Developer
-   : <address-model>64 <architecture>x86 <target-os>darwin
+   : <address-model>64 <architecture>${ARCH_GENERIC} <target-os>darwin
    ;
 EOF
     else
@@ -123,8 +139,8 @@ buildBoostForOSX()
 {
     cd $BOOST_SRC
 
-    ./b2 -j16 --build-dir=../osx-build --stagedir=../osx-build/stage --prefix=$PREFIXDIR toolset=clang cxxflags="-std=c++11 -stdlib=libc++ -arch i386 -arch x86_64" linkflags="-stdlib=libc++" link=static threading=multi stage
-    ./b2 -j16 --build-dir=../osx-build --stagedir=../osx-build/stage --prefix=$PREFIXDIR toolset=clang cxxflags="-std=c++11 -stdlib=libc++ -arch i386 -arch x86_64" linkflags="-stdlib=libc++" link=static threading=multi install
+    ./b2 -j16 --build-dir=../osx-build --stagedir=../osx-build/stage --prefix=$PREFIXDIR toolset=clang cxxflags="-std=c++11 -stdlib=libc++ -arch ${ARCH}" linkflags="-stdlib=libc++" link=static threading=multi stage
+    ./b2 -j16 --build-dir=../osx-build --stagedir=../osx-build/stage --prefix=$PREFIXDIR toolset=clang cxxflags="-std=c++11 -stdlib=libc++ -arch ${ARCH}" linkflags="-stdlib=libc++" link=static threading=multi install
     doneSection
 }
 

@@ -9,7 +9,11 @@ if  uname -a | grep -q 'Linux'; then
 	export QTDIR="$HOME/Qt5.11.0/5.11.0/gcc_64"
 else
 	#mac
-	export QTDIR="$HOME/Qt5.11.0/5.11.0/clang_64"
+	if [ $mac_arch = x86_64 ]; then 
+    	export QTDIR="$HOME/Qt5.15.4/5.15.4/clang_64"
+    else
+    	export QTDIR="$HOME/Qt5.15.4/5.15.4/clang_arm64"
+    fi
 
     rm -f ./third_party/include/QtGui
 	ln -s -f $QTDIR/lib/QtGui.framework/Headers ./third_party/include/QtGui

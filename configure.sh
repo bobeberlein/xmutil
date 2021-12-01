@@ -4,8 +4,6 @@ set -euo pipefail
 gypfile="${GYPFILE:-XMUtil.gyp}"
 rmout="${rmout:-yes}"
 
-source ./build/environment.sh
-
 quiet=no
 msvs=no
 xcode=no
@@ -13,7 +11,7 @@ ui=no
 gyp_ui=0
 arch_id=64
 x86=yes
-
+mac_arch=x86_64
 
 usage() {
     cat <<EOF
@@ -40,6 +38,9 @@ do
 		arch_id=64
 		x86=no
     ;;
+    --mac-arm)
+        mac_arch=arm64
+    ;;
     --with-ui)
     ui=yes
     gyp_ui=1
@@ -53,6 +54,8 @@ do
     ;;
     esac
 done
+
+source ./build/environment.sh
 
 if [ $ui = 'yes' ]; then
     . ./qt_generate.sh

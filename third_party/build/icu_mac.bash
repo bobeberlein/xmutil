@@ -2,7 +2,7 @@
 set -e
 
 PKG_VERSION=54-2
-SDK_VERSION=11.0
+SDK_VERSION=12.0
 OSX_VERSION=10.15
 
 ARCHIVE_NAME="icu4c-$(echo $PKG_VERSION | sed -e 's/\-/_/')-src.zip"
@@ -12,7 +12,20 @@ PKG_NAME='icu'
 LIB_NAME="lib${PKG_NAME}.a"
 
 WORK_PATH="$PWD/build_icu_mac"
-ARCHS="x86_64"
+
+ARCHS=x86_64
+
+for arg in "$@"
+do
+    case $arg in
+    --mac-arm)
+        ARCHS=arm64
+    ;;
+    --mac-x86_64)
+        ARCHS=x86_64
+    ;;
+    esac
+done
 
 mkdir -p ${WORK_PATH}/src
 mkdir -p ${WORK_PATH}/lib
