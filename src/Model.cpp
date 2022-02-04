@@ -454,6 +454,15 @@ bool Model::MarkVariableTypes(SymbolNameSpace* ns)
 	return true;
 }
 
+void Model::CheckGhostOwners()
+{
+    // now everything is defined (and only defined once) - we need to make sure there are no missing connectors
+    for (View* view : vViews)
+    {
+        view->CheckGhostOwners();
+    }
+}
+
 void Model::AttachStragglers()
 {
 	SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable();

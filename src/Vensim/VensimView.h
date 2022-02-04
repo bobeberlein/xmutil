@@ -85,7 +85,8 @@ public:
 	bool UpgradeGhost(Variable * var);
 	bool AddFlowDefinition(Variable* var, Variable* upstream, Variable* downstream);
 	bool AddVarDefinition(Variable* var, int x, int y);
-	void CheckLinksIn();
+	virtual void CheckGhostOwners() override;
+	virtual void CheckLinksIn() override;
 	bool FindInArrow(Variable* source, int target);
 	void RemoveExtraArrowsIn(std::vector<Variable*> ins, int target);
 	int FindVariable(Variable* in, int x, int y); // add if necessary - returns UID

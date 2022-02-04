@@ -333,6 +333,28 @@ bool VensimView::AddVarDefinition(Variable* var, int x, int y)
 }
 
 // add if msising - if extra just ignore
+void VensimView::CheckGhostOwners()
+{
+	int uid;
+	int n = vElements.size();
+	for (uid = 0; uid < n; uid++)
+	{
+		VensimViewElement* ele = vElements[uid];
+		if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE)
+		{
+			VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
+			Variable* var = vele->GetVariable();
+			if (var && var->GetView() == NULL)
+			{
+				var->SetView(this);
+				vele->SetGhost(false);
+			}
+		}
+	}
+}
+
+
+// add if msising - if extra just ignore
 void VensimView::CheckLinksIn()
 {
 	int uid;

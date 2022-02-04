@@ -12,6 +12,7 @@ public:
 	virtual bool AddFlowDefinition(Variable* var, Variable* in, Variable* out) = 0;
 	virtual bool AddVarDefinition(Variable* var, int x, int y) = 0;
 	virtual void CheckLinksIn() = 0;
+	virtual void CheckGhostOwners() = 0;
 	// just a placeholder to derive from
 };
 class Model
@@ -29,6 +30,7 @@ public:
    void GenerateShortNames(void) ;
    bool OutputComputable(bool wantshort) ;
    bool MarkVariableTypes(SymbolNameSpace* ns);
+   void CheckGhostOwners();
    void AttachStragglers(); // try to get diagramatic stuff right
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 

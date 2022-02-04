@@ -144,6 +144,9 @@ int main(int argc, char* argv[])
 		   m->MarkVariableTypes(mf->NameSpace());
 	   }
 
+	   // any ghosts that are never defined make the first appearance not a ghost
+	   m->CheckGhostOwners();
+
 	   // if there is a view then try to make sure everything is defined in the views
 	   // put unknowns in a heap in the first view at 20,20 but for things that have
 	   // connections try to put them in the right place
