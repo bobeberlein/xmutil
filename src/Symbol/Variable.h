@@ -21,7 +21,7 @@ class View;
 
   VariableContent is an abstract class 
   */
-enum XMILE_Type { XMILE_Type_UNKNOWN, XMILE_Type_AUX, XMILE_Type_STOCK, XMILE_Type_FLOW, XMILE_Type_ARRAY, XMILE_Type_ARRAY_ELM };
+enum XMILE_Type { XMILE_Type_UNKNOWN, XMILE_Type_AUX, XMILE_Type_DELAYAUX, XMILE_Type_STOCK, XMILE_Type_FLOW, XMILE_Type_ARRAY, XMILE_Type_ARRAY_ELM };
 class VariableContent
 {
 public :
@@ -148,6 +148,8 @@ public:
 
    void MarkAsFlow() { bAsFlow = true; }
    bool AsFlow() const { return bAsFlow; }
+   void MarkUsesMemory() { bUsesMemory = true; }
+   bool UsesMemory() const { return bUsesMemory; }
 
    size_t Nelm() const { return iNelm; }
    void SetNelm(size_t set) { iNelm = set; }
@@ -176,6 +178,7 @@ private :
    bool _hasUpstream;
    bool _hasDownstream;
    bool bAsFlow;
+   bool bUsesMemory;
 } ;
 
 

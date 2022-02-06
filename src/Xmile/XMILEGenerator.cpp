@@ -313,6 +313,7 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 		std::string tag;
 		switch (type)
 		{
+		case XMILE_Type_DELAYAUX:
 		case XMILE_Type_AUX:
 			tag = "aux";
 			break;
@@ -334,6 +335,12 @@ void XMILEGenerator::generateModel(tinyxml2::XMLElement* element, std::vector<st
 
 		variables->InsertEndChild(xvar);
 		xvar->SetAttribute("name", var->GetAlternateName().c_str());
+
+		if (type == XMILE_Type_DELAYAUX)
+		{
+			tinyxml2::XMLElement* xcomment = doc->NewElement("isee:delay_aux");
+			xvar->InsertEndChild(xcomment);
+		}
 
 		std::vector<Equation*> eqns = var->GetAllEquations();
 		size_t eq_count = eqns.size();
@@ -673,6 +680,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					std::string tag;
 					switch (type)
 					{
+					case XMILE_Type_DELAYAUX:
 					case XMILE_Type_AUX:
 						tag = "aux";
 						break;

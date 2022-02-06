@@ -12,25 +12,33 @@ class UnitExpression;
    files depending on complexity */
 
 class Function :
-   public Symbol
+	public Symbol
 {
 public:
-   Function(SymbolNameSpace *sns,const std::string &name,int narg) ;
-   virtual ~Function(void) = 0 ;
-   SYMTYPE isType(void) { return Symtype_Function ; }
-   virtual bool AsKeyword(void) { return false ; } // for the parser - treats name as keyword not function
-   virtual bool IsMemoryless(void) { return true ; }
-   virtual bool IsTimeDependent(void) { return false ; }
-   virtual double Eval(Expression *ex, ExpressionList *arg, ContextInfo *info) { return 0; } // make this pure virtual if finishing engine is required
-   virtual bool CheckComputedList(ContextInfo *info,ExpressionList *arg) ;
-   virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) ;
-   virtual std::string ComputableName(void) { return "" ; }
-   virtual std::string ComputableNameInit(void) { return "" ; }
-   virtual bool IsActiveInit() { return false; }
-   int NumberArgs(void) { return iNumberArgs ; }
-protected :
-   int iNumberArgs ;
+	Function(SymbolNameSpace* sns, const std::string& name, int narg);
+	virtual ~Function(void) = 0;
+	SYMTYPE isType(void) { return Symtype_Function; }
+	virtual bool AsKeyword(void) { return false; } // for the parser - treats name as keyword not function
+	virtual bool IsMemoryless(void) { return true; }
+	virtual bool IsDelay(void) { return false; }
+	virtual bool IsTimeDependent(void) { return false; }
+	virtual double Eval(Expression* ex, ExpressionList* arg, ContextInfo* info) { return 0; } // make this pure virtual if finishing engine is required
+	virtual bool CheckComputedList(ContextInfo* info, ExpressionList* arg);
+	virtual void OutputComputable(ContextInfo* info, ExpressionList* arg);
+	virtual std::string ComputableName(void) { return ""; }
+	virtual std::string ComputableNameInit(void) { return ""; }
+	virtual bool IsActiveInit() { return false; }
+	int NumberArgs(void) { return iNumberArgs; }
+protected:
+	int iNumberArgs;
 };
+
+class DFunction : public Function {
+public:
+	DFunction(SymbolNameSpace* sns, const std::string& name, int narg) : Function(sns, name, narg) { }
+	virtual bool IsDelay(void) override { return true; }
+};
+
 
 class UnknownFunction : public Function
 {
@@ -49,6 +57,7 @@ public:
    ~FunctionMemoryBase(void) {}
    unsigned BitFlip(unsigned bits) ;
    virtual bool IsMemoryless(void) override { return false ; }
+   virtual bool IsDelay(void) override { return true; }
    virtual bool CheckComputedList(ContextInfo *info,ExpressionList *arg) override;
    virtual void OutputComputable(ContextInfo *info,ExpressionList *arg) override;
 private :
@@ -98,6 +107,16 @@ public :\
 private :
 
 #define FSubclass(name,xname,narg,cname) FSubclassStart(name,xname,narg,cname) };
+
+#define DFSubclassStart(name,xname,narg,cname) \
+class name : public DFunction {\
+public :\
+   name(SymbolNameSpace *sns) : DFunction(sns,xname,narg) { ; }\
+   ~name(void) {}\
+    std::string ComputableName(void) { return cname ; }\
+private :
+
+#define DFSubclass(name,xname,narg,cname) DFSubclassStart(name,xname,narg,cname) };
 
 
 
@@ -156,17 +175,17 @@ FSubclass(FunctionRandomUniform, "RANDOM UNIFORM", 3, "UNIFORM");
 FSubclass(FunctionNAN, "A FUNCTION OF", -1, "NAN");
 
 // actually memory but no init - or init - does not matter for translation
-FSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
-FSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
-FSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH3")
-FSubclass(FunctionSmooth3I, "SMOOTH3I", 3, "SMTH3")
-FSubclass(FunctionTrend,"TREND", 3, "TREND")
-FSubclass(FunctionDelay1, "DELAY1", 2, "DELAY1")
-FSubclass(FunctionDelay1I, "DELAY1I", 3, "DELAY1")
-FSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
-FSubclass(FunctionDelay3I, "DELAY3I", 3, "DELAY3")
-FSubclass(FunctionDelay, "DELAY FIXED", 3, "DELAY")
-FSubclass(FunctionNPV,"NPV",4,"NPV")
+DFSubclass(FunctionSmooth, "SMOOTH", 2, "SMTH1")
+DFSubclass(FunctionSmoothI, "SMOOTHI", 3, "SMTH1")
+DFSubclass(FunctionSmooth3, "SMOOTH3", 2, "SMTH3")
+DFSubclass(FunctionSmooth3I, "SMOOTH3I", 3, "SMTH3")
+DFSubclass(FunctionTrend,"TREND", 3, "TREND")
+DFSubclass(FunctionDelay1, "DELAY1", 2, "DELAY1")
+DFSubclass(FunctionDelay1I, "DELAY1I", 3, "DELAY1")
+DFSubclass(FunctionDelay3, "DELAY3", 2, "DELAY3")
+DFSubclass(FunctionDelay3I, "DELAY3I", 3, "DELAY3")
+DFSubclass(FunctionDelay, "DELAY FIXED", 3, "DELAY")
+DFSubclass(FunctionNPV,"NPV",4,"NPV")
 
 // done as macros
 FSubclass(FunctionDelayConveyor,"DELAY CONVEYOR", 6, "DELAY_CONVEYOR")

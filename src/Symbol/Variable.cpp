@@ -19,6 +19,7 @@ Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, n
    _unwanted = false;
    _hasUpstream = _hasDownstream = false;
    bAsFlow = false;
+   bUsesMemory = false;
 }
 
 
@@ -147,6 +148,9 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		if (exp->GetType() == EXPTYPE_Function)
 		{
 			Function* function = static_cast<ExpressionFunction*>(exp)->GetFunction();
+			bool mrl = function->IsMemoryless();
+			if (function->IsDelay())
+				this->MarkUsesMemory();
 			std::string name = function->GetName();
 			if (name == "LOOKUP EXTRAPOLATE")
 			{
@@ -176,6 +180,8 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 			// check to see if this is decorated as a flow
 			if (this->AsFlow())
 				mVariableType = XMILE_Type_FLOW;
+			else if (this->UsesMemory())
+				mVariableType = XMILE_Type_DELAYAUX;
 			else
 				mVariableType = XMILE_Type_AUX;
 		}
