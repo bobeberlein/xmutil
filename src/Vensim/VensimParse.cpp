@@ -51,6 +51,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionLog(pSymbolNameSpace);
 		new FunctionZidz(pSymbolNameSpace);
 		new FunctionXidz(pSymbolNameSpace);
+		new FunctionLookupInv(pSymbolNameSpace);
 		new FunctionWithLookup(pSymbolNameSpace); // but WITH_LOOKUP is treated specially by parser
 		new FunctionStep(pSymbolNameSpace);
 		new FunctionTabbedArray(pSymbolNameSpace);

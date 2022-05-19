@@ -160,6 +160,7 @@ FSubclass(FunctionMax, "MAX", 2, "MAX")
 FSubclass(FunctionMin, "MIN", 2, "MIN")
 FSubclass(FunctionZidz, "ZIDZ", 2, "SAFEDIV")
 FSubclass(FunctionXidz, "XIDZ", 3, "SAFEDIV")
+FSubclass(FunctionLookupInv, "LOOKUP INVERT", 2, "LOOKUPINV")
 FSubclass(FunctionWithLookup, "WITH LOOKUP", 3, "WITH_LOOKUP")
 FSubclass(FunctionSum, "SUM", 1, "SUM");
 FSubclass(FunctionProd, "PROD", 1, "PROD");
