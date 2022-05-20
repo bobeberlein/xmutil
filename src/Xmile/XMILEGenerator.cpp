@@ -710,14 +710,27 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					}
 					else
 					{
-						xvar->SetAttribute("x", vele->X());
-						xvar->SetAttribute("y", vele->Y());
-						if (type == XMILE_Type_STOCK)
+						if (type == XMILE_Type_STOCK && (vele->Width() > 60 || vele->Height() > 40))
 						{
-							if (vele->Width() > 60)
-								xvar->SetAttribute("width", vele->Width());
-							if (vele->Height() > 40)
-								xvar->SetAttribute("height", vele->Height());
+							int x = vele->X();
+							int y = vele->Y();
+							int width = vele->Width();
+							int height = vele->Height();
+							if (width < 60)
+								width = 60;
+							if (height < 40)
+								height = 40;
+							x -= width / 2;
+							y -= height / 2;
+							xvar->SetAttribute("x", x);
+							xvar->SetAttribute("y", y);
+							xvar->SetAttribute("width", width);
+							xvar->SetAttribute("height", height);
+						}
+						else
+						{
+							xvar->SetAttribute("x", vele->X());
+							xvar->SetAttribute("y", vele->Y());
 						}
 					}
 					if (type == XMILE_Type_FLOW)
