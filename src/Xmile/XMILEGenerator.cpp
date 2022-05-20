@@ -712,6 +712,13 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					{
 						xvar->SetAttribute("x", vele->X());
 						xvar->SetAttribute("y", vele->Y());
+						if (type == XMILE_Type_STOCK)
+						{
+							if (vele->Width() > 60)
+								xvar->SetAttribute("width", vele->Width());
+							if (vele->Height() > 40)
+								xvar->SetAttribute("height", vele->Height());
+						}
 					}
 					if (type == XMILE_Type_FLOW)
 					{
@@ -724,6 +731,8 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 						int toind = -1;
 						int xpt[2];
 						int ypt[2];
+						int xanchor[2];
+						int yanchor[2];
 						for (size_t i = 0; i < n; i++)
 						{
 							VensimConnectorElement* cele = static_cast<VensimConnectorElement*>(elements[i]);
@@ -733,10 +742,26 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 								{
 									// check to see what to is
 									VensimVariableElement* stock = static_cast<VensimVariableElement*>(elements[cele->To()]);
+									bool isgood = false;
 									if (stock)
 									{
-										xpt[count] = stock->X();
-										ypt[count] = stock->Y();
+										if ((stock->Type() == VensimViewElement::ElementTypeVARIABLE))
+										{
+											Variable* var = stock->GetVariable();
+											if (var && var->VariableType() == XMILE_Type_STOCK)
+												isgood = true;
+										}
+										else if (stock->Type() == VensimViewElement::ElementTypeCOMMENT)
+										{
+											isgood = true;
+										}
+									}
+									if (isgood)
+									{
+										xpt[count] = cele->X();
+										xanchor[count] = stock->X();
+										ypt[count] = cele->Y();
+										yanchor[count] = stock->Y();
 										if (stock->Type() == VensimViewElement::ElementTypeVARIABLE)
 										{
 											Variable* var = stock->GetVariable();
@@ -778,6 +803,21 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 							ypt[0] = ypt[1] = vele->Y();
 							toind = 1;
 						}
+						else
+						{
+							if (xpt[0] == xpt[1])
+							{
+								// vertical put the ys at the achors
+								ypt[0] = yanchor[0];
+								ypt[1] = yanchor[1];
+							}
+							else
+							{
+								// horizontal put the xs at the achors
+								xpt[0] = xanchor[0];
+								xpt[1] = xanchor[1];
+							}
+						}
 						tinyxml2::XMLElement* xpts = doc->NewElement("pts");
 						xvar->InsertEndChild(xpts);
 						tinyxml2::XMLElement* xxpt = doc->NewElement("pt");
@@ -798,15 +838,17 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 				{
 					VensimVariableElement* from = static_cast<VensimVariableElement*>(elements[cele->From()]);
 					// if from is a valve we switch it to the next element in the list which should be a var
-					if (from->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->From()])->Attached())
+					if (from->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->From()])->Attached()) {
 						from = static_cast<VensimVariableElement*>(elements[cele->From() + 1]);
+					}
 					VensimVariableElement* to = static_cast<VensimVariableElement*>(elements[cele->To()]);
 					if (to->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->To()])->Attached())
 						to = static_cast<VensimVariableElement*>(elements[cele->To() + 1]);
-					if (from && to && from->Type() == VensimViewElement::ElementTypeVARIABLE && to && to->Type() == VensimViewElement::ElementTypeVARIABLE &&
+					if (from && from->Type() == VensimViewElement::ElementTypeVARIABLE && to && to->Type() == VensimViewElement::ElementTypeVARIABLE &&
 						to->GetVariable() && 
 						to->GetVariable()->VariableType() != XMILE_Type_STOCK)
 					{
+						// valid xmile connector
 						tinyxml2::XMLElement* xconnector = doc->NewElement("connector");
 						element->InsertEndChild(xconnector);
 						xconnector->SetAttribute("uid", uid);

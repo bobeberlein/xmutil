@@ -19,6 +19,8 @@ public:
 	void SetX(int x) { _x = x; }
 	int Y() { return _y; }
 	void SetY(int y) { _y = y; }
+	int Width() const { return _width; }
+	int Height() const { return _height; }
 protected:
 	int _x;
 	int _y;
