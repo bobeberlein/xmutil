@@ -298,6 +298,16 @@ void Variable::AddEq(Equation *eq)
 
 void Variable::OutputComputable(ContextInfo* info)
 {
+	if (this->mVariableType == XMILE_Type_ARRAY)
+	{
+		Symbol* s = info->GetLHSSpecific(this);
+		if (s && s != this)
+		{
+			*info << SpaceToUnderBar(this->GetName()) << ".";
+			*info << SpaceToUnderBar(s->GetName());
+			return;
+		}
+	}
 	if (pVariableContent)
 		pVariableContent->OutputComputable(info);
 	else

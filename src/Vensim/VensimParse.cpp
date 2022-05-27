@@ -299,7 +299,7 @@ bool VensimParse::ProcessFile(const std::string &filename)
 		   if (strncmp(buf, "\\\\\\---///", 9) != 0)
 			   break;
 		   this->mVensimLex.ReadLine(buf, BUFLEN); // version line
-		   if (strncmp(buf, "V300 ", 5))
+		   if (strncmp(buf, "V300 ", 5) && strncmp(buf, "V364 ", 5))
 		   {
 			   printf("Unrecognized version - can't read sketch info\n");
 			   noerr = false;
