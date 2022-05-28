@@ -36,12 +36,14 @@ public:
 	VensimVariableElement(VensimView* view, Variable* var, int x, int y);
 	ElementType Type() { return ElementTypeVARIABLE; }
 	Variable* GetVariable() { return _variable; }
-	bool Ghost() { return _ghost;  }
+	bool Ghost(std::set<Variable*>* adds);
+	bool CrossLevel() { return _cross_level; }
 	void SetGhost(bool set) { _ghost = set; }
 	bool Attached() { return _attached; }
 protected:
 	Variable* _variable;
 	bool _ghost;
+	bool _cross_level;
 	bool _attached; // to a valve for flows
 };
 class VensimValveElement : public VensimViewElement

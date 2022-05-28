@@ -107,6 +107,8 @@ bool ParseVensimModel(int argc, char* argv[],Model *m)
 	   {
 		   if (StringMatch(arg, "--longnames"))
 			   vp.SetLongName(true);
+		   else if (StringMatch(arg, "--sectors"))
+			   m->SetAsSectors(true);
 	   }
 	   else
 		   filename = arg;

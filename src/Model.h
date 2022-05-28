@@ -32,6 +32,7 @@ public:
    bool MarkVariableTypes(SymbolNameSpace* ns);
    void CheckGhostOwners();
    void AttachStragglers(); // try to get diagramatic stuff right
+   void MakeViewNamesUnique();
    bool WriteToXMILE(const std::string& filePath, std::vector<std::string>& errs);
 
    double GetConstanValue(const char *var, double defval);
@@ -48,6 +49,8 @@ public:
    Integration_Type IntegrationType() { return iIntegrationType; }
    std::vector<ModelGroup>& Groups() { return vGroups; }
 
+   void SetAsSectors(bool set) { bAsSectors = set; }
+   bool AsSectors() const { return bAsSectors; }
 
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
@@ -77,6 +80,8 @@ private :
    double *dLevel ;
    double *dRate ;
    double *dAux ;
+   bool bAsSectors;
+
 };
 
 #endif

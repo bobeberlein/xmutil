@@ -231,6 +231,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	}
 	Variable* v = new Variable(sns, name);
 	v->SetVariableType(XMILE_Type_FLOW);
+	v->SetView(this->GetView());
 	mInflows.push_back(v);
 
 	// now we swap the active part of the INTEG equation for v and set v's equation to

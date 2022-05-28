@@ -5,11 +5,13 @@
 #include <vector>
 #include "XMUtil.h"
 #include "Xmile/XMILEGenerator.h"
+#include "Vensim/VensimView.h"
 #include <iostream>
 
 Model::Model(void)
 {
    dLevel = dRate = dAux = NULL ;
+   bAsSectors = false;
    iIntegrationType = Integration_Type_EULER;
 }
 
@@ -549,6 +551,33 @@ void Model::AttachStragglers()
 
 }
 
+void Model::MakeViewNamesUnique()
+{
+    std::vector<View*>& views = Views();
+    std::set<std::string> names;
+    for (View* gview : views)
+    {
+        VensimView* view = static_cast<VensimView*>(gview);
+        std::string name;
+        // get rid of . and - in the name
+        for (char c : view->Title())
+        {
+            if (c == '.' || c == '-' || c == '+')
+                c = ' ';
+            if (c != ' ' || (!name.empty() && name.back() != ' '))
+                name.push_back(c);
+        }
+        if (name.empty())
+            name = "Module ";
+        while (GetNameSpace()->Find(name) || names.find(name) != names.end())
+        {
+            name += "1"; // not very original
+        }
+        names.insert(name);
+        view->SetTitle(name);
+    }
+}
+
 
 bool Model::RenameVariable(Variable *v,const std::string &newname)
 {
@@ -654,7 +683,7 @@ bool Model::WriteToXMILE(const std::string& path, std::vector<std::string>& errs
 	// sim specs are different 
 
 	XMILEGenerator generator(this);
-	success = generator.Generate(path, errs);
+	success = generator.Generate(path, errs, bAsSectors);
 
 	return success;
 }

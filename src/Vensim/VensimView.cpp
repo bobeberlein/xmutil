@@ -23,6 +23,7 @@ VensimVariableElement::VensimVariableElement(VensimView* view, char *curpos, cha
 		_ghost = false;
 	else
 		_ghost = true;
+	_cross_level = false;
 
 #ifndef NDEBUG
 	if (name == "P100")
@@ -52,6 +53,7 @@ VensimVariableElement::VensimVariableElement(VensimView* view, Variable* var, in
 	_y = y;
 	_width = _height = 0;
 	_ghost = var->GetView() != NULL;
+	_cross_level = false;
 	_variable = var;
 	_variable->SetView(view);
 #ifndef NDEBUG
@@ -99,6 +101,25 @@ VensimValveElement::VensimValveElement(char *curpos, char *buf, VensimParse* par
 		_attached = false;
 
 
+}
+
+bool VensimVariableElement::Ghost(std::set<Variable*>* adds)
+{
+	if (_ghost && !  _cross_level)
+	{
+		if (adds)
+		{
+			std::set<Variable*>::iterator it = adds->find(this->GetVariable());
+			if (it != adds->end())
+			{
+				adds->erase(it);
+				_cross_level = true; // so it will continue to return false 
+				return false;
+			}
+		}
+		return true;
+	}
+	return false;
 }
 
 VensimConnectorElement::VensimConnectorElement(char *curpos, char *buf, VensimParse* parser)
@@ -261,7 +282,7 @@ bool VensimView::UpgradeGhost(Variable *var)
 			VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
 			if (vele->GetVariable() == var)
 			{
-				assert(vele->Ghost());
+				assert(vele->Ghost(NULL));
 				vele->SetGhost(false);
 				var->SetView(this); // now done
 				return true;
@@ -366,7 +387,7 @@ void VensimView::CheckLinksIn()
 		{
 			VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
 			Variable* var = vele->GetVariable();
-			if (var && var->VariableType() != XMILE_Type_STOCK && !vele->Ghost())
+			if (var && var->VariableType() != XMILE_Type_STOCK && !vele->Ghost(NULL))
 			{
 				std::vector<Variable*>ins = var->GetInputVars();
 				for (Variable* in: ins)
