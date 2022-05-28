@@ -894,6 +894,7 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 				if (included.find(input) == included.end()
 					&& input->VariableType() != XMILE_Type_ARRAY
 					&& input->VariableType() != XMILE_Type_ARRAY_ELM
+					&& input->VariableType() != XMILE_Type_UNKNOWN
 					&& !StringMatch(input->GetName(), "Time")
 					&& !input->Unwanted()
 					)

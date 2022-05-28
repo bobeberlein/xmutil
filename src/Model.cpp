@@ -562,7 +562,7 @@ void Model::MakeViewNamesUnique()
         // get rid of . and - in the name
         for (char c : view->Title())
         {
-            if (c == '.' || c == '-' || c == '+')
+            if (c == '.' || c == '-' || c == '+' || c == ',' || c == '/' || c == '*' || c == '^')
                 c = ' ';
             if (c != ' ' || (!name.empty() && name.back() != ' '))
                 name.push_back(c);
