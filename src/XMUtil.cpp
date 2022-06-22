@@ -1,7 +1,5 @@
 // XMUtil.cpp : Defines the entry point for the console application.
 //
-#include <boost/filesystem.hpp>
-
 #include "Vensim/VensimParse.h"
 #include "Model.h"
 #include "Unicode.h"
@@ -294,14 +292,14 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 
 extern "C" {
 // returns NULL on error or a string containing XMILE that the caller now owns
-char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool isCompact) {
+char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool isCompact, bool isLongName, bool isAsSectors) {
     Model m{};
 
     // parse the input
     {
         VensimParse vp{&m};
-        // vp.SetLongName(true);
-        // m.SetAsSectors(true);
+        vp.SetLongName(isLongName);
+        m.SetAsSectors(isAsSectors);
         if (!vp.ProcessFile("<in memory>", mdlSource, mdlSourceLen)) {
             return nullptr;
         }
@@ -345,4 +343,4 @@ char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool i
 
     return result;
 }
-}
+} // extern "C"

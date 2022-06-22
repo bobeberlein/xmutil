@@ -1,6 +1,6 @@
 // VensimParse.cpp : Read an mdl file into an XModel object
-// we use a mapped file via boost to simplify look ahead/back
-// we include the tokenizer here because it is as easy as settinig
+// we use an in-memory string to simplify look ahead/back
+// we include the tokenizer here because it is as easy as setting
 // up regular expressions for Flex and more easily understood
 
 #include "VensimParse.h"

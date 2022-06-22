@@ -2,8 +2,7 @@
 //
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <cstdio>
+#include <filesystem>
 #include <fstream>
 
 #include "Model.h"
@@ -124,7 +123,7 @@ int cliMain(int argc, char *argv[], Model *m) {
         return false;
     }
 
-    auto xmile = _convert_mdl_to_xmile(contents.c_str(), contents.size(), false);
+    auto xmile = _convert_mdl_to_xmile(contents.c_str(), contents.size(), false, longNames, sectors);
     if (xmile == nullptr) {
         fprintf(stderr, "error trying to convert the mdl to xmile\n");
         return 1;
@@ -132,7 +131,7 @@ int cliMain(int argc, char *argv[], Model *m) {
 
     std::ofstream fileOutput;
     if (!useStdio) {
-        boost::filesystem::path p(path);
+        std::filesystem::path p(path);
         p.replace_extension(".xmile");
         fileOutput = std::ofstream{p.string(), std::ofstream::out | std::ios::binary | std::ios::trunc};
         if (!fileOutput.is_open()) {
