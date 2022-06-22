@@ -24,36 +24,6 @@ std::string ReadStream(std::istream &input, int &error) {
     return content;
 }
 
-std::string ReadFile(FILE *file, int &error) {
-    size_t bufLen = 0;
-    size_t bufCapacity = 4096;
-    char *buf = reinterpret_cast<char *>(malloc(bufCapacity));
-
-    while (!feof(file) && !ferror(file)) {
-        if (bufLen == bufCapacity) {
-            bufCapacity *= 2;
-            buf = reinterpret_cast<char *>(realloc(buf, bufCapacity));
-        }
-        auto len = fread(buf + bufLen, sizeof(char), bufCapacity - bufLen, file);
-        // fprintf(stderr, "read: %zu %p %zu\n", len, buf + bufLen, bufCapacity - bufLen);
-        bufLen += len;
-    }
-
-    if (!feof(file)) {
-        error = ferror(file);
-        assert(error != 0);
-        // fprintf(stderr, "ferror :\\ %d %d %s \n", error, errno, strerror(errno));
-        free(buf);
-        return "";
-    } else {
-        error = 0;
-    }
-
-    std::string str{buf, bufLen};
-    free(buf);
-    return str;
-}
-
 void cliUsage(void) {
     fprintf(
         stderr,
