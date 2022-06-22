@@ -74,11 +74,6 @@ bool StringMatch(const std::string& f, const std::string& s)
 	return true;
 }
 
-
-#ifdef _DEBUG
-void CheckMemoryTrack(int clear) ;
-#endif
-
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy)
 {
 	double thetax;
