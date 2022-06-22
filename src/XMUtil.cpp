@@ -292,7 +292,7 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 
 extern "C" {
 // returns NULL on error or a string containing XMILE that the caller now owns
-char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool isCompact, bool isLongName, bool isAsSectors) {
+char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, bool isCompact, bool isLongName, bool isAsSectors) {
     Model m{};
 
     // parse the input
@@ -300,7 +300,7 @@ char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool i
         VensimParse vp{&m};
         vp.SetLongName(isLongName);
         m.SetAsSectors(isAsSectors);
-        if (!vp.ProcessFile("<in memory>", mdlSource, mdlSourceLen)) {
+        if (!vp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
             return nullptr;
         }
     }
