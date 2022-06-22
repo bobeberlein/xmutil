@@ -63,6 +63,18 @@ inline void __cdecl operator delete[](void *p)
 #endif
 #endif
 
+#ifdef WIN32
+#define XMUTIL_EXPORT
+#else
+#define XMUTIL_EXPORT __attribute__((visibility("default")))
+#endif
+
+extern "C" {
+// returns NULL on error or a string containing XMILE that the caller now owns
+XMUTIL_EXPORT char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool isCompact);
+}
+
+
 // utility functions
 std::string StringFromDouble(double val);
 std::string SpaceToUnderBar(const std::string& s);

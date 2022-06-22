@@ -224,18 +224,13 @@ static std::string compress_whitespace(const std::string& s)
 	return rval;
 }
 
-bool VensimParse::ProcessFile(const std::string &filename)
+bool VensimParse::ProcessFile(const std::string &filename, const char *contents, size_t contentsLen)
 {
    sFilename = filename ;
-    try {
-      mfSource.open(filename);
-    }
-    catch(...) {
-       return false ;
-    }
-    if(mfSource.is_open()) { 
+
+    if(true) {
        bool noerr = true ;
-       mVensimLex.Initialize((const char *)mfSource.data(), mfSource.size()) ;
+       mVensimLex.Initialize(contents, contentsLen) ;
        int endtok = mVensimLex.GetEndToken() ;
        // now we call the bison built parser which will call back to VensimLex
        // for the tokenizing - 
@@ -359,7 +354,6 @@ bool VensimParse::ProcessFile(const std::string &filename)
 			   }
 		   }
 	   }
-       mfSource.close() ;
 	   _model->SetMacroFunctions(mMacroFunctions);
 
 	   if (bLongName)

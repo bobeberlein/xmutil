@@ -3,31 +3,14 @@
 #include <boost/filesystem.hpp>
 
 #include "Vensim/VensimParse.h"
-#include "unicode/utypes.h"
-#include "unicode/ustring.h"
-#include "unicode/ucasemap.h"
 #include "Model.h"
+#include "Unicode.h"
 #include "XMUtil.h"
 
 #ifdef WITH_UI
 #include "UI/Main_Window.h"
 #include <QApplication>
 #endif
-
-UCaseMap *GlobalUCaseMap ;
-bool OpenUCaseMap(void)
-{
-
-   UErrorCode ec = U_ZERO_ERROR  ;
-   GlobalUCaseMap = ucasemap_open("en",0,&ec) ;
-   if(!GlobalUCaseMap)
-      return false ;
-   return true ;
-}
-void CloseUCaseMap(void)
-{
-   ucasemap_close(GlobalUCaseMap) ;
-}
 
 std::string StringFromDouble(double val)
 {
@@ -94,106 +77,9 @@ bool StringMatch(const std::string& f, const std::string& s)
 }
 
 
-bool ParseVensimModel(int argc, char* argv[],Model *m)
-{
-   if(argc < 2)
-      return false ;
-   VensimParse vp(m) ;
-   char *filename = 0;
-   for (int i = 1; i < argc; i++)
-   {
-	   char *arg = argv[i];
-	   if (*arg == '-')
-	   {
-		   if (StringMatch(arg, "--longnames"))
-			   vp.SetLongName(true);
-		   else if (StringMatch(arg, "--sectors"))
-			   m->SetAsSectors(true);
-	   }
-	   else
-		   filename = arg;
-   }
-   if(!vp.ProcessFile(filename)) 
-      return false ;
-	return true ;
-}
-
 #ifdef _DEBUG
 void CheckMemoryTrack(int clear) ;
 #endif
-
-int main(int argc, char* argv[])
-{
-   if(!OpenUCaseMap())
-      return -1;
-    
-   int ret = 0;
-   Model *m = new Model() ;
-#ifndef WITH_UI
-    if(ParseVensimModel(argc,argv,m)) {
-        
-        /*if(m->AnalyzeEquations()) {
-         m->Simulate() ;
-         m->OutputComputable(true);
-      }*/
-
-	   // mark variable types and potentially convert INTEG equations involving expressions
-	   // into flows (a single net flow on the first pass though this)
-	   m->MarkVariableTypes(NULL);
-
-	   for (MacroFunction* mf: m->MacroFunctions())
-	   {
-		   m->MarkVariableTypes(mf->NameSpace());
-	   }
-
-	   // any ghosts that are never defined make the first appearance not a ghost
-	   m->CheckGhostOwners();
-
-	   // if there is a view then try to make sure everything is defined in the views
-	   // put unknowns in a heap in the first view at 20,20 but for things that have
-	   // connections try to put them in the right place
-	   bool want_complete = false; // could pass this as an option - but let the reader handle this stuff
-	   if (want_complete)
-			m->AttachStragglers();
-
-	   boost::filesystem::path p(argv[1]);
-	   p.replace_extension(".xmile");
-
-	   std::vector<std::string> errs;
-	   m->WriteToXMILE(p.string(), errs);
-
-        for (const std::string& err: errs)
-        {
-            std::cout << err << std::endl;
-        }
-    } else {
-        ret = 0;
-    }
-#else
-    QApplication app(argc, argv);
-    //QApplication::setWindowIcon(QIcon(":icons/icon.svg"));
-    QApplication::setOrganizationName("XMUtil");
-    QApplication::setOrganizationDomain("github.com/xmutil");
-    QApplication::setApplicationName("MDL to XMILE");
-    
-    Main_Window window;
-    window.show();
-    
-    ret = app.exec();
-#endif
-    delete m ;
-    CloseUCaseMap() ;
-   //CheckMemoryTrack(1) ;
-
-
-   //printf("Size of symbol is %d\n",sizeof(Symbol)) ;
-   //printf("Size of variable is %d\n",sizeof(Variable)) ;
-  // _CrtDumpMemoryLeaks() ;
-
-   // if want to look at terminal 
-
-   return ret;
-}
 
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy)
 {
@@ -406,63 +292,57 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 	return 33;
 }
 
-#if defined(_DEBUG) && defined(wantownmemorytesting)
-#include <unordered_map>
-#include <assert.h>
-#undef new // regular new used in this section
-#undef delete // same for delete
+extern "C" {
+// returns NULL on error or a string containing XMILE that the caller now owns
+char *_convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, bool isCompact) {
+    Model m{};
 
-typedef struct {
-   size_t size ;
-   int line_no ;
-   char file[32] ;
-} AllocInfo ;
+    // parse the input
+    {
+        VensimParse vp{&m};
+        // vp.SetLongName(true);
+        // m.SetAsSectors(true);
+        if (!vp.ProcessFile("<in memory>", mdlSource, mdlSourceLen)) {
+            return nullptr;
+        }
+    }
 
-typedef std::unordered_map<void*, AllocInfo> MemTrackMap ;
+    // if(m->AnalyzeEquations()) {
+    //   m->Simulate() ;
+    //   m->OutputComputable(true);
+    // }
 
-MemTrackMap *AllocList = 0 ;
+    // mark variable types and potentially convert INTEG equations
+    // involving expressions into flows (a single net flow on the first
+    // pass though this)
+    m.MarkVariableTypes(nullptr);
 
-void AddTrack(void *addr,  size_t size,  const char *fname, int lnum)
-{
-   if(!AllocList)
-      AllocList = new MemTrackMap() ;
-   AllocInfo ai ;
-   ai.size = size ;
-   ai.line_no = lnum ;
-   if(strlen(fname) > 31) 
-      strcpy(ai.file,fname+strlen(fname)-31) ;
-   else
-      strcpy(ai.file,fname) ;
-   (*AllocList)[addr] = ai ;
-};
+    for (MacroFunction *mf : m.MacroFunctions()) {
+        m.MarkVariableTypes(mf->NameSpace());
+    }
 
-static int Uk =0 ;
-void RemoveTrack(void *addr)
-{
-   if(AllocList) {
-      MemTrackMap::iterator node = AllocList->find(addr) ;
-      if(node != AllocList->end()) {
-         AllocList->erase(node) ;
-         return ;
-      }
-   }
-   //printf("%x %d\n",addr,++Uk) ;
-   // ignore things that may have been allocated elsewhere - boost is not controllable
+    // any ghosts that are never defined make the first appearance not a ghost
+    m.CheckGhostOwners();
+
+    // if there is a view then try to make sure everything is defined in
+    // the views put unknowns in a heap in the first view at 20,20 but
+    // for things that have connections try to put them in the right
+    // place
+    bool want_complete = false; // could pass this as an option - but let the reader handle this stuff
+    if (want_complete) {
+        m.AttachStragglers();
+    }
+
+    // TODO: expose errs
+    std::vector<std::string> errs;
+    std::string xmile = m.PrintXMILE(isCompact, errs);
+
+    if (errs.size() != 0) {
+        return nullptr;
+    }
+
+    char *result = strdup(xmile.c_str());
+
+    return result;
 }
-
-void CheckMemoryTrack(int clear)
-{
-   if(!AllocList)
-      return ;
-   MemTrackMap::iterator node = AllocList->begin() ;
-   for(;node != AllocList->end();node++) {
-      fprintf(stderr,"Uncleared Memory at %u size %d from %s(%d)\n",node->first,node->second.size,node->second.file,node->second.line_no) ;
-   }
-   if(clear) {
-      MemTrackMap *a = AllocList ;
-      AllocList = NULL ;
-      delete a ;
-   }
 }
-
-#endif
