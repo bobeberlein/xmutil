@@ -1071,7 +1071,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 						tag = "flow";
 						break;
 					default:
-						fprintf(stderr, "unknown view element type %d\n", type);
+						log("unknown view element type %d\n", type);
 					}
 					if (tag.empty())
 						continue;

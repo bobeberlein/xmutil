@@ -1,7 +1,7 @@
 #ifndef _XMUTIL_VENSIM_VENSIMPARSE_H
 #define _XMUTIL_VENSIM_VENSIMPARSE_H
 #include <string>
-#include <iostream>
+
 #include "../Symbol/Parse.h"
 #include "../Symbol/Symbol.h"
 #include "../Symbol/Units.h"

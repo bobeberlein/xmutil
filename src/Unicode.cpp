@@ -1,5 +1,7 @@
 // Unicode.cpp : Wraps unicode-specific functionality
-//
+
+#include <cstring>
+
 #include "Unicode.h"
 
 #include "unicode/utypes.h"

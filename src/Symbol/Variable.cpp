@@ -123,7 +123,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 				const std::vector<double>& vals = t->GetVals();
 				if (vals.size() != elms.size())
 				{
-					std::cout << "Error the number of entries does not match array size for \"" << this->GetName() << std::endl;
+					log("Error the number of entries does not match array size for \"%s\"\n", this->GetName().c_str());
 				}
 				else
 				{
@@ -338,9 +338,9 @@ void VariableContentVar::CheckPlaceholderVars(Model *m)
 
 bool VariableContentVar::CheckComputed(Symbol *parent,ContextInfo *info,bool first)
 {
-   //printf("Checking out %s\n",GetName().c_str()) ;
+   //log("Checking out %s\n",GetName().c_str()) ;
    if(!pState) {
-      //printf("   - not computable ignoring\n") ;
+      //log("   - not computable ignoring\n") ;
       return true ;
    }
    if(pState->cComputeFlag & info->GetComputeType()) {
@@ -355,20 +355,20 @@ bool VariableContentVar::CheckComputed(Symbol *parent,ContextInfo *info,bool fir
    int intype = info->GetComputeType() << 1 ;
    if(pState->cComputeFlag & intype) {
       if(info->GetComputeType() == CF_initial)
-         std::cout << "Simultaneous initial equations found " << std::endl ;
+         log("Simultaneous initial equations found \n");
       else {
          if(pState->HasMemory()) { // first call was for rates - now for level
             assert(!first) ;
             info->AddDDF(DDF_level) ;
             return true ;
          }
-         std::cout << "Simultaneous active equations found " << std::endl ;
+         log("Simultaneous active equations found \n");
       }
-      std::cout << "     " << parent->GetName() << std::endl ;
+      log("     %s\n", parent->GetName().c_str());
       pState->cComputeFlag &= ~intype ;
       return false ;
    } else if(!first && (info->GetComputeType() != CF_initial) && pState->HasMemory()) {
-      //printf("Not tracing further for level  %s\n",GetName().c_str()) ;
+      //log("Not tracing further for level  %s\n",GetName().c_str()) ;
       info->AddDDF(DDF_level) ; // this is the level - even if the rate is a constant (only a 0 rate would really be unchanging)
       return true ;
    } else if(first && info->GetComputeType() == CF_initial && !pState->HasMemory()) {
@@ -383,7 +383,7 @@ bool VariableContentVar::CheckComputed(Symbol *parent,ContextInfo *info,bool fir
       pState->cComputeFlag |= intype ;
       for (Equation* e: vEquations) {
          if(!e->GetExpression()->CheckComputed(info)) {
-            std::cout << "     " << parent->GetName() << std::endl ;
+            log("     %s\n", parent->GetName().c_str());
             pState->cComputeFlag &= ~intype ;
             pState->cComputeFlag |= info->GetComputeType() ; // don't reenter
             return false ;
@@ -410,7 +410,7 @@ bool VariableContentVar::CheckComputed(Symbol *parent,ContextInfo *info,bool fir
       if(!pState->HasMemory())
          return true ;
    }
-   printf("Outputting equations for  %s\n",parent->GetName().c_str()) ;
+   log("Outputting equations for  %s\n",parent->GetName().c_str()) ;
    for (Equation* e: vEquations) {
       info->PushEquation(e) ;
    }

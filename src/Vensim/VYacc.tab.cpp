@@ -76,13 +76,15 @@
 /* First part of user prologue.  */
 #line 10 "VYacc.y"
 
+#include "../Log.h"
 #include "../Symbol/Parse.h"
 #include "VensimParseFunctions.h"
 extern int vpyylex (void);
 extern void vpyyerror (char const *);
 #define YYSTYPE ParseUnion
+#define YYFPRINTF XmutilLogf
 
-#line 86 "VYacc.tab.cpp"
+#line 88 "VYacc.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -575,16 +577,16 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    86,    86,    87,    88,    89,    90,    91,    92,    93,
-      97,    97,   101,   108,   109,   110,   111,   112,   113,   114,
-     115,   116,   121,   122,   123,   127,   128,   132,   136,   137,
-     138,   139,   142,   143,   144,   145,   149,   150,   151,   152,
-     153,   157,   158,   161,   162,   163,   167,   168,   169,   170,
-     175,   176,   177,   178,   182,   183,   187,   188,   189,   190,
-     195,   196,   201,   202,   203,   204,   208,   209,   210,   211,
-     212,   213,   214,   215,   216,   217,   218,   219,   220,   221,
-     222,   223,   224,   225,   226,   227,   228,   229,   230,   231,
-     232,   236,   237,   239,   244,   245,   250,   251,   256,   257
+       0,    88,    88,    89,    90,    91,    92,    93,    94,    95,
+      99,    99,   103,   110,   111,   112,   113,   114,   115,   116,
+     117,   118,   123,   124,   125,   129,   130,   134,   138,   139,
+     140,   141,   144,   145,   146,   147,   151,   152,   153,   154,
+     155,   159,   160,   163,   164,   165,   169,   170,   171,   172,
+     177,   178,   179,   180,   184,   185,   189,   190,   191,   192,
+     197,   198,   203,   204,   205,   206,   210,   211,   212,   213,
+     214,   215,   216,   217,   218,   219,   220,   221,   222,   223,
+     224,   225,   226,   227,   228,   229,   230,   231,   232,   233,
+     234,   238,   239,   241,   246,   247,   252,   253,   258,   259
 };
 #endif
 
@@ -1306,595 +1308,595 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* fulleq: VPTT_eqend  */
-#line 86 "VYacc.y"
+#line 88 "VYacc.y"
                    { return VPTT_eqend ; }
-#line 1312 "VYacc.tab.cpp"
+#line 1314 "VYacc.tab.cpp"
     break;
 
   case 3: /* fulleq: VPTT_groupstar  */
-#line 87 "VYacc.y"
+#line 89 "VYacc.y"
                          { return VPTT_groupstar ; }
-#line 1318 "VYacc.tab.cpp"
+#line 1320 "VYacc.tab.cpp"
     break;
 
   case 4: /* fulleq: macrostart  */
-#line 88 "VYacc.y"
+#line 90 "VYacc.y"
                                   { return '|'; }
-#line 1324 "VYacc.tab.cpp"
+#line 1326 "VYacc.tab.cpp"
     break;
 
   case 5: /* fulleq: macroend  */
-#line 89 "VYacc.y"
+#line 91 "VYacc.y"
                                           {return '|'; }
-#line 1330 "VYacc.tab.cpp"
+#line 1332 "VYacc.tab.cpp"
     break;
 
   case 6: /* fulleq: eqn '~' unitsrange '~'  */
-#line 90 "VYacc.y"
+#line 92 "VYacc.y"
                                                       {vpyy_addfulleq((yyvsp[-3].eqn),(yyvsp[-1].uni)) ; return '~' ; }
-#line 1336 "VYacc.tab.cpp"
+#line 1338 "VYacc.tab.cpp"
     break;
 
   case 7: /* fulleq: eqn '~' unitsrange '|'  */
-#line 91 "VYacc.y"
+#line 93 "VYacc.y"
                                                        {vpyy_addfulleq((yyvsp[-3].eqn),(yyvsp[-1].uni)) ; return '|' ; }
-#line 1342 "VYacc.tab.cpp"
+#line 1344 "VYacc.tab.cpp"
     break;
 
   case 8: /* fulleq: eqn '~' '~'  */
-#line 92 "VYacc.y"
+#line 94 "VYacc.y"
                                          {vpyy_addfulleq((yyvsp[-2].eqn),NULL) ; return '~' ;}
-#line 1348 "VYacc.tab.cpp"
+#line 1350 "VYacc.tab.cpp"
     break;
 
   case 9: /* fulleq: eqn '~' '|'  */
-#line 93 "VYacc.y"
+#line 95 "VYacc.y"
                                                    {vpyy_addfulleq((yyvsp[-2].eqn),NULL) ; return '|' ;}
-#line 1354 "VYacc.tab.cpp"
+#line 1356 "VYacc.tab.cpp"
     break;
 
   case 10: /* $@1: %empty  */
-#line 97 "VYacc.y"
+#line 99 "VYacc.y"
                    { vpyy_macro_start(); }
-#line 1360 "VYacc.tab.cpp"
+#line 1362 "VYacc.tab.cpp"
     break;
 
   case 11: /* macrostart: VPTT_macro $@1 VPTT_symbol '(' exprlist ')'  */
-#line 97 "VYacc.y"
+#line 99 "VYacc.y"
                                                                           { vpyy_macro_expression((yyvsp[-3].sym),(yyvsp[-1].exl)) ;}
-#line 1366 "VYacc.tab.cpp"
+#line 1368 "VYacc.tab.cpp"
     break;
 
   case 12: /* macroend: VPTT_end_of_macro  */
-#line 101 "VYacc.y"
+#line 103 "VYacc.y"
                      { (yyval.tok) = (yyvsp[0].tok); vpyy_macro_end(); }
-#line 1372 "VYacc.tab.cpp"
+#line 1374 "VYacc.tab.cpp"
     break;
 
   case 13: /* eqn: lhs '=' exprlist  */
-#line 108 "VYacc.y"
+#line 110 "VYacc.y"
                     {(yyval.eqn) = vpyy_addeq((yyvsp[-2].lhs),NULL,(yyvsp[0].exl),'=') ; }
-#line 1378 "VYacc.tab.cpp"
+#line 1380 "VYacc.tab.cpp"
     break;
 
   case 14: /* eqn: lhs '(' tablevals ')'  */
-#line 109 "VYacc.y"
+#line 111 "VYacc.y"
                            { (yyval.eqn) = vpyy_add_lookup((yyvsp[-3].lhs),NULL,(yyvsp[-1].tbl), 0) ; }
-#line 1384 "VYacc.tab.cpp"
+#line 1386 "VYacc.tab.cpp"
     break;
 
   case 15: /* eqn: lhs '(' xytablevals ')'  */
-#line 110 "VYacc.y"
+#line 112 "VYacc.y"
                              { (yyval.eqn) = vpyy_add_lookup((yyvsp[-3].lhs),NULL,(yyvsp[-1].tbl), 1) ; }
-#line 1390 "VYacc.tab.cpp"
+#line 1392 "VYacc.tab.cpp"
     break;
 
   case 16: /* eqn: lhs '=' VPTT_with_lookup '(' exp ',' '(' tablevals ')' ')'  */
-#line 111 "VYacc.y"
+#line 113 "VYacc.y"
                                                                 { (yyval.eqn) = vpyy_add_lookup((yyvsp[-9].lhs),(yyvsp[-5].exn),(yyvsp[-2].tbl), 0) ; }
-#line 1396 "VYacc.tab.cpp"
+#line 1398 "VYacc.tab.cpp"
     break;
 
   case 17: /* eqn: lhs VPTT_dataequals exp  */
-#line 112 "VYacc.y"
+#line 114 "VYacc.y"
                              {(yyval.eqn) = vpyy_addeq((yyvsp[-2].lhs),(yyvsp[0].exn),NULL,VPTT_dataequals) ; }
-#line 1402 "VYacc.tab.cpp"
+#line 1404 "VYacc.tab.cpp"
     break;
 
   case 18: /* eqn: lhs  */
-#line 113 "VYacc.y"
+#line 115 "VYacc.y"
          { (yyval.eqn) = vpyy_add_lookup((yyvsp[0].lhs),NULL,NULL, 0) ; }
-#line 1408 "VYacc.tab.cpp"
+#line 1410 "VYacc.tab.cpp"
     break;
 
   case 19: /* eqn: VPTT_symbol ':' subdef maplist  */
-#line 114 "VYacc.y"
+#line 116 "VYacc.y"
                                     {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-3].sym),NULL),NULL,0),(Expression *)vpyy_symlist_expression((yyvsp[-1].sml),(yyvsp[0].sml)),NULL,':') ; }
-#line 1414 "VYacc.tab.cpp"
+#line 1416 "VYacc.tab.cpp"
     break;
 
   case 20: /* eqn: VPTT_symbol VPTT_equiv VPTT_symbol  */
-#line 115 "VYacc.y"
+#line 117 "VYacc.y"
                                          {(yyval.eqn) = vpyy_addeq(vpyy_addexceptinterp(vpyy_var_expression((yyvsp[-2].sym),NULL),NULL,0),(Expression *)vpyy_symlist_expression(vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL),NULL),NULL,VPTT_equiv) ; }
-#line 1420 "VYacc.tab.cpp"
+#line 1422 "VYacc.tab.cpp"
     break;
 
   case 21: /* eqn: lhs '=' VPTT_tabbed_array  */
-#line 116 "VYacc.y"
+#line 118 "VYacc.y"
                                { (yyval.eqn) = vpyy_addeq((yyvsp[-2].lhs),(yyvsp[0].exn),NULL,'=') ; }
-#line 1426 "VYacc.tab.cpp"
+#line 1428 "VYacc.tab.cpp"
     break;
 
   case 22: /* lhs: var  */
-#line 121 "VYacc.y"
+#line 123 "VYacc.y"
         { (yyval.lhs) = vpyy_addexceptinterp((yyvsp[0].var),NULL,0) ; }
-#line 1432 "VYacc.tab.cpp"
+#line 1434 "VYacc.tab.cpp"
     break;
 
   case 23: /* lhs: var exceptlist  */
-#line 122 "VYacc.y"
+#line 124 "VYacc.y"
                      {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[-1].var),(yyvsp[0].sll),0) ;}
-#line 1438 "VYacc.tab.cpp"
+#line 1440 "VYacc.tab.cpp"
     break;
 
   case 24: /* lhs: var interpmode  */
-#line 123 "VYacc.y"
+#line 125 "VYacc.y"
                     {(yyval.lhs) = vpyy_addexceptinterp((yyvsp[-1].var),NULL,(yyvsp[0].tok)) ;}
-#line 1444 "VYacc.tab.cpp"
+#line 1446 "VYacc.tab.cpp"
     break;
 
   case 25: /* var: VPTT_symbol  */
-#line 127 "VYacc.y"
+#line 129 "VYacc.y"
                     { (yyval.var) = vpyy_var_expression((yyvsp[0].sym),NULL);}
-#line 1450 "VYacc.tab.cpp"
+#line 1452 "VYacc.tab.cpp"
     break;
 
   case 26: /* var: VPTT_symbol sublist  */
-#line 128 "VYacc.y"
+#line 130 "VYacc.y"
                               { (yyval.var) = vpyy_var_expression((yyvsp[-1].sym),(yyvsp[0].sml)) ;}
-#line 1456 "VYacc.tab.cpp"
+#line 1458 "VYacc.tab.cpp"
     break;
 
   case 27: /* sublist: '[' symlist ']'  */
-#line 132 "VYacc.y"
+#line 134 "VYacc.y"
                         {(yyval.sml) = (yyvsp[-1].sml) ;}
-#line 1462 "VYacc.tab.cpp"
+#line 1464 "VYacc.tab.cpp"
     break;
 
   case 28: /* symlist: VPTT_symbol  */
-#line 136 "VYacc.y"
+#line 138 "VYacc.y"
                     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL) ; }
-#line 1468 "VYacc.tab.cpp"
+#line 1470 "VYacc.tab.cpp"
     break;
 
   case 29: /* symlist: VPTT_symbol '!'  */
-#line 137 "VYacc.y"
+#line 139 "VYacc.y"
                           { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[-1].sym),1,NULL) ; }
-#line 1474 "VYacc.tab.cpp"
+#line 1476 "VYacc.tab.cpp"
     break;
 
   case 30: /* symlist: symlist ',' VPTT_symbol  */
-#line 138 "VYacc.y"
+#line 140 "VYacc.y"
                                   { (yyval.sml) = vpyy_symlist((yyvsp[-2].sml),(yyvsp[0].sym),0,NULL) ;}
-#line 1480 "VYacc.tab.cpp"
+#line 1482 "VYacc.tab.cpp"
     break;
 
   case 31: /* symlist: symlist ',' VPTT_symbol '!'  */
-#line 139 "VYacc.y"
+#line 141 "VYacc.y"
                                       { (yyval.sml) = vpyy_symlist((yyvsp[-3].sml),(yyvsp[-1].sym),1,NULL) ;}
-#line 1486 "VYacc.tab.cpp"
+#line 1488 "VYacc.tab.cpp"
     break;
 
   case 32: /* subdef: VPTT_symbol  */
-#line 142 "VYacc.y"
+#line 144 "VYacc.y"
                     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL) ; }
-#line 1492 "VYacc.tab.cpp"
+#line 1494 "VYacc.tab.cpp"
     break;
 
   case 33: /* subdef: '(' VPTT_symbol '-' VPTT_symbol ')'  */
-#line 143 "VYacc.y"
+#line 145 "VYacc.y"
                                               {(yyval.sml) = vpyy_symlist(NULL,(yyvsp[-3].sym),0,(yyvsp[-1].sym)) ;}
-#line 1498 "VYacc.tab.cpp"
+#line 1500 "VYacc.tab.cpp"
     break;
 
   case 34: /* subdef: subdef ',' VPTT_symbol  */
-#line 144 "VYacc.y"
+#line 146 "VYacc.y"
                                  { (yyval.sml) = vpyy_symlist((yyvsp[-2].sml),(yyvsp[0].sym),0,NULL) ; }
-#line 1504 "VYacc.tab.cpp"
+#line 1506 "VYacc.tab.cpp"
     break;
 
   case 35: /* subdef: subdef ',' '(' VPTT_symbol '-' VPTT_symbol ')'  */
-#line 145 "VYacc.y"
+#line 147 "VYacc.y"
                                                          {(yyval.sml) = vpyy_symlist((yyvsp[-6].sml),(yyvsp[-3].sym),0,(yyvsp[-1].sym)) ; }
-#line 1510 "VYacc.tab.cpp"
+#line 1512 "VYacc.tab.cpp"
     break;
 
   case 36: /* unitsrange: units  */
-#line 149 "VYacc.y"
+#line 151 "VYacc.y"
               { (yyval.uni) = (yyvsp[0].uni) ; }
-#line 1516 "VYacc.tab.cpp"
+#line 1518 "VYacc.tab.cpp"
     break;
 
   case 37: /* unitsrange: units '[' urangenum ',' urangenum ']'  */
-#line 150 "VYacc.y"
+#line 152 "VYacc.y"
                                                 { (yyval.uni) = vpyy_unitsrange((yyvsp[-5].uni),(yyvsp[-3].num),(yyvsp[-1].num),-1) ; }
-#line 1522 "VYacc.tab.cpp"
+#line 1524 "VYacc.tab.cpp"
     break;
 
   case 38: /* unitsrange: units '[' urangenum ',' urangenum ',' urangenum ']'  */
-#line 151 "VYacc.y"
+#line 153 "VYacc.y"
                                                               { (yyval.uni) = vpyy_unitsrange((yyvsp[-7].uni),(yyvsp[-5].num),(yyvsp[-3].num),(yyvsp[-1].num)) ; }
-#line 1528 "VYacc.tab.cpp"
+#line 1530 "VYacc.tab.cpp"
     break;
 
   case 39: /* unitsrange: '[' urangenum ',' urangenum ']'  */
-#line 152 "VYacc.y"
+#line 154 "VYacc.y"
                                           { (yyval.uni) = vpyy_unitsrange(NULL,(yyvsp[-3].num),(yyvsp[-1].num),-1) ; }
-#line 1534 "VYacc.tab.cpp"
+#line 1536 "VYacc.tab.cpp"
     break;
 
   case 40: /* unitsrange: '[' urangenum ',' urangenum ',' urangenum ']'  */
-#line 153 "VYacc.y"
+#line 155 "VYacc.y"
                                                         { (yyval.uni) = vpyy_unitsrange(NULL,(yyvsp[-5].num),(yyvsp[-3].num),(yyvsp[-1].num)) ; }
-#line 1540 "VYacc.tab.cpp"
+#line 1542 "VYacc.tab.cpp"
     break;
 
   case 41: /* urangenum: number  */
-#line 157 "VYacc.y"
+#line 159 "VYacc.y"
                {(yyval.num) = (yyvsp[0].num) ; }
-#line 1546 "VYacc.tab.cpp"
+#line 1548 "VYacc.tab.cpp"
     break;
 
   case 42: /* urangenum: '?'  */
-#line 158 "VYacc.y"
+#line 160 "VYacc.y"
               {(yyval.num) = -1e30 ; }
-#line 1552 "VYacc.tab.cpp"
+#line 1554 "VYacc.tab.cpp"
     break;
 
   case 43: /* number: VPTT_number  */
-#line 161 "VYacc.y"
+#line 163 "VYacc.y"
                     {(yyval.num) = (yyvsp[0].num) ; }
-#line 1558 "VYacc.tab.cpp"
+#line 1560 "VYacc.tab.cpp"
     break;
 
   case 44: /* number: '-' VPTT_number  */
-#line 162 "VYacc.y"
+#line 164 "VYacc.y"
                           {(yyval.num) = -(yyvsp[0].num) ;}
-#line 1564 "VYacc.tab.cpp"
+#line 1566 "VYacc.tab.cpp"
     break;
 
   case 45: /* number: '+' VPTT_number  */
-#line 163 "VYacc.y"
+#line 165 "VYacc.y"
                           {(yyval.num) = (yyvsp[0].num) ;}
-#line 1570 "VYacc.tab.cpp"
+#line 1572 "VYacc.tab.cpp"
     break;
 
   case 46: /* units: VPTT_units_symbol  */
-#line 167 "VYacc.y"
+#line 169 "VYacc.y"
                           { (yyval.uni) = (yyvsp[0].uni) ; }
-#line 1576 "VYacc.tab.cpp"
+#line 1578 "VYacc.tab.cpp"
     break;
 
   case 47: /* units: units '/' units  */
-#line 168 "VYacc.y"
+#line 170 "VYacc.y"
                           {(yyval.uni) = vpyy_unitsdiv((yyvsp[-2].uni),(yyvsp[0].uni));}
-#line 1582 "VYacc.tab.cpp"
+#line 1584 "VYacc.tab.cpp"
     break;
 
   case 48: /* units: units '*' units  */
-#line 169 "VYacc.y"
+#line 171 "VYacc.y"
                           {(yyval.uni) = vpyy_unitsmult((yyvsp[-2].uni),(yyvsp[0].uni));}
-#line 1588 "VYacc.tab.cpp"
+#line 1590 "VYacc.tab.cpp"
     break;
 
   case 49: /* units: '(' units ')'  */
-#line 170 "VYacc.y"
+#line 172 "VYacc.y"
                         { (yyval.uni) = (yyvsp[-1].uni) ; }
-#line 1594 "VYacc.tab.cpp"
+#line 1596 "VYacc.tab.cpp"
     break;
 
   case 50: /* interpmode: VPTT_interpolate  */
-#line 175 "VYacc.y"
+#line 177 "VYacc.y"
                      { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1600 "VYacc.tab.cpp"
+#line 1602 "VYacc.tab.cpp"
     break;
 
   case 51: /* interpmode: VPTT_raw  */
-#line 176 "VYacc.y"
+#line 178 "VYacc.y"
                    { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1606 "VYacc.tab.cpp"
+#line 1608 "VYacc.tab.cpp"
     break;
 
   case 52: /* interpmode: VPTT_hold_backward  */
-#line 177 "VYacc.y"
+#line 179 "VYacc.y"
                              { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1612 "VYacc.tab.cpp"
+#line 1614 "VYacc.tab.cpp"
     break;
 
   case 53: /* interpmode: VPTT_look_forward  */
-#line 178 "VYacc.y"
+#line 180 "VYacc.y"
                             { (yyval.tok) = (yyvsp[0].tok) ; }
-#line 1618 "VYacc.tab.cpp"
+#line 1620 "VYacc.tab.cpp"
     break;
 
   case 54: /* exceptlist: VPTT_except sublist  */
-#line 182 "VYacc.y"
+#line 184 "VYacc.y"
                         { (yyval.sll) = vpyy_chain_sublist(NULL,(yyvsp[0].sml)) ; }
-#line 1624 "VYacc.tab.cpp"
+#line 1626 "VYacc.tab.cpp"
     break;
 
   case 55: /* exceptlist: exceptlist ',' sublist  */
-#line 183 "VYacc.y"
+#line 185 "VYacc.y"
                                  { vpyy_chain_sublist((yyvsp[-2].sll),(yyvsp[0].sml)) ; (yyval.sll) = (yyvsp[-2].sll) ; }
-#line 1630 "VYacc.tab.cpp"
+#line 1632 "VYacc.tab.cpp"
     break;
 
   case 56: /* mapsymlist: VPTT_symbol  */
-#line 187 "VYacc.y"
+#line 189 "VYacc.y"
                     { (yyval.sml) = vpyy_symlist(NULL,(yyvsp[0].sym),0,NULL) ; }
-#line 1636 "VYacc.tab.cpp"
+#line 1638 "VYacc.tab.cpp"
     break;
 
   case 57: /* mapsymlist: '(' VPTT_symbol ':' symlist ')'  */
-#line 188 "VYacc.y"
+#line 190 "VYacc.y"
                                           { (yyval.sml) = vpyy_mapsymlist(NULL, (yyvsp[-3].sym), (yyvsp[-1].sml)); }
-#line 1642 "VYacc.tab.cpp"
+#line 1644 "VYacc.tab.cpp"
     break;
 
   case 58: /* mapsymlist: mapsymlist ',' VPTT_symbol  */
-#line 189 "VYacc.y"
+#line 191 "VYacc.y"
                                      { (yyval.sml) = vpyy_symlist((yyvsp[-2].sml),(yyvsp[0].sym),0,NULL) ;}
-#line 1648 "VYacc.tab.cpp"
+#line 1650 "VYacc.tab.cpp"
     break;
 
   case 59: /* mapsymlist: mapsymlist ',' '(' VPTT_symbol ':' symlist ')'  */
-#line 190 "VYacc.y"
+#line 192 "VYacc.y"
                                                          { (yyval.sml) = vpyy_mapsymlist((yyvsp[-6].sml), (yyvsp[-3].sym), (yyvsp[-1].sml));}
-#line 1654 "VYacc.tab.cpp"
+#line 1656 "VYacc.tab.cpp"
     break;
 
   case 60: /* maplist: %empty  */
-#line 195 "VYacc.y"
+#line 197 "VYacc.y"
     { (yyval.sml) = NULL ; }
-#line 1660 "VYacc.tab.cpp"
+#line 1662 "VYacc.tab.cpp"
     break;
 
   case 61: /* maplist: VPTT_map mapsymlist  */
-#line 196 "VYacc.y"
+#line 198 "VYacc.y"
                               { (yyval.sml) =  (yyvsp[0].sml) ; }
-#line 1666 "VYacc.tab.cpp"
+#line 1668 "VYacc.tab.cpp"
     break;
 
   case 62: /* exprlist: exp  */
-#line 201 "VYacc.y"
+#line 203 "VYacc.y"
        {(yyval.exl) = vpyy_chain_exprlist(NULL,(yyvsp[0].exn)) ;}
-#line 1672 "VYacc.tab.cpp"
+#line 1674 "VYacc.tab.cpp"
     break;
 
   case 63: /* exprlist: exprlist ',' exp  */
-#line 202 "VYacc.y"
+#line 204 "VYacc.y"
                       {(yyval.exl) = vpyy_chain_exprlist((yyvsp[-2].exl),(yyvsp[0].exn)) ; }
-#line 1678 "VYacc.tab.cpp"
+#line 1680 "VYacc.tab.cpp"
     break;
 
   case 64: /* exprlist: exprlist ';' exp  */
-#line 203 "VYacc.y"
+#line 205 "VYacc.y"
                       {(yyval.exl) = vpyy_chain_exprlist((yyvsp[-2].exl),(yyvsp[0].exn)) ; }
-#line 1684 "VYacc.tab.cpp"
+#line 1686 "VYacc.tab.cpp"
     break;
 
   case 65: /* exprlist: exprlist ';'  */
-#line 204 "VYacc.y"
+#line 206 "VYacc.y"
                   {(yyval.exl) = (yyvsp[-1].exl) ; }
-#line 1690 "VYacc.tab.cpp"
+#line 1692 "VYacc.tab.cpp"
     break;
 
   case 66: /* exp: VPTT_number  */
-#line 208 "VYacc.y"
+#line 210 "VYacc.y"
                           { (yyval.exn) = vpyy_num_expression((yyvsp[0].num)) ; }
-#line 1696 "VYacc.tab.cpp"
+#line 1698 "VYacc.tab.cpp"
     break;
 
   case 67: /* exp: VPTT_na  */
-#line 209 "VYacc.y"
+#line 211 "VYacc.y"
                                           { (yyval.exn) = vpyy_num_expression(-1E38);}
-#line 1702 "VYacc.tab.cpp"
+#line 1704 "VYacc.tab.cpp"
     break;
 
   case 68: /* exp: var  */
-#line 210 "VYacc.y"
+#line 212 "VYacc.y"
                           { (yyval.exn) = (Expression *)(yyvsp[0].var) ; }
-#line 1708 "VYacc.tab.cpp"
+#line 1710 "VYacc.tab.cpp"
     break;
 
   case 69: /* exp: VPTT_literal  */
-#line 211 "VYacc.y"
+#line 213 "VYacc.y"
                               { (yyval.exn) = vpyy_literal_expression((yyvsp[0].lit)) ; }
-#line 1714 "VYacc.tab.cpp"
+#line 1716 "VYacc.tab.cpp"
     break;
 
   case 70: /* exp: var '(' exprlist ')'  */
-#line 212 "VYacc.y"
+#line 214 "VYacc.y"
                                    { (yyval.exn) = vpyy_lookup_expression((yyvsp[-3].var),(yyvsp[-1].exl)) ; }
-#line 1720 "VYacc.tab.cpp"
+#line 1722 "VYacc.tab.cpp"
     break;
 
   case 71: /* exp: '(' exp ')'  */
-#line 213 "VYacc.y"
+#line 215 "VYacc.y"
                               { (yyval.exn) = vpyy_operator_expression('(',(yyvsp[-1].exn),NULL) ; }
-#line 1726 "VYacc.tab.cpp"
+#line 1728 "VYacc.tab.cpp"
     break;
 
   case 72: /* exp: VPTT_function '(' exprlist ')'  */
-#line 214 "VYacc.y"
+#line 216 "VYacc.y"
                                         { (yyval.exn) = vpyy_function_expression((yyvsp[-3].fnc),(yyvsp[-1].exl)) ;}
-#line 1732 "VYacc.tab.cpp"
+#line 1734 "VYacc.tab.cpp"
     break;
 
   case 73: /* exp: VPTT_function '(' exprlist ',' ')'  */
-#line 215 "VYacc.y"
+#line 217 "VYacc.y"
                                             { (yyval.exn) = vpyy_function_expression((yyvsp[-4].fnc),vpyy_chain_exprlist((yyvsp[-2].exl),vpyy_literal_expression("?"))) ;}
-#line 1738 "VYacc.tab.cpp"
+#line 1740 "VYacc.tab.cpp"
     break;
 
   case 74: /* exp: VPTT_function '(' ')'  */
-#line 216 "VYacc.y"
+#line 218 "VYacc.y"
                                { (yyval.exn) = vpyy_function_expression((yyvsp[-2].fnc),NULL) ;}
-#line 1744 "VYacc.tab.cpp"
+#line 1746 "VYacc.tab.cpp"
     break;
 
   case 75: /* exp: exp '+' exp  */
-#line 217 "VYacc.y"
+#line 219 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('+',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1750 "VYacc.tab.cpp"
+#line 1752 "VYacc.tab.cpp"
     break;
 
   case 76: /* exp: exp '-' exp  */
-#line 218 "VYacc.y"
+#line 220 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('-',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1756 "VYacc.tab.cpp"
+#line 1758 "VYacc.tab.cpp"
     break;
 
   case 77: /* exp: exp '*' exp  */
-#line 219 "VYacc.y"
+#line 221 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('*',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1762 "VYacc.tab.cpp"
+#line 1764 "VYacc.tab.cpp"
     break;
 
   case 78: /* exp: exp '/' exp  */
-#line 220 "VYacc.y"
+#line 222 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('/',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1768 "VYacc.tab.cpp"
+#line 1770 "VYacc.tab.cpp"
     break;
 
   case 79: /* exp: exp '<' exp  */
-#line 221 "VYacc.y"
+#line 223 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('<',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1774 "VYacc.tab.cpp"
+#line 1776 "VYacc.tab.cpp"
     break;
 
   case 80: /* exp: exp VPTT_le exp  */
-#line 222 "VYacc.y"
+#line 224 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression(VPTT_le,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1780 "VYacc.tab.cpp"
+#line 1782 "VYacc.tab.cpp"
     break;
 
   case 81: /* exp: exp '>' exp  */
-#line 223 "VYacc.y"
+#line 225 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('>',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1786 "VYacc.tab.cpp"
+#line 1788 "VYacc.tab.cpp"
     break;
 
   case 82: /* exp: exp VPTT_ge exp  */
-#line 224 "VYacc.y"
+#line 226 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression(VPTT_ge,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1792 "VYacc.tab.cpp"
+#line 1794 "VYacc.tab.cpp"
     break;
 
   case 83: /* exp: exp VPTT_ne exp  */
-#line 225 "VYacc.y"
+#line 227 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression(VPTT_ne,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1798 "VYacc.tab.cpp"
+#line 1800 "VYacc.tab.cpp"
     break;
 
   case 84: /* exp: exp VPTT_or exp  */
-#line 226 "VYacc.y"
+#line 228 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression(VPTT_or,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1804 "VYacc.tab.cpp"
+#line 1806 "VYacc.tab.cpp"
     break;
 
   case 85: /* exp: exp VPTT_and exp  */
-#line 227 "VYacc.y"
+#line 229 "VYacc.y"
                            { (yyval.exn) = vpyy_operator_expression(VPTT_and,(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1810 "VYacc.tab.cpp"
+#line 1812 "VYacc.tab.cpp"
     break;
 
   case 86: /* exp: VPTT_not exp  */
-#line 228 "VYacc.y"
+#line 230 "VYacc.y"
                                   { (yyval.exn) = vpyy_operator_expression(VPTT_not,(yyvsp[0].exn),NULL) ; }
-#line 1816 "VYacc.tab.cpp"
+#line 1818 "VYacc.tab.cpp"
     break;
 
   case 87: /* exp: exp '=' exp  */
-#line 229 "VYacc.y"
+#line 231 "VYacc.y"
                       { (yyval.exn) = vpyy_operator_expression('=',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1822 "VYacc.tab.cpp"
+#line 1824 "VYacc.tab.cpp"
     break;
 
   case 88: /* exp: '-' exp  */
-#line 230 "VYacc.y"
+#line 232 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('-',NULL, (yyvsp[0].exn)) ; }
-#line 1828 "VYacc.tab.cpp"
+#line 1830 "VYacc.tab.cpp"
     break;
 
   case 89: /* exp: '+' exp  */
-#line 231 "VYacc.y"
+#line 233 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('+',NULL, (yyvsp[0].exn)) ; }
-#line 1834 "VYacc.tab.cpp"
+#line 1836 "VYacc.tab.cpp"
     break;
 
   case 90: /* exp: exp '^' exp  */
-#line 232 "VYacc.y"
+#line 234 "VYacc.y"
                           { (yyval.exn) = vpyy_operator_expression('^',(yyvsp[-2].exn),(yyvsp[0].exn)) ; }
-#line 1840 "VYacc.tab.cpp"
+#line 1842 "VYacc.tab.cpp"
     break;
 
   case 91: /* tablevals: tablepairs  */
-#line 236 "VYacc.y"
+#line 238 "VYacc.y"
                    { (yyval.tbl) = (yyvsp[0].tbl) ; }
-#line 1846 "VYacc.tab.cpp"
+#line 1848 "VYacc.tab.cpp"
     break;
 
   case 92: /* tablevals: '[' '(' number ',' number ')' '-' '(' number ',' number ')' ']' ',' tablepairs  */
-#line 238 "VYacc.y"
+#line 240 "VYacc.y"
         { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-12].num),(yyvsp[-10].num),(yyvsp[-6].num),(yyvsp[-4].num)) ; }
-#line 1852 "VYacc.tab.cpp"
+#line 1854 "VYacc.tab.cpp"
     break;
 
   case 93: /* tablevals: '[' '(' number ',' number ')' '-' '(' number ',' number ')' ',' tablepairs ']' ',' tablepairs  */
-#line 240 "VYacc.y"
+#line 242 "VYacc.y"
         { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-14].num),(yyvsp[-12].num),(yyvsp[-8].num),(yyvsp[-6].num)) ; }
-#line 1858 "VYacc.tab.cpp"
+#line 1860 "VYacc.tab.cpp"
     break;
 
   case 94: /* xytablevals: xytablevec  */
-#line 244 "VYacc.y"
+#line 246 "VYacc.y"
                    { (yyval.tbl) = (yyvsp[0].tbl) ; }
-#line 1864 "VYacc.tab.cpp"
+#line 1866 "VYacc.tab.cpp"
     break;
 
   case 95: /* xytablevals: '[' '(' number ',' number ')' '-' '(' number ',' number ')' ']' ',' xytablevec  */
-#line 246 "VYacc.y"
+#line 248 "VYacc.y"
         { (yyval.tbl) = vpyy_tablerange((yyvsp[0].tbl),(yyvsp[-12].num),(yyvsp[-10].num),(yyvsp[-6].num),(yyvsp[-4].num)) ; }
-#line 1870 "VYacc.tab.cpp"
+#line 1872 "VYacc.tab.cpp"
     break;
 
   case 96: /* xytablevec: number  */
-#line 250 "VYacc.y"
+#line 252 "VYacc.y"
                 { (yyval.tbl) = vpyy_tablevec(NULL,(yyvsp[0].num)) ;}
-#line 1876 "VYacc.tab.cpp"
+#line 1878 "VYacc.tab.cpp"
     break;
 
   case 97: /* xytablevec: xytablevec ',' number  */
-#line 251 "VYacc.y"
+#line 253 "VYacc.y"
                                   {(yyval.tbl) = vpyy_tablevec((yyvsp[-2].tbl),(yyvsp[0].num)) ;}
-#line 1882 "VYacc.tab.cpp"
+#line 1884 "VYacc.tab.cpp"
     break;
 
   case 98: /* tablepairs: '(' number ',' number ')'  */
-#line 256 "VYacc.y"
+#line 258 "VYacc.y"
                                   { (yyval.tbl) = vpyy_tablepair(NULL,(yyvsp[-3].num),(yyvsp[-1].num)) ;}
-#line 1888 "VYacc.tab.cpp"
+#line 1890 "VYacc.tab.cpp"
     break;
 
   case 99: /* tablepairs: tablepairs ',' '(' number ',' number ')'  */
-#line 257 "VYacc.y"
+#line 259 "VYacc.y"
                                                     {(yyval.tbl) = vpyy_tablepair((yyvsp[-6].tbl),(yyvsp[-3].num),(yyvsp[-1].num)) ;}
-#line 1894 "VYacc.tab.cpp"
+#line 1896 "VYacc.tab.cpp"
     break;
 
 
-#line 1898 "VYacc.tab.cpp"
+#line 1900 "VYacc.tab.cpp"
 
       default: break;
     }
@@ -2087,5 +2089,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 263 "VYacc.y"
+#line 265 "VYacc.y"
 

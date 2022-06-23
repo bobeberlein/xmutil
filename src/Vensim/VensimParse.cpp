@@ -3,6 +3,8 @@
 // we include the tokenizer here because it is as easy as setting
 // up regular expressions for Flex and more easily understood
 
+#include <cstring>
+
 #include "VensimParse.h"
 #include "../Symbol/Variable.h"
 #include "../Symbol/LeftHandSide.h"
@@ -111,7 +113,7 @@ void VensimParse::ReadyFunctions()
         pSymbolNameSpace->ConfirmAllAllocations();
 	}
 	catch (...) {
-		std::cout << "Failed to initialize symbol table" << std::endl;
+		log("Failed to initialize symbol table");
 	}
 
 }
@@ -247,7 +249,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
              else if(rval == '|') {
              }
              else if(rval == VPTT_groupstar) {
-				//printf("%s\n", mVensimLex.CurToken()->c_str());
+				//log("%s\n", mVensimLex.CurToken()->c_str());
 				// only change this if a new number
 				 std::string group_owner;
 				 char c = mVensimLex.CurToken()->at(0);
@@ -261,17 +263,16 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
 				 }
              }
              else if(rval != endtok) {
-                std::cout << "Unknown terminal token " << rval << std::endl ;
+                log("Unknown terminal token %d\n", rval);
                 if(!FindNextEq(false))
                    break ;
              }
 
           }
           catch(VensimParseSyntaxError& e) {
-             std::cout << e.str << std::endl ;
-             std::cout << "Error at line " << mVensimLex.LineNumber() << " position " << mVensimLex.Position() 
-                << " in file " << sFilename << std::endl ;
-			 std::cout << ".... skipping the associated variable and looking for the next usable content.\n";
+             log("%s\n", e.str.c_str());
+             log("Error at line %d position %d in file %s\n", mVensimLex.LineNumber(), mVensimLex.Position(), sFilename.c_str());
+             log(".... skipping the associated variable and looking for the next usable content.\n");
              pSymbolNameSpace->DeleteAllUnconfirmedAllocations() ;
              noerr = false ;
              if(!FindNextEq(false)) 
@@ -296,7 +297,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
 		   this->mVensimLex.ReadLine(buf, BUFLEN); // version line
 		   if (strncmp(buf, "V300 ", 5) && strncmp(buf, "V364 ", 5))
 		   {
-			   printf("Unrecognized version - can't read sketch info\n");
+			   log("Unrecognized version - can't read sketch info\n");
 			   noerr = false;
 			   break;
 		   }
@@ -375,7 +376,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
 		   }
 	   }
        if (!noerr) {
-          fprintf(stderr, "warning: writing output file, but we had errors. check the result carefully.\n");
+          log("warning: writing output file, but we had errors. check the result carefully.\n");
        }
        return true ; // got something - try to put something out
     }
