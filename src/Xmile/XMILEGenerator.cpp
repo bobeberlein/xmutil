@@ -12,13 +12,14 @@ XMILEGenerator::XMILEGenerator(Model* model)
 	_model = model;
 }
 
-bool XMILEGenerator::Generate(const std::string& path, std::vector<std::string>& errs, bool as_sectors)
+std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string>& errs, bool as_sectors)
 {
 	tinyxml2::XMLDocument doc;
 	
 	tinyxml2::XMLElement* root = doc.NewElement("xmile");
 	root->SetName("xmile");
 	root->SetAttribute("xmlns", "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0");
+	root->SetAttribute("xmlns:isee", "http://iseesystems.com/XMILE");
 	root->SetAttribute("version", "1.0");
 	doc.InsertFirstChild(root);
 
@@ -81,18 +82,17 @@ bool XMILEGenerator::Generate(const std::string& path, std::vector<std::string>&
 		root->InsertEndChild(macro);
 	}
 
-	tinyxml2::XMLError err = doc.SaveFile(path.c_str());
-	if (err != tinyxml2::XML_SUCCESS)
-	{
- 		if (doc.ErrorStr())
+	tinyxml2::XMLPrinter printer{nullptr, is_compact};
+	if (!doc.Accept(&printer)) {
+		if (doc.ErrorStr()) {
 			errs.push_back("TinyXML2 Error: " + std::string(doc.ErrorStr()));
-		else
-			errs.push_back("File error opening document");
-
-		return false;
+		}
+		return "";
 	}
-	
-	return true;
+
+	std::string xmile = printer.CStr();
+
+	return xmile;
 }
 
 void XMILEGenerator::generateHeader(tinyxml2::XMLElement* element, std::vector<std::string>& errs)

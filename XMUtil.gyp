@@ -100,8 +100,11 @@
             }]
         ],
         'sources': [
+            './src/Main.cpp',
             './src/XMUtil.h',
             './src/XMUtil.cpp',
+            './src/Unicode.h',
+            './src/Unicode.cpp',
             './src/Model.h',
             './src/Model.cpp',
             './src/ContextInfo.h',

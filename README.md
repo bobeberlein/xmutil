@@ -55,24 +55,6 @@ In MinGW Installation Manager make sure you've installed:
 
 ## Install dependencies
 
-### Boost C++ Libraries
-
-Download and extract the latest version of [Boost](http://www.boost.org/users/download/).
-
-Follow the instructions in [Boost Getting Started on Windows](http://www.boost.org/doc/libs/1_64_0/more/getting_started/windows.html).
-
-~~~
-cd boost
-bootstrap.bat
-bjam -j4 toolset=msvc-14.1 architecture=x86 address-model=64 --build-type=complete --with-filesystem --with-iostreams --with-system stage
-~~~
-
-The products end up in stage\lib
-The include directory is \boost
-
-Copy the headers into \third_party\include\boost
-Copy the libs into \third_party\win\lib
-
 ### ICU - International Components for Unicode
 
 Download [ICU4C](http://site.icu-project.org/download/59#TOC-ICU4C-Download)version 59.1 binaries for Win64.

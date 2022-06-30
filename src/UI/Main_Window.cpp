@@ -1,10 +1,12 @@
-#include "Main_Window.h"
-#include "ui_main_window.h"
+#include <filesystem>
+#include <fstream>
 
 #include <QFileDialog>
 #include <QStandardPaths>
 
-#include <boost/filesystem.hpp>
+#include "Main_Window.h"
+#include "ui_main_window.h"
+
 #include "Vensim/VensimParse.h"
 #include "Model.h"
 
@@ -53,12 +55,23 @@ void Main_Window::choose_file()
         m.AttachStragglers();
         
         
-        boost::filesystem::path p(file);
+        std::filesystem::path p(file);
         p.replace_extension(".xmile");
         
         std::vector<std::string> errs;
-        m.WriteToXMILE(p.string(), errs);
-        
+        std::string xmile = m.PrintXMILE(false, errs);
+
+        {
+            // close will be called when fileOutput goes out of scope
+            std::ofstream fileOutput{p.string(), std::ofstream::out | std::ios::binary | std::ios::trunc};
+            if (fileOutput.is_open()) {
+                fileOutput << xmile;
+                fileOutput.flush();
+            } else {
+                ui->log->append("couldn't open file for writing: " + StdString_to_QString(p.string()))
+            }
+        }
+
         for (const std::string& err: errs)
         {
             ui->log->append(StdString_to_QString(err));

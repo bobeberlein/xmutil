@@ -1,7 +1,6 @@
 #ifndef _XMUTIL_VENSIM_VENSIMPARSE_H
 #define _XMUTIL_VENSIM_VENSIMPARSE_H
 #include <string>
-#include <boost/iostreams/device/mapped_file.hpp>
 #include <iostream>
 #include "../Symbol/Parse.h"
 #include "../Symbol/Symbol.h"
@@ -26,7 +25,7 @@ public:
    VensimParse(Model* model);
    ~VensimParse(void);
    void ReadyFunctions();
-   bool ProcessFile(const std::string &filename) ;
+   bool ProcessFile(const std::string &filename, const char *contents, size_t contentsLen) ;
    inline int yylex(void) { return mVensimLex.yylex() ; }
    int yyerror(const char *str) ;
    Equation *AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int tok) ;
@@ -71,7 +70,6 @@ private :
    bool FindNextEq(bool want_comment) ;
    Model* _model;
    std::string sFilename;
-   boost::iostreams::mapped_file_source mfSource;
    VensimLex mVensimLex ;
    VensimParseSyntaxError mSyntaxError ;
    SymbolNameSpace *pSymbolNameSpace ;

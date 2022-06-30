@@ -115,7 +115,7 @@
                 'xcode_settings': {
                     'MACOSX_DEPLOYMENT_TARGET':'10.9',
                     'CLANG_CXX_LIBRARY': 'libc++',
-                    'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++14',
+                    'CLANG_CXX_LANGUAGE_STANDARD': 'c++17',
                     'SDKROOT': 'macosx',
                     'GCC_OPTIMIZATION_LEVEL': '0',
                     'OTHER_CFLAGS': [
@@ -135,8 +135,6 @@
                         '-L<(cwd)/third_party/mac/lib',
                     ],
                     'libraries': [
-                        '<(cwd)/third_party/mac/lib/libboost_filesystem.a',
-                        '<(cwd)/third_party/mac/lib/libboost_iostreams.a',
                         '<(cwd)/third_party/mac/lib/libtinyxml2.a',
                         '<(cwd)/third_party/mac/lib/libicudata.a',
                         '<(cwd)/third_party/mac/lib/libicui18n.a',
@@ -147,7 +145,6 @@
                         '<(cwd)/third_party/mac/lib/libicuuc.a',
                     ]
                 }
-
             }],
             ['OS=="linux"', {
                 'defines':[
@@ -162,8 +159,6 @@
                         '-L./third_party/linux/lib',
                     ],
                     'libraries': [
-                        '-lboost_filesystem',
-                        '-lboost_iostreams',
                         '-licuuc',
                         '-ltinyxml2',
                     ],
@@ -173,7 +168,7 @@
                     '-Wall',
                     '-Wextra',
                     '-Wno-unused-parameter',
-                    '-std=c++14',
+                    '-std=c++17',
                     '-fPIC',
                 ],
                 'libraries': [

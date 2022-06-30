@@ -676,14 +676,7 @@ std::vector<Variable*> Model::GetVariables(SymbolNameSpace *ns)
 	return vars;
 }
 
-bool Model::WriteToXMILE(const std::string& path, std::vector<std::string>& errs)
-{
-	bool success = true;
-
-	// sim specs are different 
-
-	XMILEGenerator generator(this);
-	success = generator.Generate(path, errs, bAsSectors);
-
-	return success;
+std::string Model::PrintXMILE(bool isCompact, std::vector<std::string> &errs) {
+    XMILEGenerator generator(this);
+    return generator.Print(isCompact, errs, bAsSectors);
 }

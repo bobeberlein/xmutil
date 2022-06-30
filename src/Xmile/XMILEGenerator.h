@@ -17,7 +17,7 @@ class XMILEGenerator
 public:
 	XMILEGenerator(Model* model);
 
-	bool Generate(const std::string& path, std::vector<std::string>& errs, bool as_sectors);
+	std::string Print(bool is_compact, std::vector<std::string>& errs, bool as_sectors);
 
 protected:
 	void generateHeader(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
