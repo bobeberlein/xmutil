@@ -86,9 +86,9 @@ public:
 	int GetNextUID();
 	VensimViewElements& Elements() { return vElements; }
 
-	bool UpgradeGhost(Variable * var);
-	bool AddFlowDefinition(Variable* var, Variable* upstream, Variable* downstream);
-	bool AddVarDefinition(Variable* var, int x, int y);
+	bool UpgradeGhost(Variable * var) override;
+	bool AddFlowDefinition(Variable* var, Variable* upstream, Variable* downstream) override;
+	bool AddVarDefinition(Variable* var, int x, int y) override;
 	virtual void CheckGhostOwners() override;
 	virtual void CheckLinksIn() override;
 	bool FindInArrow(Variable* source, int target);
