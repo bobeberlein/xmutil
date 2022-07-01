@@ -126,8 +126,8 @@ class name : public FunctionMemoryBase {\
 public :\
    name(SymbolNameSpace *sns) : FunctionMemoryBase(sns,xname,narg,actarg,iniarg) { }\
    ~name(void) {}\
-   std::string ComputableName(void) override { return cnamea ; }\
-   std::string ComputableNameInit(void) override { return cnamei ; }\
+   virtual std::string ComputableName(void) override { return cnamea ; }\
+   virtual std::string ComputableNameInit(void) override { return cnamei ; }\
 private :
 
 #define FSubclassMemory(name,xname,narg,actarg,iniarg,cnamea,cnamei) FSubclassMemoryStart(name,xname,narg,actarg,iniarg,cnamea,cnamei) };

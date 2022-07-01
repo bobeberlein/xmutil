@@ -49,7 +49,7 @@ std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string>& err
 	if (as_sectors)
 	{
 		tinyxml2::XMLElement* model = doc.NewElement("model");
-		this->generateModelAsSectors(model, errs, NULL);
+		this->generateModelAsSectors(model, errs, NULL, true);
 		root->InsertEndChild(model);
 	}
 	else
@@ -78,7 +78,7 @@ std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string>& err
 			xparm->SetText(info.str().c_str());
 		}
 
-		this->generateModelAsSectors(macro, errs, mf->NameSpace()); // not really a secotr - only a root module here
+		this->generateModelAsSectors(macro, errs, mf->NameSpace(), false); // not really a secotr - only a root module here
 		root->InsertEndChild(macro);
 	}
 
@@ -303,14 +303,14 @@ void XMILEGenerator::generateDimensions(tinyxml2::XMLElement* element, std::vect
 }
 
 // first pass if flat - we probably want to do this differently when we break up into modules
-void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns)
+void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns, bool want_diagram)
 {
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 	tinyxml2::XMLElement* variables = doc->NewElement("variables");
 	element->InsertEndChild(variables);
 
 	std::vector<Variable*> vars = _model->GetVariables(ns); // all symbols that are variables
-	for (Variable * var: vars)
+	for (Variable* var : vars)
 	{
 		if (var->Unwanted())
 			continue;
@@ -364,13 +364,13 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 		}
 		if (type == XMILE_Type_STOCK)
 		{
-			for (Variable * in: var->Inflows())
+			for (Variable* in : var->Inflows())
 			{
 				tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
 				xvar->InsertEndChild(inflow);
 				inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
 			}
-			for (Variable * out: var->Outflows())
+			for (Variable* out : var->Outflows())
 			{
 				tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
 				xvar->InsertEndChild(outflow);
@@ -401,7 +401,7 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 					eqn->SubscriptExpand(elms, subs);
 					if (!elms.empty())
 					{
-						for (std::vector<Symbol*> elm: elms)
+						for (std::vector<Symbol*> elm : elms)
 						{
 							for (int i = 0; i < dim_count; i++)
 							{
@@ -530,34 +530,34 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 				}
 				else
 				{
-std::set<Symbol*>& entry = entries[i];
-Symbol* parent = (*entry.begin())->Owner();
-Symbol* best = parent;
-if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
-{
-	for (Symbol* subrange : *parent->Subranges())
-	{
-		if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
-			static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
-		{
-			// does it have them all
-			bool complete = true;
-			std::vector<Symbol*> telms;
-			Equation::GetSubscriptElements(telms, subrange);
-			for (Symbol* elm : entries[i])
-			{
-				if (std::find(telms.begin(), telms.end(), elm) == telms.end())
-				{
-					complete = false;
-					break;
-				}
-			}
-			if (complete)
-				best = subrange;
-		}
-	}
-}
-xdim->SetAttribute("name", best->GetName().c_str());
+					std::set<Symbol*>& entry = entries[i];
+					Symbol* parent = (*entry.begin())->Owner();
+					Symbol* best = parent;
+					if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
+					{
+						for (Symbol* subrange : *parent->Subranges())
+						{
+							if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
+								static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
+							{
+								// does it have them all
+								bool complete = true;
+								std::vector<Symbol*> telms;
+								Equation::GetSubscriptElements(telms, subrange);
+								for (Symbol* elm : entries[i])
+								{
+									if (std::find(telms.begin(), telms.end(), elm) == telms.end())
+									{
+										complete = false;
+										break;
+									}
+								}
+								if (complete)
+									best = subrange;
+							}
+						}
+					}
+					xdim->SetAttribute("name", best->GetName().c_str());
 				}
 				xdims->InsertEndChild(xdim);
 			}
@@ -572,9 +572,12 @@ xdim->SetAttribute("name", best->GetName().c_str());
 			units->SetText(un->GetEquationString().c_str());
 		}
 	}
-	tinyxml2::XMLElement* views = doc->NewElement("views");
-	this->generateSectorViews(views, variables, errs, ns == NULL);
-	element->InsertEndChild(views);
+	if (want_diagram)
+	{
+		tinyxml2::XMLElement* views = doc->NewElement("views");
+		this->generateSectorViews(views, variables, errs, ns == NULL);
+		element->InsertEndChild(views);
+	}
 }
 
 void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::XMLDocument* doc, tinyxml2::XMLElement* variables)
@@ -851,7 +854,7 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 	if (views.size() < 2)
 	{
 		tinyxml2::XMLElement* model = doc->NewElement("model");
-		generateModelAsSectors(model, errs, ns);
+		generateModelAsSectors(model, errs, ns, true);
 		element->InsertEndChild(model);
 		return;
 	}
