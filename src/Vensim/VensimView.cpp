@@ -45,7 +45,7 @@ VensimVariableElement::VensimVariableElement(VensimView* view, char *curpos, cha
 		}
 	}
 	else
-		printf("Can't find - %s\n", name.c_str());
+		log("Can't find - %s\n", name.c_str());
 }
 VensimVariableElement::VensimVariableElement(VensimView* view, Variable* var, int x, int y)
 {

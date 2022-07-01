@@ -2,7 +2,7 @@
 #define _XMUTIL_CONTEXTINFO_H
 #include <vector>
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 /* a utility class helpfu in sorting and evaluating equations 
 */
 

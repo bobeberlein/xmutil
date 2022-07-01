@@ -103,6 +103,8 @@
             './src/Main.cpp',
             './src/XMUtil.h',
             './src/XMUtil.cpp',
+            './src/Log.h',
+            './src/Log.cpp',
             './src/Unicode.h',
             './src/Unicode.cpp',
             './src/Model.h',

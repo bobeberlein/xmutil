@@ -8,11 +8,13 @@ Outputs: VYacc.tab.cpp VYacc.tab.hpp
 */
 
 %{
+#include "../Log.h"
 #include "../Symbol/Parse.h"
 #include "VensimParseFunctions.h"
 extern int vpyylex (void);
 extern void vpyyerror (char const *);
 #define YYSTYPE ParseUnion
+#define YYFPRINTF XmutilLogf
 %}
      
 /* tokens returned by the tokenizer (in addition to single char tokens) */

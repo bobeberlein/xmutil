@@ -1,12 +1,13 @@
+#include <vector>
+
 #include "Model.h"
 #include "Symbol/Symbol.h"
 #include "Symbol/LeftHandSide.h"
 #include "Symbol/Equation.h"
-#include <vector>
 #include "XMUtil.h"
 #include "Xmile/XMILEGenerator.h"
 #include "Vensim/VensimView.h"
-#include <iostream>
+
 
 Model::Model(void)
 {
@@ -31,7 +32,7 @@ Equation *Model::AddUnnamedVariable(ExpressionFunctionMemory *e)
    LeftHandSide *lhs = new LeftHandSide(&mSymbolNameSpace,ev,NULL, NULL,0) ;
    e2 = new ExpressionFunction(&mSymbolNameSpace,e->GetFunction(),e->GetArgs()) ;
    Equation *eq = new Equation(&mSymbolNameSpace,lhs,e2,'=') ;
-   //printf("Adding in a placeholder from function %s\n",e->GetFunction()->GetName().c_str()) ;
+   //log("Adding in a placeholder from function %s\n",e->GetFunction()->GetName().c_str()) ;
    var->AddEq(eq) ;
    vUnamedVars.push_back(var) ;
    return eq ;
@@ -101,7 +102,7 @@ bool Model::ValidatePlaceholderVars(void)
    try {
       SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable() ;
       for (const SymbolNameSpace::iterator &it: *ht) {
-         //printf("Checking placeholders out %s\n",SNSitToSymbol(it)->GetName().c_str()) ;
+         //log("Checking placeholders out %s\n",SNSitToSymbol(it)->GetName().c_str()) ;
          SNSitToSymbol(it)->CheckPlaceholderVars(this) ;
       }
       mSymbolNameSpace.ConfirmAllAllocations() ;
@@ -197,7 +198,7 @@ bool Model::OrderEquations(ContextInfo *info,bool tonly)
             haserr = true ;
       } else {
          for (const SymbolNameSpace::iterator &it: *ht) {
-            //printf("Looping to: %s\n",SNSitToSymbol(it)->GetName().c_str()) ;
+            //log("Looping to: %s\n",SNSitToSymbol(it)->GetName().c_str()) ;
             if(!SNSitToSymbol(it)->CheckComputed(info,true))
                haserr = true ; // continue looking for simultaneous even when false 
          }
@@ -248,29 +249,29 @@ bool Model::AnalyzeEquations(void)
    // 
 
    // before the passes initialize time, then dt
-   printf("\nInitial time \n") ;
+   log("\nInitial time \n") ;
    info.iComputeType = CF_initial ;
    info.pEquations = &vInitialTimeComps ;
    if(!OrderEquations(&info,true))
       return false ;
 
 
-   printf("\nInitial equations \n") ;
+   log("\nInitial equations \n") ;
    info.iComputeType = CF_initial ;
    info.pEquations = &vInitialComps ;
    if(!OrderEquations(&info,false))
       return false ;
-   printf("\n\nActive equations \n") ;
+   log("\n\nActive equations \n") ;
    info.iComputeType = CF_active ;
    info.pEquations = &vActiveComps ;
    if(!OrderEquations(&info,false))
       return false ;
-   printf("\n\nUnchanging equations \n") ;
+   log("\n\nUnchanging equations \n") ;
    info.iComputeType = CF_unchanging ;
    info.pEquations = &vUnchangingComps ;
    if(!OrderEquations(&info,false))
       return false ;
-   printf("\n\nRate equations \n") ;
+   log("\n\nRate equations \n") ;
    info.iComputeType = CF_rate ;
    info.pEquations = &vRateComps ;
    if(!OrderEquations(&info,false))
@@ -293,7 +294,7 @@ bool Model::Simulate(void)
       info.iComputeType = CF_initial ;
       for (Equation *e: vInitialTimeComps) {
          e->Execute(&info) ;
-         //printf("%s = %g\n",e->GetVariable()->GetName().c_str(),e->GetVariable()->Eval(&info)) ;
+         //log("%s = %g\n",e->GetVariable()->GetName().c_str(),e->GetVariable()->Eval(&info)) ;
       }
       if(start)
          s = start->Eval(&info) ;
@@ -307,15 +308,15 @@ bool Model::Simulate(void)
       info.dDT = dt ;
       for (Equation *e: vInitialComps) {
          e->Execute(&info) ;
-         //printf("%s = %g\n",e->GetVariable()->GetName().c_str(),e->GetVariable()->Eval(&info)) ;
+         //log("%s = %g\n",e->GetVariable()->GetName().c_str(),e->GetVariable()->Eval(&info)) ;
       }
       // now the active equations
       info.iComputeType = CF_active ;
       // first the unchanging variables
-      //printf("\n Unchanging\n") ;
+      //log("\n Unchanging\n") ;
       for (Equation *e: vUnchangingComps) {
          e->Execute(&info) ;
-         //printf("%s = %g\n",e->GetVariable()->GetName().c_str(),e->GetVariable()->Eval(&info)) ;
+         //log("%s = %g\n",e->GetVariable()->GetName().c_str(),e->GetVariable()->Eval(&info)) ;
       }
 
       // now over time
@@ -323,28 +324,28 @@ bool Model::Simulate(void)
          e = end->Eval(&info) ;
       else
          e = 100 ;
-      printf("Time") ;
+      log("Time") ;
       for (Equation *e: vActiveComps) {
-         printf("\t%s",e->GetVariable()->GetName().c_str()) ;
+         log("\t%s",e->GetVariable()->GetName().c_str()) ;
       } ;
       for (Equation *e: vRateComps) {
-         printf("\t%s",e->GetVariable()->GetName().c_str()) ;
-      } printf("\n") ;
+         log("\t%s",e->GetVariable()->GetName().c_str()) ;
+      } log("\n") ;
 
       for(t=s;t<=e;t += dt) {
          info.dTime = t ;
-         //printf("\n\nAt time %g\n",t) ;
+         //log("\n\nAt time %g\n",t) ;
          if(time)
             time->SetActiveValue(0,t) ;
-         printf("%g",t) ;
+         log("%g",t) ;
          for (Equation *e: vActiveComps) {
             e->Execute(&info) ;
-            printf("\t%g",e->GetVariable()->Eval(&info)) ;
+            log("\t%g",e->GetVariable()->Eval(&info)) ;
          } 
          for (Equation *e: vRateComps) {
             e->Execute(&info) ;
-            printf("\t%g",e->GetVariable()->Eval(&info)) ;
-         } printf("\n") ;
+            log("\t%g",e->GetVariable()->Eval(&info)) ;
+         } log("\n") ;
          if(step)
             info.dDT = dt = step->Eval(&info) ;
          // update states
@@ -355,7 +356,7 @@ bool Model::Simulate(void)
             e = end->Eval(&info) ;
       }
    } catch(...) {
-      std::cout << "Error of some sort" << std::endl ;
+      log("Error of some sort");
       return false ;
    }
    return true ;
@@ -370,31 +371,31 @@ bool Model::OutputComputable(bool wantshort)
       else
          GenerateCanonicalNames() ;
       info.iComputeType = CF_initial ;
-      printf("------------- initial time -----------------\n") ;
+      log("------------- initial time -----------------\n") ;
       for (Equation *e: vInitialTimeComps) {
          e->OutputComputable(&info) ;
       }
-      printf("------------- initialization -----------------\n") ;
+      log("------------- initialization -----------------\n") ;
       for (Equation *e: vInitialComps) {
          e->OutputComputable(&info) ;
       }
       info.iComputeType = CF_active ;
-      printf("------------- Unchanging -----------------\n") ;
+      log("------------- Unchanging -----------------\n") ;
       info.iComputeType = CF_active ;
       for (Equation *e: vUnchangingComps) {
          e->OutputComputable(&info) ;
       }
-      printf("------------- active -----------------\n") ;
+      log("------------- active -----------------\n") ;
       for (Equation *e: vActiveComps) {
          e->OutputComputable(&info) ;
       } 
       info.iComputeType = CF_rate ;
-      printf("------------- rates -----------------\n") ;
+      log("------------- rates -----------------\n") ;
       for (Equation *e: vRateComps) {
          e->OutputComputable(&info) ;
       } 
    } catch(...) {
-      std::cout << "Error of some sort" << std::endl ;
+      log("Error of some sort");
       return false ;
    }
    return true ;
