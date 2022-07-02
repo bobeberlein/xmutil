@@ -4,7 +4,7 @@
 
 #include "Log.h"
 
-#ifdef WIN32
+#if defined WIN32 || defined __APPLE__
 #define ATTRIBUTE_PRINTF
 #else
 // this gives us better compiler error messages for callers
