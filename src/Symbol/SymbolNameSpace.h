@@ -31,9 +31,9 @@ public:
    typedef std::unordered_map<std::string, Symbol*> HashTable ;
    typedef HashTable::value_type iterator ; // allows iterator type to be used directly with C++11 range-based for loops
    inline HashTable *GetHashTable(void) { return &mHashTable ; } 
+   static std::string* ToLowerSpace(const std::string& name);
 
 private :
-   std::string *ToLowerSpace(const std::string &name) ;
    std::set<SymbolTableBase*>sUnconfirmedAllocations ;
    HashTable mHashTable ;
 };

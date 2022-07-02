@@ -844,11 +844,12 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 	}
 }
 
-// first pass if flat - we probably want to do this differently when we break up into modules
 void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns)
 {
 	// we will leave the base model completely empty and only generate the modules - letting the opening software
 	// lay out the modules and mark the connections between them
+	// we will also leave in anything that does not exist in any view at a reasonable level of
+	// attachment
 	std::vector<View*>& views = _model->Views();
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 	if (views.size() < 2)
@@ -859,11 +860,22 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 		return;
 	}
 	std::vector<Variable*> vars = _model->GetVariables(ns); // all symbols that are variables
+	// for every variable in a view, put its causes into the same view if they are not in any view 
+	// otherwise we let the go cross level
+	for (Variable* var : vars)
+	{
+		var->SetViewOfCauses();
+	}
+	// and now for any variables still not assigned a view we do essentially the opposite
+	for (Variable* var : vars)
+	{
+		var->SetViewToCause();
+	}
+
 	tinyxml2::XMLElement* mainmodel = doc->NewElement("model");
 	element->InsertEndChild(mainmodel);
 	tinyxml2::XMLElement* modules = doc->NewElement("variables");
 	mainmodel->InsertEndChild(modules);
-	std::set<Variable*> remnant;
 	int uid_off = 0;
 
 	for (View* gview : views)
@@ -921,8 +933,6 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 			std::string from;
 			if (var->GetView())
 				from = static_cast<VensimView*>(var->GetView())->Title();
-			else
-				remnant.insert(var);
 			from += "." + var->GetAlternateName();
 			connect->SetAttribute("from", SpaceToUnderBar(from).c_str());
 			module->InsertEndChild(connect);
@@ -948,6 +958,12 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 		xviews->InsertEndChild(xview);
 		uid_off = view->SetViewStart(100, 100, uid_off);
 		this->generateView(view, xview, errs, &needed);
+	}
+	std::set<Variable*> remnant;
+	for (Variable* var : vars)
+	{
+		if (var->GetView() == NULL && !var->Unwanted())
+			remnant.insert(var);
 	}
 	generateEquations(remnant, doc, modules);
 	//tinyxml2::XMLElement* views = doc->NewElement("views");

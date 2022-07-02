@@ -33,6 +33,48 @@ Variable::~Variable(void)
    }
 }
 
+void Variable::SetViewOfCauses()
+{
+	if (_view == NULL || pVariableContent == NULL  || _unwanted)
+		return; // nothing useful to do with this
+	std::vector<Equation*> eqns = pVariableContent->GetAllEquations();
+	for (Equation* eqn : eqns)
+	{
+		std::vector<Variable*> vars;
+		eqn->GetVarsUsed(vars);
+		for (Variable* var : vars)
+		{
+			if (var->_view == NULL)
+			{
+				var->_view = _view;
+				var->SetViewOfCauses(); // recur
+			}
+		}
+	}
+}
+
+
+void Variable::SetViewToCause()
+{
+	if (_view != NULL || pVariableContent == NULL || _unwanted)
+		return; // nothing useful to do with this
+	std::vector<Equation*> eqns = pVariableContent->GetAllEquations();
+	for (Equation* eqn : eqns)
+	{
+		std::vector<Variable*> vars;
+		eqn->GetVarsUsed(vars);
+		for (Variable* var : vars)
+		{
+			var->SetViewToCause(); // recur
+			if (var->_view != NULL)
+			{
+				_view = var->_view;
+				return;
+			}
+		}
+	}
+}
+
 std::string Variable::GetAlternateName(void)
 { 
 	std::string name =  pVariableContent ? pVariableContent->GetAlternateName() : GetName(); 

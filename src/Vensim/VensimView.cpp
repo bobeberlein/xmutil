@@ -44,8 +44,12 @@ VensimVariableElement::VensimVariableElement(VensimView* view, char *curpos, cha
 				_variable->MarkAsFlow();
 		}
 	}
-	else
-		log("Can't find - %s\n", name.c_str());
+	else {
+		std::string* nname = SymbolNameSpace::ToLowerSpace(name);
+		if (*nname != "time") // any others?
+			log("Can't find - %s\n", name.c_str());
+		delete nname;
+	}
 }
 VensimVariableElement::VensimVariableElement(VensimView* view, Variable* var, int x, int y)
 {
