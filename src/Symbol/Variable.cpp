@@ -54,10 +54,11 @@ void Variable::SetViewOfCauses()
 }
 
 
-void Variable::SetViewToCause()
+void Variable::SetViewToCause(int depth)
 {
-	if (_view != NULL || pVariableContent == NULL || _unwanted)
+	if (_view != NULL || pVariableContent == NULL || _unwanted || depth == 0)
 		return; // nothing useful to do with this
+	depth--;
 	std::vector<Equation*> eqns = pVariableContent->GetAllEquations();
 	for (Equation* eqn : eqns)
 	{
@@ -65,7 +66,7 @@ void Variable::SetViewToCause()
 		eqn->GetVarsUsed(vars);
 		for (Variable* var : vars)
 		{
-			var->SetViewToCause(); // recur
+			var->SetViewToCause(depth); // recur
 			if (var->_view != NULL)
 			{
 				_view = var->_view;

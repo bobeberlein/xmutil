@@ -118,7 +118,7 @@ public:
    View* GetView() { return _view; }
    void SetView(View* view) { _view = view; }
    void SetViewOfCauses();
-   void SetViewToCause();
+   void SetViewToCause(int depth);
 
    void SetComment(const std::string& com) { _comment = com; }
    bool Unwanted() const { return _unwanted; }

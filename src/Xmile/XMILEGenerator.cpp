@@ -869,7 +869,7 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 	// and now for any variables still not assigned a view we do essentially the opposite
 	for (Variable* var : vars)
 	{
-		var->SetViewToCause();
+		var->SetViewToCause(5);
 	}
 
 	tinyxml2::XMLElement* mainmodel = doc->NewElement("model");
