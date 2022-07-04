@@ -101,6 +101,25 @@ int cliMain(int argc, char *argv[], Model *m) {
 
     std::ofstream fileOutput;
     if (!useStdio) {
+#ifdef __APPLE__
+        std::string p(path);
+        for (std::string::iterator it = p.end();it-- > p.begin();)
+        {
+            if (*it == '.')
+            {
+                p = p.substr(0,it-p.begin());
+                break;
+            }
+            else if (*it == '/' || *it == '\\' || *it == ':')
+                break;
+        }
+        p += ".xmile";
+        fileOutput = std::ofstream{p, std::ofstream::out | std::ios::binary | std::ios::trunc};
+        if (!fileOutput.is_open()) {
+            log("ERROR: couldn't open '%s' for writing.\n", p.c_str());
+            exit(EXIT_FAILURE);
+        }
+#else
         std::filesystem::path p(path);
         p.replace_extension(".xmile");
         fileOutput = std::ofstream{p.string(), std::ofstream::out | std::ios::binary | std::ios::trunc};
@@ -108,6 +127,7 @@ int cliMain(int argc, char *argv[], Model *m) {
             log("ERROR: couldn't open '%s' for writing.\n", p.string().c_str());
             exit(EXIT_FAILURE);
         }
+#endif
     }
 
     (useStdio ? std::cout : fileOutput) << xmile;
