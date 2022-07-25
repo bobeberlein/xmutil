@@ -172,6 +172,7 @@ FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
 FSubclass(FunctionGame, "GAME", 1, ""); // don't need this 
 FSubclass(FunctionRandom01, "RANDOM 0 1", 0, "UNIFORM(0,1)");
 FSubclass(FunctionRandomUniform, "RANDOM UNIFORM", 3, "UNIFORM");
+FSubclass(FunctionRandomPink, "RANDOM PINK NOISE", 4, "NORMALPINK");
 
 FSubclass(FunctionNAN, "A FUNCTION OF", -1, "NAN");
 

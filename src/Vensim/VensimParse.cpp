@@ -95,6 +95,7 @@ void VensimParse::ReadyFunctions()
 		new FunctionGame(pSymbolNameSpace);
 		new FunctionRandom01(pSymbolNameSpace);
 		new FunctionRandomUniform(pSymbolNameSpace);
+        new FunctionRandomPink(pSymbolNameSpace);
 		new FunctionAbs(pSymbolNameSpace);
         new FunctionExp(pSymbolNameSpace);
         new FunctionSqrt(pSymbolNameSpace);
