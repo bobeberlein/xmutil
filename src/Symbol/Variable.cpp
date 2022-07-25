@@ -80,7 +80,7 @@ std::string Variable::GetAlternateName(void)
 { 
 	std::string name =  pVariableContent ? pVariableContent->GetAlternateName() : GetName(); 
 	// strip out surrounding quotes if they exist - we want to deliver the name without them
-	if (name.size() > 2 && name[0] == '\"' && name.back() == '\"' and name.find('.') == std::string::npos)
+	if (name.size() > 2 && name[0] == '\"' && name.back() == '\"' && name.find('.') == std::string::npos)
 		name = name.substr(1, name.size() - 2);
 	return name;
 }
