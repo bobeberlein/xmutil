@@ -1247,7 +1247,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 				{
 					VensimVariableElement* from = static_cast<VensimVariableElement*>(elements[cele->From()]);
 					// if from is a valve we switch it to the next element in the list which should be a var
-					if (from->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->From()])->Attached()) {
+					if (from && from->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->From()])->Attached()) {
 						from = static_cast<VensimVariableElement*>(elements[cele->From() + 1]);
 					}
 					VensimVariableElement* to = static_cast<VensimVariableElement*>(elements[cele->To()]);
