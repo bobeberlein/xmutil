@@ -450,15 +450,15 @@ bool VensimLex::IsGetXLSorVDF()
 {
 	// Vensim has a bunch of GET functions that use strings and aren't worth translating 
 	if (KeywordMatch("ET 123"))
-		sToken = "0{GET 123";
+		sToken = "{GET 123";
 	else if (KeywordMatch("ET DATA"))
-		sToken = "0{GET DATA";
+		sToken = "{GET DATA";
 	else if (KeywordMatch("ET DIRECT"))
-		sToken = "0{GET DIRECT";
+		sToken = "{GET DIRECT";
 	else if (KeywordMatch("ET VDF"))
-		sToken = "0{GET VDF";
+		sToken = "{GET VDF";
 	else if (KeywordMatch("ET XLS"))
-		sToken = "0{GET XLS";
+		sToken = "{GET XLS";
 	else
 		return false;
 	char c;
