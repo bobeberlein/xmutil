@@ -78,6 +78,7 @@ bool StringMatch(const std::string& f, const std::string& s)
 
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy)
 {
+	assert(startx > 0 && starty > 0 && pointx > 0 && pointy > 0 && endx > 0 && endy > 0);
 	double thetax;
 	if (endx > startx)
 		thetax = -atan((endy - starty) / (endx - startx)) * 180 / 3.14159265358979;
@@ -87,7 +88,8 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 		thetax = 270;
 	else
 		thetax = 90;
-	// straight line connector- use this is geometry fails
+	// straight line connector- use this if geometry fails
+	//return thetax;
 
 	// first take the start and end point - the center of the circle is on a line perpindicular
 	// to the line between them and intersects it at its midpoint
@@ -177,7 +179,7 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 	if (abs(centery - starty) < 1e-6)
 	{
 		if (pointy > starty)
-			return 99;
+			return 90;
 		return 270;
 	}
 	if (abs(centerx - startx) < 1e-6)

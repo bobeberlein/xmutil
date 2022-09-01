@@ -1053,6 +1053,7 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 		{
 			if (ele->Type() == VensimViewElement::ElementTypeVARIABLE)
 			{
+				assert(ele->X() > 0 && ele->Y() > 0);
 				VensimVariableElement* vele = static_cast<VensimVariableElement*>(ele);
 				Variable* var = vele->GetVariable();
 				// skip time altogether - this never shows up under xmil
@@ -1246,38 +1247,41 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 				if (cele->From() > 0 && cele->To() > 0)
 				{
 					VensimVariableElement* from = static_cast<VensimVariableElement*>(elements[cele->From()]);
-					// if from is a valve we switch it to the next element in the list which should be a var
-					if (from && from->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->From()])->Attached()) {
-						from = static_cast<VensimVariableElement*>(elements[cele->From() + 1]);
-					}
 					VensimVariableElement* to = static_cast<VensimVariableElement*>(elements[cele->To()]);
-					if (to->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->To()])->Attached())
-						to = static_cast<VensimVariableElement*>(elements[cele->To() + 1]);
-					if (from && from->Type() == VensimViewElement::ElementTypeVARIABLE && to && to->Type() == VensimViewElement::ElementTypeVARIABLE &&
-						to->GetVariable() && 
-						to->GetVariable()->VariableType() != XMILE_Type_STOCK)
+					if (from && to)
 					{
-						// valid xmile connector
-						tinyxml2::XMLElement* xconnector = doc->NewElement("connector");
-						element->InsertEndChild(xconnector);
-						xconnector->SetAttribute("uid", uid);
-						// try to figure out the angle based on the 3 points - 
-						xconnector->SetAttribute("angle", AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y()));
-						tinyxml2::XMLElement* xfrom = doc->NewElement("from");
-						xconnector->InsertEndChild(xfrom);
-						if (from->Ghost(NULL))
-						{
-							tinyxml2::XMLElement* xalias = doc->NewElement("alias");
-							xfrom->InsertEndChild(xalias);
-							xalias->SetAttribute("uid", view->UIDOffset() + cele->From());
+						// if from is a valve we switch it to the next element in the list which should be a var
+						if (from->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->From()])->Attached()) {
+							from = static_cast<VensimVariableElement*>(elements[cele->From() + 1]);
 						}
-						else if (from->GetVariable())
+						if (to->Type() == VensimViewElement::ElementTypeVALVE && static_cast<VensimValveElement*>(elements[cele->To()])->Attached())
+							to = static_cast<VensimVariableElement*>(elements[cele->To() + 1]);
+						if (from->Type() == VensimViewElement::ElementTypeVARIABLE && to && to->Type() == VensimViewElement::ElementTypeVARIABLE &&
+							to->GetVariable() &&
+							to->GetVariable()->VariableType() != XMILE_Type_STOCK)
 						{
-							xfrom->SetText(QuotedSpaceToUnderBar(from->GetVariable()->GetAlternateName()).c_str());
+							// valid xmile connector
+							tinyxml2::XMLElement* xconnector = doc->NewElement("connector");
+							element->InsertEndChild(xconnector);
+							xconnector->SetAttribute("uid", uid);
+							// try to figure out the angle based on the 3 points - 
+							xconnector->SetAttribute("angle", AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y()));
+							tinyxml2::XMLElement* xfrom = doc->NewElement("from");
+							xconnector->InsertEndChild(xfrom);
+							if (from->Ghost(NULL))
+							{
+								tinyxml2::XMLElement* xalias = doc->NewElement("alias");
+								xfrom->InsertEndChild(xalias);
+								xalias->SetAttribute("uid", view->UIDOffset() + cele->From());
+							}
+							else if (from->GetVariable())
+							{
+								xfrom->SetText(QuotedSpaceToUnderBar(from->GetVariable()->GetAlternateName()).c_str());
+							}
+							tinyxml2::XMLElement* xto = doc->NewElement("to");
+							xconnector->InsertEndChild(xto);
+							xto->SetText(QuotedSpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
 						}
-						tinyxml2::XMLElement* xto = doc->NewElement("to");
-						xconnector->InsertEndChild(xto);
-						xto->SetText(QuotedSpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
 					}
 				}
 			}
