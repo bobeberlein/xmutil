@@ -58,6 +58,8 @@ public:
    void MacroExpression(Variable *macro, ExpressionList *margs);
    void MacroEnd();
 
+   double Xratio() const { return _xratio; }
+   double Yratio() const { return _yratio; }
    VensimLex& Lexer() { return mVensimLex; }
    char *GetInt(char *buf, int& val);
    char *GetIntChar(char *buf, int& val, char c);
@@ -75,6 +77,8 @@ private :
    SymbolNameSpace *pSymbolNameSpace ;
    SymbolNameSpace* pMainSymbolNameSpace;
    Variable *pActiveVar ;
+   double _xratio;
+   double _yratio;
    bool mInMacro;
    bool bLongName;
    std::vector<MacroFunction*> mMacroFunctions;

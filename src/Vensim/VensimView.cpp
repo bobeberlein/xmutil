@@ -161,6 +161,16 @@ VensimConnectorElement::VensimConnectorElement(int from, int to, int x, int y)
 	_y = y;
 }
 
+bool VensimConnectorElement::ScalePoints(double xs, double ys, int xo, int yo)
+{
+	if (_x != 0 || _y != 0) // invalide leave it alone
+	{
+		_x = _x * xs + xo;
+		_y = _y * ys + yo;
+	}
+	return true;
+}
+
 void VensimView::ReadView(VensimParse* parser, char* buf)
 {
 	VensimLex& lexer = parser->Lexer();
@@ -181,6 +191,7 @@ void VensimView::ReadView(VensimParse* parser, char* buf)
 				len = uid + 25;
 				vElements.resize(len + 1, NULL);
 			}
+			assert(vElements[uid] == NULL);
 			switch (type)
 			{
 			case 10: // a variable
@@ -216,7 +227,7 @@ int VensimView::GetNextUID()
 	return GetNextUID();
 }
 
-int VensimView::SetViewStart(int startx, int starty, int uid_start)
+int VensimView::SetViewStart(int startx, int starty, double xratio, double yratio, int uid_start)
 {
 	_uid_offset = uid_start;
 	if (this->vElements.empty())
@@ -233,14 +244,19 @@ int VensimView::SetViewStart(int startx, int starty, int uid_start)
 				min_y = ele->Y();
 		}
 	}
-	int off_x = startx - min_x;
-	int off_y = starty - min_y;
+	int off_x = std::round(startx - min_x*xratio);
+	int off_y = std::round(starty - min_y*yratio);
 	for (VensimViewElement *ele: vElements)
 	{
 		if (ele)
 		{
-			ele->SetX(ele->X() + off_x);
-			ele->SetY(ele->Y() + off_y);
+			if (!ele->ScalePoints(xratio, yratio, off_x, off_y))
+			{
+				ele->SetX(std::round(ele->X() * xratio + off_x));
+				ele->SetY(std::round(ele->Y() * yratio + off_y));
+				ele->SetWidth(std::round(ele->Width() * xratio));
+				ele->SetHeight(std::round(ele->Height() * yratio));
+			}
 		}
 	}
 	return _uid_offset + vElements.size();

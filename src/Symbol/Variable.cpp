@@ -263,6 +263,10 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		return mVariableType; // done
 	}
 
+	// if no active causes we don't need flows
+	if (flow_lists.size() == 1 && flow_lists[0].Empty())
+		return mVariableType;
+
 	// mismatched for invalid flow equations - create a flow variable and add it to the model
 	std::string basename = this->GetName() + " net flow";
 	std::string name = basename;

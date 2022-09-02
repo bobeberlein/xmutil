@@ -7,9 +7,11 @@
 #include "../Vensim/VensimView.h"
 #include "../Symbol/ExpressionList.h"
 
-XMILEGenerator::XMILEGenerator(Model* model)
+XMILEGenerator::XMILEGenerator(Model* model, double xratio, double yratio)
 {
 	_model = model;
+	_xratio = xratio;
+	_yratio = yratio;
 }
 
 std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string>& errs, bool as_sectors)
@@ -956,7 +958,7 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 		submodel->InsertEndChild(xviews);
 		tinyxml2::XMLElement* xview = doc->NewElement("view");
 		xviews->InsertEndChild(xview);
-		uid_off = view->SetViewStart(100, 100, uid_off);
+		uid_off = view->SetViewStart(100, 100, _xratio, _yratio, uid_off);
 		this->generateView(view, xview, errs, &needed);
 	}
 	std::set<Variable*> remnant;
@@ -1013,7 +1015,7 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement* element, tinyxml2
 	{
 		VensimView* view = static_cast<VensimView*>(gview);
 		// first update geometry - we put views one after another along the y axix - could lay out in pages or something
-		uid_off = view->SetViewStart(x, y+20, uid_off);
+		uid_off = view->SetViewStart(x, y+20, _xratio, _yratio, uid_off);
 		int width = view->GetViewMaxX(100);
 		int height = view->GetViewMaxY(y + 80) - y;
 		// add a surrounding sector to contain this view - call it the view name
@@ -1066,6 +1068,18 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					element->InsertEndChild(xghost);
 					xghost->SetAttribute("x", vele->X());
 					xghost->SetAttribute("y", vele->Y());
+					if (vele->GetVariable() && vele->GetVariable()->VariableType() == XMILE_Type_STOCK)
+					{
+						xghost->SetAttribute("x", vele->X()-22);
+						xghost->SetAttribute("y", vele->Y()-17);
+						xghost->SetAttribute("width", 45);
+						xghost->SetAttribute("height", 35);
+					}
+					else
+					{
+						xghost->SetAttribute("x", vele->X());
+						xghost->SetAttribute("y", vele->Y());
+					}
 					xghost->SetAttribute("uid", uid);
 					tinyxml2::XMLElement* xof = doc->NewElement("of");
 					xghost->InsertEndChild(xof);
@@ -1103,16 +1117,16 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 					{
 						xvar->SetAttribute("x", elements[local_uid - 1]->X());
 						xvar->SetAttribute("y", elements[local_uid-1]->Y());
-
 					}
 					else
 					{
-						if (type == XMILE_Type_STOCK && !vele->CrossLevel() && (vele->Width() > 60 || vele->Height() > 40))
+						// pretty big things - Vensim's default size is 80x40 - width and height are half vals so a fair bit bigger 90x50 then bring size across
+						if (type == XMILE_Type_STOCK && !vele->CrossLevel() && !vele->Ghost(NULL) && (vele->Width() > 45 || vele->Height() > 25))
 						{
 							int x = vele->X();
 							int y = vele->Y();
-							int width = vele->Width();
-							int height = vele->Height();
+							int width = 2*vele->Width();
+							int height = 2*vele->Height();
 							if (width < 60)
 								width = 60;
 							if (height < 40)
@@ -1265,6 +1279,11 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 							element->InsertEndChild(xconnector);
 							xconnector->SetAttribute("uid", uid);
 							// try to figure out the angle based on the 3 points - 
+#ifndef NDEBUG
+							double thetax = 999;
+							if (to->GetVariable()->GetName() == "US crude death rate")
+								thetax = AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y());
+#endif
 							xconnector->SetAttribute("angle", AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y()));
 							tinyxml2::XMLElement* xfrom = doc->NewElement("from");
 							xconnector->InsertEndChild(xfrom);

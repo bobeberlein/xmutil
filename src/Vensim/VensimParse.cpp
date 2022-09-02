@@ -310,6 +310,30 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
 		   this->mVensimLex.ReadLine(buf, BUFLEN); 
 		   view->SetTitle(buf + 1); // skip the star - we can try to name modules with this eventually subject to name collisions
 		   this->mVensimLex.ReadLine(buf, BUFLEN); // default font info - we can try to grab this later
+		   int pos = 0;
+		   char* tv = buf;
+		   for (; pos < 8; pos++)
+		   {
+			   tv = strchr(tv, '|');
+			   if (tv)
+				   tv++;
+			   else
+				   break;
+		   }
+		   // the following does not really help
+		   //if (tv)
+		   //{
+			  // int ppix = 72;
+			  // int ppiy = 72;
+			  // sscanf(tv,"%d,%d",&ppix,&ppiy);
+			  // _xratio = 72.0 / (double)ppix;
+			  // _yratio = 72.0 / (double)ppiy;
+		   //}
+		   //else
+		   {
+			   _xratio = 1.0;
+			   _yratio = 1.0;
+		   }
 		   view->ReadView(this, buf); // will return with buf populated at next view
 	   }
 	   // there may be options at the end

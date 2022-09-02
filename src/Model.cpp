@@ -677,7 +677,7 @@ std::vector<Variable*> Model::GetVariables(SymbolNameSpace *ns)
 	return vars;
 }
 
-std::string Model::PrintXMILE(bool isCompact, std::vector<std::string> &errs) {
-    XMILEGenerator generator(this);
+std::string Model::PrintXMILE(bool isCompact, std::vector<std::string> &errs, double xscale, double yscale) {
+    XMILEGenerator generator(this, xscale, yscale);
     return generator.Print(isCompact, errs, bAsSectors);
 }

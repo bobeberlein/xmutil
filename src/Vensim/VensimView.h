@@ -15,12 +15,15 @@ class VensimViewElement
 public:
 	enum ElementType { ElementTypeVARIABLE, ElementTypeVALVE, ElementTypeCOMMENT, ElementTypeCONNECTOR};
 	virtual ElementType Type() = 0;
+	virtual bool ScalePoints(double xratio, double yratio, int offx, int offy) { return false; }
 	int X() { return _x; }
 	void SetX(int x) { _x = x; }
 	int Y() { return _y; }
 	void SetY(int y) { _y = y; }
 	int Width() const { return _width; }
+	void SetWidth(int w) { _width = w; }
 	int Height() const { return _height; }
+	void SetHeight(int h) { _height = h; }
 protected:
 	int _x;
 	int _y;
@@ -67,6 +70,7 @@ public:
 	ElementType Type() { return ElementTypeCONNECTOR; }
 	VensimConnectorElement(char *curpos, char*buf, VensimParse* parser);
 	VensimConnectorElement(int from, int to, int x, int y);
+	virtual bool ScalePoints(double xratio, double yratio, int offx, int offy) override;
 	int From() { return _from; }
 	int To() { return _to; }
 	void Invalidate() { _to = _from = 0;  }
@@ -95,7 +99,7 @@ public:
 	void RemoveExtraArrowsIn(std::vector<Variable*> ins, int target);
 	int FindVariable(Variable* in, int x, int y); // add if necessary - returns UID
 
-	int SetViewStart(int x, int y, int uid); // returns last uid val + 1
+	int SetViewStart(int x, int y, double xratio, double yratio, int uid); // returns last uid val + 1
 	int GetViewMaxX(int defval);
 	int GetViewMaxY(int defval);
 	int UIDOffset() { return _uid_offset; }

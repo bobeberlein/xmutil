@@ -33,7 +33,7 @@ public:
    void CheckGhostOwners();
    void AttachStragglers(); // try to get diagramatic stuff right
    void MakeViewNamesUnique();
-   std::string PrintXMILE(bool isCompact, std::vector<std::string> &errs);
+   std::string PrintXMILE(bool isCompact, std::vector<std::string> &errs, double xscale, double yscale);
 
    double GetConstanValue(const char *var, double defval);
    UnitExpression* GetUnits(const char *var);

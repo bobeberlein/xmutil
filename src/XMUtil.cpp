@@ -78,7 +78,6 @@ bool StringMatch(const std::string& f, const std::string& s)
 
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy)
 {
-	assert(startx > 0 && starty > 0 && pointx > 0 && pointy > 0 && endx > 0 && endy > 0);
 	double thetax;
 	if (endx > startx)
 		thetax = -atan((endy - starty) / (endx - startx)) * 180 / 3.14159265358979;
@@ -89,7 +88,8 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 	else
 		thetax = 90;
 	// straight line connector- use this if geometry fails
-	//return thetax;
+	if (pointx == 0 && pointy == 0)
+	   return thetax;
 
 	// first take the start and end point - the center of the circle is on a line perpindicular
 	// to the line between them and intersects it at its midpoint
@@ -191,6 +191,7 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 	thetax = atan2(-(starty - centery), (startx - centerx)) * 180 / 3.14159265358979;
 	// this needs to go through the point - so add or subtract 90 to get o 
 	// find the angle closest to the angle from start to point
+
 	double direct = atan2 ( -(pointy - starty), (pointx - startx)) * 180 / 3.14159265358979;
 	double diff1 = direct - (thetax - 90);
 	while (diff1 < 0)
@@ -299,6 +300,8 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
     }
 
     // parse the input
+	double xscale = 1.0;
+	double yscale = 1.0;
     {
         VensimParse vp{&m};
         vp.SetLongName(isLongName);
@@ -306,6 +309,8 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
         if (!vp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
             return nullptr;
         }
+		xscale = vp.Xratio();
+		yscale = vp.Yratio();
     }
 
     // if(m->AnalyzeEquations()) {
@@ -336,7 +341,7 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
 
     // TODO: expose errs
     std::vector<std::string> errs;
-    std::string xmile = m.PrintXMILE(isCompact, errs);
+    std::string xmile = m.PrintXMILE(isCompact, errs, xscale, yscale);
 
     if (errs.size() != 0) {
         return nullptr;

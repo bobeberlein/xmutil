@@ -15,7 +15,7 @@ class Variable;
 class XMILEGenerator
 {
 public:
-	XMILEGenerator(Model* model);
+	XMILEGenerator(Model* model, double xtrario, double yratio);
 
 	std::string Print(bool is_compact, std::vector<std::string>& errs, bool as_sectors);
 
@@ -32,6 +32,8 @@ protected:
 
 private:
 	Model* _model;
+	double _xratio;
+	double _yratio;
 };
 
 #endif
