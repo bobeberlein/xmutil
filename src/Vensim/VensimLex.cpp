@@ -135,6 +135,7 @@ int VensimLex::ReadTabbedArray(void)
       }
       if(toktype != VPTT_number)
          throw "Bad numbers" ;
+	  vpyylval.num = atof(sToken.c_str());
       ent->AddValue(row,vpyylval.num) ;
       // test for \n
       while ((c = GetNextChar(false))) {

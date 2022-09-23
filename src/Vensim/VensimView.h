@@ -75,10 +75,12 @@ public:
 	int To() { return _to; }
 	void Invalidate() { _to = _from = 0;  }
 	bool FromAsAlias(); // in this case From will send back a number
+	char Polarity() const { return _polarity; }
 private:
 	int _from;
 	int _to;
 	int _npoints;
+	char _polarity;
 };
 
 class VensimView : public View

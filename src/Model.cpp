@@ -14,6 +14,7 @@ Model::Model(void)
    dLevel = dRate = dAux = NULL ;
    bAsSectors = false;
    iIntegrationType = Integration_Type_EULER;
+   bLetterPolarity = false;
 }
 
 

@@ -68,6 +68,10 @@ public:
    void SetLongName(bool set) { bLongName = set; }
    bool LongName() const { return bLongName; }
 
+   bool LetterPolarity() const;
+   void SetLetterPolarity(bool set);
+
+
 private :
    bool FindNextEq(bool want_comment) ;
    Model* _model;

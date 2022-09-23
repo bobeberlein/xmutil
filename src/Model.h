@@ -52,6 +52,9 @@ public:
    void SetAsSectors(bool set) { bAsSectors = set; }
    bool AsSectors() const { return bAsSectors; }
 
+   void SetLetterPolarity(bool set) { bLetterPolarity = set; }
+   bool LetterPolarity() const { return bLetterPolarity; }
+
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
    bool SetupVariableStates(int pass) ;
@@ -81,6 +84,7 @@ private :
    double *dRate ;
    double *dAux ;
    bool bAsSectors;
+   bool bLetterPolarity;
 
 };
 

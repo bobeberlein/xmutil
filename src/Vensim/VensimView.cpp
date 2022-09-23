@@ -133,7 +133,20 @@ VensimConnectorElement::VensimConnectorElement(char *curpos, char *buf, VensimPa
 	std::string ignore;
 	curpos = parser->GetString(curpos, ignore);
 	curpos = parser->GetString(curpos, ignore);
-	curpos = parser->GetString(curpos, ignore);
+	int polarity_ascii;
+	curpos = parser->GetInt(curpos, polarity_ascii);
+	if (polarity_ascii == 'S' || polarity_ascii == 's')
+	{
+		parser->SetLetterPolarity(true);
+		_polarity = '+';
+	}
+	else if (polarity_ascii == 'O' || polarity_ascii == '0')
+	{
+		parser->SetLetterPolarity(true);
+		_polarity = '-';
+	}
+	else
+		_polarity = polarity_ascii; // might be invalid
 	curpos = parser->GetString(curpos, ignore);
 	curpos = parser->GetString(curpos, ignore);
 	curpos = parser->GetString(curpos, ignore);

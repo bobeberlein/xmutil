@@ -957,6 +957,8 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 		tinyxml2::XMLElement* xviews = doc->NewElement("views");
 		submodel->InsertEndChild(xviews);
 		tinyxml2::XMLElement* xview = doc->NewElement("view");
+		if (_model->LetterPolarity())
+			xview->SetAttribute("isee:use_lettered_polarity", "true");
 		xviews->InsertEndChild(xview);
 		uid_off = view->SetViewStart(100, 100, _xratio, _yratio, uid_off);
 		this->generateView(view, xview, errs, &needed);
@@ -1009,6 +1011,8 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement* element, tinyxml2
 	y = 100;
 	// all the views against a single xmile view - or break up into modules - need vector of models as input to do that
 	tinyxml2::XMLElement* xview = doc->NewElement("view");
+	if (_model->LetterPolarity())
+		xview->SetAttribute("isee:use_lettered_polarity", "true");
 	element->InsertEndChild(xview);
 	int uid_off = 0;
 	for (View* gview: views)
@@ -1285,6 +1289,13 @@ void XMILEGenerator::generateView(VensimView* view, tinyxml2::XMLElement* elemen
 								thetax = AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y());
 #endif
 							xconnector->SetAttribute("angle", AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y()));
+							if (cele->Polarity())
+							{
+								char cbuf[2];
+								cbuf[0] = cele->Polarity();
+								cbuf[1] = 0;
+								xconnector->SetAttribute("polarity", cbuf);
+							}
 							tinyxml2::XMLElement* xfrom = doc->NewElement("from");
 							xconnector->InsertEndChild(xfrom);
 							if (from->Ghost(NULL))

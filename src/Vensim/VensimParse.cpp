@@ -732,3 +732,12 @@ void VensimParse::MacroEnd()
 	pSymbolNameSpace = pMainSymbolNameSpace;
 	mInMacro = false;
 }
+
+bool VensimParse::LetterPolarity() const
+{ 
+	return _model->LetterPolarity(); 
+}
+void VensimParse::SetLetterPolarity(bool set)
+{
+	_model->SetLetterPolarity(set); 
+}
