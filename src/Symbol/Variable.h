@@ -144,7 +144,8 @@ public:
    std::string GetAlternateName(void);
 
    void PurgeAFOEq();
-   XMILE_Type MarkFlows(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
+   XMILE_Type MarkTypes(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
+   void MarkStockFlows(SymbolNameSpace* sns); // mark the variableType of inflows/outflows
    XMILE_Type VariableType() { return mVariableType; }
    void SetVariableType(XMILE_Type t) { mVariableType = t; }
 

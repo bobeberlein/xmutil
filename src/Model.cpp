@@ -424,9 +424,14 @@ bool Model::MarkVariableTypes(SymbolNameSpace* ns)
 		for (Variable* var: vars)
 		{
             var->PurgeAFOEq();
-			var->MarkFlows(ns); // may change number of entries so can't be in above loop
+			var->MarkTypes(ns); // may change number of entries so can't be in above loop
 		}
-		// don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();
+        // repeat this for flows after all stocks marked
+        for (Variable* var : vars)
+        {
+            var->MarkStockFlows(ns); // may change number of entries so can't be in above loop
+        }
+        // don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();
 	}
 	catch (...) {
 		ns->DeleteAllUnconfirmedAllocations();

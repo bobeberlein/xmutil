@@ -76,6 +76,8 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 				fl->SetValid(false);
 			else
 			{
+				if (var->VariableType() == XMILE_Type_STOCK)
+					fl->SetValid(false);
 				fl->AddOutflow(var);
 				var->SetHasUpstream(true);
 			}
@@ -86,6 +88,8 @@ static void is_all_plus_minus(Expression *e, FlowList* fl,bool neg)
 				fl->SetValid(false);
 			else
 			{
+				if (var->VariableType() == XMILE_Type_STOCK)
+					fl->SetValid(false);
 				fl->AddInflow(var);
 				var->SetHasDownstream(true);
 			}

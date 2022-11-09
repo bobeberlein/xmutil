@@ -106,7 +106,7 @@ void Variable::PurgeAFOEq()
 }
 
 
-XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
+XMILE_Type Variable::MarkTypes(SymbolNameSpace* sns)
 {
 	if (!pVariableContent)
 		return mVariableType;
@@ -122,15 +122,15 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 
 	/* if the equations are INTEG this is a stock and we need to validate flows - if we need to make
 	   up flows it has to be done here so that all the equations get the same net flow name
-       we make up flows if the active part of INTEG uses something other then +/- of flows or 
+	   we make up flows if the active part of INTEG uses something other then +/- of flows or
 	   if there are multiple equations that don't match (even if they all use +/- of flows)
 
 	   */
-	//first pass - just figure out if there is anything to do - 
+	   //first pass - just figure out if there is anything to do - 
 	bool gotone = false;
 	size_t n = equations.size();
 	for (size_t i = 0; i < n; i++)
-	{ 
+	{
 		Equation* eq = equations[i];
 		Expression* exp = eq->GetExpression();
 		if (exp->GetType() == EXPTYPE_Symlist)
@@ -184,7 +184,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 					}
 					// now reenter with new equations
 					pVariableContent->SetAllEquations(equations);
-					return MarkFlows(sns);
+					return MarkTypes(sns);
 				}
 			}
 		}
@@ -202,7 +202,7 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 				exp->GetVarsUsed(vars);
 				// the first should be a graphical
 				std::vector<Equation*> eqs = vars[0]->GetAllEquations();
-				for (Equation* eq: eqs)
+				for (Equation* eq : eqs)
 				{
 					Expression* exp = eq->GetExpression();
 					if (exp->GetType() == EXPTYPE_Table)
@@ -231,10 +231,21 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 		return mVariableType;
 	}
 	mVariableType = XMILE_Type_STOCK;
+	return mVariableType;
+}
 
+void Variable::MarkStockFlows(SymbolNameSpace* sns)
+{
 	// second pass, get the flow lists for everyone -- NOTE there is a bug in this code
 	// because we don't check subscripts on the flows list so they may match even though
 	// they shouldn't eg STOCK[A]=INTEG(FLOW[B],0) STOCK[B]=INTEG(FLOW[A],0) 
+
+	if (mVariableType != XMILE_Type_STOCK)
+		return;
+	std::vector<Equation*>equations = pVariableContent->GetAllEquations();
+	if (equations.empty())
+		return;
+
 	std::vector<FlowList> flow_lists;
 	flow_lists.resize(equations.size());
 	size_t i = 0;
@@ -260,12 +271,12 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 			v->SetVariableType(XMILE_Type_FLOW);
 			mOutflows.push_back(v);
 		}
-		return mVariableType; // done
+		return; // done
 	}
 
 	// if no active causes we don't need flows
 	if (flow_lists.size() == 1 && flow_lists[0].Empty())
-		return mVariableType;
+		return;
 
 	// mismatched for invalid flow equations - create a flow variable and add it to the model
 	std::string basename = this->GetName() + " net flow";
@@ -296,7 +307,6 @@ XMILE_Type Variable::MarkFlows(SymbolNameSpace* sns)
 	}
 	// don't do this - we get some memory leakage but risk a crash otherwise v->MarkGoodAlloc();
 
-	return mVariableType;
 }
 
 void VariableContent::Clear(void)
