@@ -117,7 +117,7 @@ bool Model::ValidatePlaceholderVars(void)
 
 bool Model::SetupVariableStates(int pass/* 0 just assign, 1 determine sizes, 2 pass pointers for computation*/)
 {
-   ContextInfo info ;
+   ContextInfo info(NULL) ;
    info.pSymbolNameSpace = &mSymbolNameSpace ;
    SymbolNameSpace::HashTable *ht = mSymbolNameSpace.GetHashTable() ;
    info.iComputeType = pass ; // flag to skip empty or count sizes
@@ -223,7 +223,7 @@ bool Model::OrderEquations(ContextInfo *info,bool tonly)
 
 bool Model::AnalyzeEquations(void)
 {
-   ContextInfo info ;
+   ContextInfo info(NULL) ;
 
    ClearCompEquations() ; // will also reset comp flag and delete placeholder vars
    /* ValidatePlaceholderVars will create the variables required for functions that either
@@ -282,7 +282,7 @@ bool Model::AnalyzeEquations(void)
 
 bool Model::Simulate(void)
 {
-   ContextInfo info ;
+   ContextInfo info(NULL) ;
    try {
       double t,s,e,dt ;
       int i,n ;
@@ -365,7 +365,7 @@ bool Model::Simulate(void)
 
 bool Model::OutputComputable(bool wantshort)
 {
-   ContextInfo info ;
+   ContextInfo info(NULL) ;
    try {
       if(wantshort)
          GenerateShortNames() ;

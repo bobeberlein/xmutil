@@ -75,7 +75,7 @@ std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string>& err
 			tinyxml2::XMLElement* xparm = doc.NewElement("parm");
 			macro->InsertEndChild(xparm);
 			Expression* pexp = args->GetExp(i);
-			ContextInfo info;
+			ContextInfo info(NULL);
 			pexp->OutputComputable(&info);
 			xparm->SetText(info.str().c_str());
 		}
@@ -429,7 +429,7 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 				}
 			}
 			// skip it altogether if it is an A FUNCTION OF equation
-			std::string rhs = eqn->RHSFormattedXMILE(subs, dims, false);
+			std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false);
 			if (eq_count <= 1 || rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
 			{
 				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
@@ -442,7 +442,7 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 				{
 					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
 					xelement->InsertEndChild(xieqn);
-					xieqn->SetText(eqn->RHSFormattedXMILE(subs, dims, true).c_str());
+					xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
 				}
 
 				// if it has a lookup we need to store that separately
@@ -699,7 +699,7 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 				}
 			}
 			// skip it altogether if it is an A FUNCTION OF equation
-			std::string rhs = eqn->RHSFormattedXMILE(subs, dims, false);
+			std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false);
 			if (eq_count <= 1 || rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
 			{
 				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
@@ -712,7 +712,7 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 				{
 					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
 					xelement->InsertEndChild(xieqn);
-					xieqn->SetText(eqn->RHSFormattedXMILE(subs, dims, true).c_str());
+					xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
 				}
 
 				// if it has a lookup we need to store that separately

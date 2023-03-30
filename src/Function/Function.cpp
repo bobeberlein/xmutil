@@ -127,7 +127,9 @@ void FunctionSampleIfTrue::OutputComputable(ContextInfo *info, ExpressionList *a
 	if (arg->Length() == 3)
 	{
 		*info << "( IF ";
+		info->SetSelfIsPrevious(true);
 		const_cast<Expression*>((*arg)[0])->OutputComputable(info); // OutputComputable should really be const
+		info->SetSelfIsPrevious(false);
 		*info << " THEN ";
 		const_cast<Expression*>((*arg)[1])->OutputComputable(info); // OutputComputable should really be const
 		*info << " ELSE PREVIOUS(SELF, ";

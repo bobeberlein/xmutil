@@ -356,6 +356,14 @@ void Variable::AddEq(Equation *eq)
 
 void Variable::OutputComputable(ContextInfo* info)
 {
+	if (info->LHS() == this)
+	{
+		if (info->SelfIsPrevious())
+			*info << "PREVIOUS(SELF, NAN)";
+		else
+			*info << "SELF";
+		return;
+	}
 	if (this->mVariableType == XMILE_Type_ARRAY)
 	{
 		Symbol* s = info->GetLHSSpecific(this);
