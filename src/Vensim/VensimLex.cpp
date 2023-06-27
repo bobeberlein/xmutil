@@ -287,7 +287,8 @@ int VensimLex::NextToken() // also sets token type
 				 PushBack(c, true);
 				 break; // not a number return '.'
 			 }
-         }
+			 GetDigits();
+		 }
          else {
             GetDigits() ;
             c = GetNextChar(true) ;
