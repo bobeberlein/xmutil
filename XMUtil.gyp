@@ -136,8 +136,6 @@
             './src/Dynamo/DynamoParse.cpp',
             './src/Dynamo/DynamoParseFunctions.h',
             './src/Dynamo/DynamoParseFunctions.cpp',
-            './src/Dynamo/DynamoView.h',
-            './src/Dynamo/DynamoView.cpp',
             './src/Dynamo/DYacc.tab.cpp',
             './src/Dynamo/DYacc.tab.hpp',
             './src/Dynamo/DYacc.y',

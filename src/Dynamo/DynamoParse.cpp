@@ -13,7 +13,7 @@
 #define YYSTYPE DynamoParse
 #include "DYacc.tab.hpp"
 #include "../XMUtil.h"
-#include "DynamoView.h"
+#include "../Model.h"
 
 DynamoParse* DPObject = NULL;
 DynamoParse::DynamoParse(Model* model)
