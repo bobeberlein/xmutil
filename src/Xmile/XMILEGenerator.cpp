@@ -7,11 +7,12 @@
 #include "../Vensim/VensimView.h"
 #include "../Symbol/ExpressionList.h"
 
-XMILEGenerator::XMILEGenerator(Model* model, double xratio, double yratio)
+XMILEGenerator::XMILEGenerator(Model* model, double xratio, double yratio, bool from_dynamo)
 {
 	_model = model;
 	_xratio = xratio;
 	_yratio = yratio;
+	_from_dynamo = from_dynamo;
 }
 
 std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string>& errs, bool as_sectors)
@@ -105,13 +106,18 @@ void XMILEGenerator::generateHeader(tinyxml2::XMLElement* element, std::vector<s
 	options->SetAttribute("namespace", "std");
 	element->InsertEndChild(options);
 
-	tinyxml2::XMLElement* vendor = doc->NewElement("vendor");
-	vendor->SetText("Ventana Systems, xmutil");
-	element->InsertEndChild(vendor);
+	if (!_from_dynamo) {
+		tinyxml2::XMLElement* vendor = doc->NewElement("vendor");
+		vendor->SetText("Ventana Systems, xmutil");
+		element->InsertEndChild(vendor);
+	}
 
 	tinyxml2::XMLElement* product = doc->NewElement("product");
 	product->SetAttribute("lang", "en");
-	product->SetText("Vensim, xmutil");
+	if (_from_dynamo)
+		product->SetText("Dynamo, xmutil");
+	else
+		product->SetText("Vensim, xmutil");
 	element->InsertEndChild(product);
 }
 
@@ -144,9 +150,9 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement* element, std::vector
 	else
 		element->SetAttribute("time_units", "Months"); 
 
-	double start = _model->GetConstanValue("INITIAL TIME", -1); // default to 0 if INITIAL TIME is missing or an equation
-	double stop = _model->GetConstanValue("FINAL TIME", 100);
-	double dt = _model->GetConstanValue("TIME STEP", 1);
+	double start = _model->GetConstanValue("INITIAL TIME", _model->initial_time()); // default to 0 if INITIAL TIME is missing or an equation
+	double stop = _model->GetConstanValue("FINAL TIME", _model->final_time());
+	double dt = _model->GetConstanValue("TIME STEP", _model->dt());
 	double saveper = _model->GetConstanValue("SAVEPER", dt);
 	double speed = _model->GetConstanValue("SIMULATION PAUSE", 0);
 
@@ -349,9 +355,24 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 			xvar->InsertEndChild(xcomment);
 		}
 
-		std::vector<Equation*> eqns = var->GetAllEquations();
-		size_t eq_count = eqns.size();
+		std::vector<Equation*> eqns;
+		// for vensim models init equations will always be empty
+		std::vector<Equation*> init_eqns = var->GetAllInitEquations();
+		bool wrap_init = false;
+		if (init_eqns.empty())
+			eqns = var->GetAllEquations();
+		else if (type == XMILE_Type_STOCK)
+			eqns.swap(init_eqns); // init_eqns is used for init values of aux otherwise
+		else {
+			eqns = var->GetAllEquations();
+			if (eqns.empty())
+			{
+				eqns.swap(init_eqns); // dynamo convention can have N equations which should translate to INIT
+				wrap_init = true;
+			}
+		}
 
+		size_t eq_count = eqns.size();
 
 		// dimensions
 		std::vector<Variable*> elmlist;
@@ -434,15 +455,26 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 			{
 				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 				xelement->InsertEndChild(xeqn);
+				if (wrap_init)
+					rhs = "INIT(" + rhs + ")";
 				xeqn->SetText(rhs.c_str());
 
 
 				// it it is active init we need to store that separately
-				if (eqn->IsActiveInit())
+				if (eqn->IsActiveInit() || !init_eqns.empty())
 				{
 					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
 					xelement->InsertEndChild(xieqn);
-					xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					if (eqn->IsActiveInit())
+						xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					else
+					{
+						// this will not work correctly for complicated situations
+						if(eq_ind < init_eqns.size())
+							xieqn->SetText(init_eqns[eq_ind]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+						else
+							xieqn->SetText(init_eqns[0]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					}
 				}
 
 				// if it has a lookup we need to store that separately
@@ -572,6 +604,12 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 			tinyxml2::XMLElement* units = doc->NewElement("units");
 			xvar->InsertEndChild(units);
 			units->SetText(un->GetEquationString().c_str());
+		}
+		else if (!var->GetUnitsString().empty())
+		{
+			tinyxml2::XMLElement* units = doc->NewElement("units");
+			xvar->InsertEndChild(units);
+			units->SetText(var->GetUnitsString().c_str());
 		}
 	}
 	if (want_diagram)
@@ -619,7 +657,22 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 			xvar->InsertEndChild(xcomment);
 		}
 
-		std::vector<Equation*> eqns = var->GetAllEquations();
+		std::vector<Equation*> eqns;
+		// for vensim models init equations will always be empty
+		std::vector<Equation*> init_eqns = var->GetAllInitEquations();
+		bool wrap_init = false;
+		if (init_eqns.empty())
+			eqns = var->GetAllEquations();
+		else if (type == XMILE_Type_STOCK)
+			eqns.swap(init_eqns); // init_eqns is used for init values of aux otherwise
+		else {
+			eqns = var->GetAllEquations();
+			if (eqns.empty())
+			{
+				eqns.swap(init_eqns); // dynamo convention can have N equations which should translate to INIT
+				wrap_init = true;
+			}
+		}
 		size_t eq_count = eqns.size();
 
 
@@ -704,15 +757,27 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 			{
 				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
 				xelement->InsertEndChild(xeqn);
+				if (wrap_init)
+					rhs = "INIT(" + rhs + ")";
 				xeqn->SetText(rhs.c_str());
 
 
+
 				// it it is active init we need to store that separately
-				if (eqn->IsActiveInit())
+				if (eqn->IsActiveInit() || !init_eqns.empty())
 				{
 					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
 					xelement->InsertEndChild(xieqn);
-					xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					if (eqn->IsActiveInit())
+						xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					else
+					{
+						// this will not work correctly for complicated situations
+						if (eq_ind < init_eqns.size())
+							xieqn->SetText(init_eqns[eq_ind]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+						else
+							xieqn->SetText(init_eqns[0]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					}
 				}
 
 				// if it has a lookup we need to store that separately
@@ -843,6 +908,12 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 			xvar->InsertEndChild(units);
 			units->SetText(un->GetEquationString().c_str());
 		}
+		else if (!var->GetUnitsString().empty())
+		{
+			tinyxml2::XMLElement* units = doc->NewElement("units");
+			xvar->InsertEndChild(units);
+			units->SetText(var->GetUnitsString().c_str());
+		}
 	}
 }
 
@@ -856,6 +927,8 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 	tinyxml2::XMLDocument* doc = element->GetDocument();
 	if (views.size() < 2)
 	{
+		if (generateModelAsGroups(element, errs, ns))
+			return;
 		tinyxml2::XMLElement* model = doc->NewElement("model");
 		generateModelAsSectors(model, errs, ns, true);
 		element->InsertEndChild(model);
@@ -882,8 +955,11 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 
 	for (View* gview : views)
 	{
+		if (gview->empty())
+			continue;
 		VensimView* view = static_cast<VensimView*>(gview);
 		tinyxml2::XMLElement* submodel = doc->NewElement("model");
+		assert(!view->Title().empty());
 		submodel->SetAttribute("name", view->Title().c_str());
 		element->InsertEndChild(submodel);
 
@@ -973,8 +1049,156 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement* element, std::
 	//tinyxml2::XMLElement* views = doc->NewElement("views");
 	//this->generateSectorViews(views, variables, errs, ns == NULL);
 	//element->InsertEndChild(views);
-
 }
+
+bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns)
+{
+	tinyxml2::XMLDocument* doc = element->GetDocument();
+	std::vector<ModelGroup*>& groups = _model->Groups();
+	int used_groups = 0;
+	for (ModelGroup* group : groups)
+	{
+		if (!group->vVariables.empty())
+			used_groups++;
+	}
+	if (used_groups < 2)
+		return false;
+
+	groups.push_back(new ModelGroup("Other not Grouped",NULL));
+	// we use addess of group for simplicity
+	std::vector<Variable*> vars = _model->GetVariables(ns); // all symbols that are variables
+	// for every variable in a view, put its causes into the same view if they are not in any view 
+	// otherwise we let the go cross level
+	for (Variable* var : vars)
+	{
+		if (!var->GetGroup() 
+			&& var->VariableType() != XMILE_Type_ARRAY
+			&& var->VariableType() != XMILE_Type_ARRAY_ELM
+			&& var->VariableType() != XMILE_Type_UNKNOWN
+			)
+		{
+			var->SetGroup(groups.back());
+			groups.back()->vVariables.push_back(var);
+		}
+	}
+	// all vars are now grouped
+
+	tinyxml2::XMLElement* mainmodel = doc->NewElement("model");
+	element->InsertEndChild(mainmodel);
+	tinyxml2::XMLElement* mainvariables = doc->NewElement("variables");
+	mainmodel->InsertEndChild(mainvariables);
+	for (ModelGroup* group : groups)
+	{
+		if (!group->vVariables.empty() && group->pOwner == NULL)
+		{
+			group->pModule = doc->NewElement("module");
+			group->pModule->SetAttribute("name", group->sName.c_str());
+			mainvariables->InsertEndChild(group->pModule);
+		}
+	}
+
+	// set up the module constucts - these need to be filled in before any cross levels are created
+	for (ModelGroup* group : groups)
+	{
+		if (group->vVariables.empty())
+			continue;
+		group->pModel = doc->NewElement("model");
+		assert(!group->sName.empty());
+		group->pModel->SetAttribute("name", group->sName.c_str());
+		element->InsertEndChild(group->pModel);
+		group->pVariables = doc->NewElement("variables");
+		group->pModel->InsertEndChild(group->pVariables);
+		//  find any modules that we own
+		for (ModelGroup* sgroup : groups)
+		{
+			if (sgroup->pOwner == group)
+			{
+				sgroup->pModule = doc->NewElement("module");
+				sgroup->pModule->SetAttribute("name", sgroup->sName.c_str());
+				group->pVariables->InsertEndChild(sgroup->pModule);
+			}
+		}
+	}
+	//now output cross levels and actual variables
+	for (ModelGroup* group : groups)
+	{
+		if (group->vVariables.empty())
+			continue;
+		// first we get a list of variables included in the view and all of their inputs - if an
+		// input is not in the view we need to make a ghost to hold its place 
+		std::set<Variable*> included;
+		for (Variable* var : group->vVariables)
+		{
+			if (var->Unwanted())
+				continue;
+			included.insert(var);
+		}
+		std::set<Variable*> needed;
+		for (Variable* var : included)
+		{
+			std::vector<Variable*> inputs = var->GetInputVars();
+			for (Variable* input : inputs)
+			{
+				if (included.find(input) == included.end()
+					&& input->VariableType() != XMILE_Type_ARRAY
+					&& input->VariableType() != XMILE_Type_ARRAY_ELM
+					&& input->VariableType() != XMILE_Type_UNKNOWN
+					&& !StringMatch(input->GetName(), "Time")
+					&& !input->Unwanted()
+					)
+				{
+					needed.insert(input);
+				}
+			}
+			inputs = var->GetInitInputVars();
+			for (Variable* input : inputs)
+			{
+				if (included.find(input) == included.end()
+					&& input->VariableType() != XMILE_Type_ARRAY
+					&& input->VariableType() != XMILE_Type_ARRAY_ELM
+					&& input->VariableType() != XMILE_Type_UNKNOWN
+					&& !StringMatch(input->GetName(), "Time")
+					&& !input->Unwanted()
+					)
+				{
+					needed.insert(input);
+				}
+			}
+		}
+
+		// needed will be cross level 
+
+		// and mark the cross levels
+		for (Variable* var : needed)
+		{
+			tinyxml2::XMLElement* connect = doc->NewElement("connect");
+			std::string to = group->sName + "." + var->GetAlternateName();
+			connect->SetAttribute("to", SpaceToUnderBar(to).c_str());
+			std::string from;
+			from = var->GetGroup()->sName;
+			from += "." + var->GetAlternateName();
+			connect->SetAttribute("from", SpaceToUnderBar(from).c_str());
+			var->GetGroup()->pModule->InsertEndChild(connect); // receiving module
+		}
+		generateEquations(included, doc, group->pVariables);
+		// for the incomming cross levels they get no equations but need to be included as variables
+		for (Variable* var : needed)
+		{
+			tinyxml2::XMLElement* xvar;
+			if (var->VariableType() == XMILE_Type_STOCK)
+				xvar = doc->NewElement("stock");
+			else
+				xvar = doc->NewElement("aux");
+
+			group->pVariables->InsertEndChild(xvar);
+			xvar->SetAttribute("name", var->GetAlternateName().c_str());
+			xvar->SetAttribute("access", "input"); // let the receiving softwwre take care out output access
+		}
+	}
+	return true;
+}
+
+
 
 
 void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement* element, tinyxml2::XMLElement* xvars, std::vector<std::string>& errs, bool mainmodel)
@@ -984,17 +1208,17 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement* element, tinyxml2
 	std::vector<View*>& views = _model->Views();
 	if (views.empty() && mainmodel)
 	{
-		std::vector<ModelGroup>& groups = _model->Groups();
+		std::vector<ModelGroup*>& groups = _model->Groups();
 		if (!groups.empty())
 		{
-			for (ModelGroup& group: groups)
+			for (ModelGroup* group: groups)
 			{
 				tinyxml2::XMLElement* xgroup = doc->NewElement("group");
-				xgroup->SetAttribute("name", group.sName.c_str());
-				if (group.sOwner != group.sName)
-					xgroup->SetAttribute("owner", group.sOwner.c_str());
+				xgroup->SetAttribute("name", group->sName.c_str());
+				if (group->pOwner)
+					xgroup->SetAttribute("owner", group->pOwner->sName.c_str());
 				element->InsertEndChild(xgroup);
-				for (Variable* var: group.vVariables)
+				for (Variable* var: group->vVariables)
 				{
 					tinyxml2::XMLElement* xvar = doc->NewElement("var");
 					xvar->SetText(SpaceToUnderBar(var->GetAlternateName()).c_str());

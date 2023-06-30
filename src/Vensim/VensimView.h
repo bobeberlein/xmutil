@@ -16,6 +16,7 @@ public:
 	enum ElementType { ElementTypeVARIABLE, ElementTypeVALVE, ElementTypeCOMMENT, ElementTypeCONNECTOR};
 	virtual ElementType Type() = 0;
 	virtual bool ScalePoints(double xratio, double yratio, int offx, int offy) { return false; }
+	virtual Variable* GetVariable() const { return NULL; }
 	int X() { return _x; }
 	void SetX(int x) { _x = x; }
 	int Y() { return _y; }
@@ -38,7 +39,7 @@ public:
 	VensimVariableElement(VensimView* view, char *curpos, char*buf, VensimParse* parser);
 	VensimVariableElement(VensimView* view, Variable* var, int x, int y);
 	ElementType Type() { return ElementTypeVARIABLE; }
-	Variable* GetVariable() { return _variable; }
+	virtual Variable* GetVariable() const override { return _variable; }
 	bool Ghost(std::set<Variable*>* adds);
 	bool CrossLevel() { return _cross_level; }
 	void SetGhost(bool set) { _ghost = set; }
@@ -91,6 +92,7 @@ public:
 	void ReadView(VensimParse* parser, char* buf);
 	int GetNextUID();
 	VensimViewElements& Elements() { return vElements; }
+	virtual bool empty() const override;
 
 	virtual bool UpgradeGhost(Variable * var) override;
 	virtual bool AddFlowDefinition(Variable* var, Variable* upstream, Variable* downstream) override;

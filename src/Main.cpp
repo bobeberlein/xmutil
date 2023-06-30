@@ -28,7 +28,7 @@ std::string ReadStream(std::istream &input, int &error) {
 
 void cliUsage() {
     log("Usage: %s [OPTION...] PATH\n"
-        "Convert Vensim MDL files to XMILE.\n\n"
+        "Convert Vensim MDL files or Dynamoc DYN files to XMILE.\n\n"
         "Options:\n"
         "  --help:\tshow this message\n"
         "  --stdio:\tread from stdin, write to stdout\n",

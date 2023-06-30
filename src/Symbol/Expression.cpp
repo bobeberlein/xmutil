@@ -9,6 +9,7 @@
 #include "../Symbol/Parse.h"
 #define YYSTYPE  ParseUnion
 #include "../Vensim/VYacc.tab.hpp"
+#include "../Dynamo/DynamoFunction.h"
 
 
 Expression::Expression(SymbolNameSpace *sns)
@@ -136,8 +137,10 @@ void ExpressionVariable::GetVarsUsed(std::vector<Variable*>& vars)
 
 bool ExpressionFunctionMemory::TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq)
 {
-	if (this->GetFunction()->GetName() != "INTEG" && this->GetFunction()->GetName() != "SINTEG")
+	if (!this->GetFunction()->IsIntegrator())
+	{
 		return false;
+	}
 	// only care about active part here - if it all a+b+c-d-e or similar then we are good to go otherwise
 	// we need to make up a new variable and then use that as the equation in place of what was here
 	Expression* e = this->GetArgs()->GetExp(0);
@@ -230,6 +233,27 @@ void ExpressionLogical::OutputComputable(ContextInfo *info)
 		pE2->OutputComputable(info);
 }
 
+void ExpressionTable::SetXAxis(Variable* var, double xmin, double xmax, double increment)
+{
+	if (increment > 0)
+	{
+		if (xmax > xmin)
+		{
+			int count = std::round((xmax - xmin) / increment + 1);
+			if (count != vYVals.size())
+				log("Error the table function %s has %d entries but its usage suggests %d\n", var->GetName().c_str(),  (int)vYVals.size(), count);
+		}
+		else
+			log("Error the table function %s is used in a table without a proper min/max\n", var->GetName().c_str());
+	}
+	else
+	{
+		log("Error the table function %s is used in a table without an increment\n", var->GetName().c_str());
+		increment = 1;
+	}
+	for (int i = 0; i < vYVals.size(); i++, xmin += increment)
+		vXVals.push_back(xmin);
+}
 void ExpressionTable::TransformLegacy()
 {
 	assert(!(vXVals.size() % 2));

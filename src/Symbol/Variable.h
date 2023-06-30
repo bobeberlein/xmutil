@@ -35,12 +35,14 @@ public :
 
    virtual bool CheckComputed(Symbol *parent,ContextInfo *info,bool first) { return true ; }
    virtual void Clear(void) ;
-   virtual void AddEq(Equation *eq) { }
+   virtual void AddEq(Equation* eq, bool init) { assert(false); }
    virtual Equation *GetEquation(int pos) { return NULL ; }
    virtual std::vector<Equation*> GetAllEquations() { return std::vector<Equation*>(); }
+   virtual std::vector<Equation*> GetAllInitEquations() { return std::vector<Equation*>(); }
    virtual void DropEquation(int pos) {}
    virtual void SetAllEquations(std::vector<Equation*> set) { assert(false); }
    virtual std::vector<Variable*> GetInputVars() { return std::vector<Variable*>(); }
+   virtual std::vector<Variable*> GetInitInputVars() { return std::vector<Variable*>(); }
    virtual bool AddUnits(UnitExpression *un) { return false; }
    virtual UnitExpression* Units() { return NULL; }
    virtual void OutputComputable(ContextInfo *info) { assert(0); }
@@ -83,12 +85,14 @@ public :
 
    bool CheckComputed(Symbol *parent,ContextInfo *info,bool first) ;
    void Clear(void) ;
-   void AddEq(Equation *eq) { vEquations.push_back(eq) ; }
+   void AddEq(Equation* eq, bool init) { if (init) vInitEquations.push_back(eq); else  vEquations.push_back(eq); }
    virtual Equation *GetEquation(int pos) { return vEquations[pos] ; }
    virtual std::vector<Equation*> GetAllEquations() { return vEquations; }
+   virtual std::vector<Equation*> GetAllInitEquations() { return vInitEquations; }
    virtual void DropEquation(int pos) { vEquations.erase(vEquations.begin()+pos); }
    virtual void SetAllEquations(std::vector<Equation*> set) { vEquations=set; }
    virtual std::vector<Variable*> GetInputVars();
+   virtual std::vector<Variable*> GetInitInputVars();
    bool AddUnits(UnitExpression *un) { if (!pUnits) { pUnits = un; return true; } return false; }
    UnitExpression* Units() { return pUnits; }
    void OutputComputable(ContextInfo *info) { *info << SpaceToUnderBar(sAlternateName) ; }
@@ -102,6 +106,7 @@ public :
 protected :
    std::vector<Variable*>vSubscripts ; // for regular variables the family's for subscripts the family (possibly self) follwed by elements
    std::vector<Equation*>vEquations ;
+   std::vector<Equation*>vInitEquations;
    std::string Comment ; // arbitrary UTF8 string
    std::string sAlternateName ; // for writing out equations as computer code
    UnitExpression *pUnits ; // units could be attached to equations
@@ -120,7 +125,12 @@ public:
    void SetViewOfCauses();
    void SetViewToCause(int depth);
 
+   ModelGroup* GetGroup() const { return _group; }
+   void SetGroup(ModelGroup* set) { _group = set; }
+
    void SetComment(const std::string& com) { _comment = com; }
+   void SetUnitsString(const std::string& set) { _units = set; }
+   const std::string& GetUnitsString() const { return _units; }
    bool Unwanted() const { return _unwanted; }
    void SetUnwanted(bool set) { _unwanted = set; }
    const std::string& Comment() { return _comment; }
@@ -130,14 +140,16 @@ public:
    void SetupState(ContextInfo *info) {if(pVariableContent)pVariableContent->SetupState(info) ;} 
    int SubscriptCountVars(std::vector<Variable *> &elmlist) { return pVariableContent ? pVariableContent->SubscriptCount(elmlist) : 0; }
    // passthrough calls - many of these are virtual in VariableContent or passed through to yet another class
-   void AddEq(Equation *eq) ;
+   void AddEq(Equation *eq, bool init = false) ;
    inline Equation *GetEquation(int pos) { return pVariableContent->GetEquation(pos) ; }
    std::vector<Equation*> GetAllEquations() { return pVariableContent?pVariableContent->GetAllEquations():std::vector<Equation*>(); }
+   std::vector<Equation*> GetAllInitEquations() { return pVariableContent ? pVariableContent->GetAllInitEquations() : std::vector<Equation*>(); }
    inline bool AddUnits(UnitExpression *un) { return pVariableContent->AddUnits(un); }
    UnitExpression* Units() { return pVariableContent?pVariableContent->Units():NULL; }
    void OutputComputable(ContextInfo* info);
    inline double Eval(ContextInfo *info) { return pVariableContent->Eval(info) ;  }
    inline std::vector<Variable*>GetInputVars() { return pVariableContent ? pVariableContent->GetInputVars() : std::vector<Variable*>(); }
+   inline std::vector<Variable*>GetInitInputVars() { return pVariableContent ? pVariableContent->GetInitInputVars() : std::vector<Variable*>(); }
    inline void SetInitialValue(int off,double val) { pVariableContent->SetInitialValue(off,val) ; }
    inline void SetActiveValue(int off,double val) { pVariableContent->SetActiveValue(off,val) ; }
    inline void SetAlternateName(const std::string &altname) { pVariableContent->SetAlternateName(altname) ; }
@@ -171,12 +183,14 @@ public:
    // virtual 
 private :
 	std::string _comment;
+	std::string _units;
 	std::vector<Variable*> mInflows; // only ued for stocks - should push to VariableConent
 	std::vector<Variable*> mOutflows;
    VariableContent *pVariableContent ; // dependent on variable type which is not known on instantiation
    XMILE_Type mVariableType;
    size_t iNelm; // used for subscript owners
    View* _view; // view defined in
+   ModelGroup* _group;
    bool _unwanted;
    bool _hasUpstream;
    bool _hasDownstream;

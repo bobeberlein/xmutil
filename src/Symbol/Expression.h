@@ -118,6 +118,7 @@ public :
 private:
    double value ;
 } ;
+
 class ExpressionLiteral :
 	public Expression
 {
@@ -227,7 +228,9 @@ public :
    virtual EXPTYPE GetType(void) { return EXPTYPE_Table; }
    virtual ExpressionTable* GetTable(void) { return this; }
    void AddPair(double x,double y) { vXVals.push_back(x);vYVals.push_back(y);}
+   void AddYVal(double y) { vYVals.push_back(y); }
    void AddRange(double x1,double y1,double x2,double y2) { bHasRange=true;dX2=x2;dY1=y1;dX2=x2;dY2=y2;}
+   void SetXAxis(Variable* var, double xmin, double xmax, double xincrerment);
    virtual void CheckPlaceholderVars(Model *m,bool isfirst) {}
    double Eval(ContextInfo *info) { assert(0) ; return FLT_MAX ; } 
    void TransformLegacy();

@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "Vensim/VensimParse.h"
+#include "Dynamo/DynamoParse.h"
 #include "Model.h"
 #include "Unicode.h"
 #include "XMUtil.h"
@@ -294,14 +295,28 @@ extern "C" {
 // returns NULL on error or a string containing XMILE that the caller now owns
 char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, bool isCompact, bool isLongName, bool isAsSectors) {
     Model m{};
-
-    if (fileName == nullptr) {
-      fileName = "<in memory>";
-    }
+	std::string ext;
+	if (fileName == nullptr) {
+		fileName = "<in memory>";
+	}
+	else if (strlen(fileName) > 5)
+		ext = fileName + strlen(fileName) - 3;
 
     // parse the input
 	double xscale = 1.0;
 	double yscale = 1.0;
+	if (ext == "dyn" || ext == "DYN")
+	{
+		DynamoParse dp{ &m };
+		dp.SetLongName(isLongName);
+		m.SetAsSectors(isAsSectors);
+		if (!dp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
+			return nullptr;
+		}
+		xscale = dp.Xratio();
+		yscale = dp.Yratio();
+	}
+	else
     {
         VensimParse vp{&m};
         vp.SetLongName(isLongName);
@@ -322,6 +337,7 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
     // involving expressions into flows (a single net flow on the first
     // pass though this)
     m.MarkVariableTypes(nullptr);
+	m.AdjustGroupNames(); // have to be unique and not elsewhere in the model
 
     for (MacroFunction *mf : m.MacroFunctions()) {
         m.MarkVariableTypes(mf->NameSpace());

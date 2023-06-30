@@ -13,6 +13,7 @@ public:
 	virtual bool AddVarDefinition(Variable* var, int x, int y) = 0;
 	virtual void CheckLinksIn() = 0;
 	virtual void CheckGhostOwners() = 0;
+	virtual bool empty() const = 0;
 	// just a placeholder to derive from
 };
 class Model
@@ -30,6 +31,7 @@ public:
    void GenerateShortNames(void) ;
    bool OutputComputable(bool wantshort) ;
    bool MarkVariableTypes(SymbolNameSpace* ns);
+   void AdjustGroupNames();
    void CheckGhostOwners();
    void AttachStragglers(); // try to get diagramatic stuff right
    void MakeViewNamesUnique();
@@ -47,13 +49,21 @@ public:
    void SetMacroFunctions(std::vector<MacroFunction*> set) { mMacroFunctions = set; }
    void SetIntegrationType(Integration_Type type) { iIntegrationType = type; }
    Integration_Type IntegrationType() { return iIntegrationType; }
-   std::vector<ModelGroup>& Groups() { return vGroups; }
+   std::vector<ModelGroup*>& Groups() { return vGroups; }
 
    void SetAsSectors(bool set) { bAsSectors = set; }
    bool AsSectors() const { return bAsSectors; }
 
    void SetLetterPolarity(bool set) { bLetterPolarity = set; }
    bool LetterPolarity() const { return bLetterPolarity; }
+
+   double initial_time() const { return _initial_time; }
+   void set_initial_time(double set) { _initial_time = set; }
+   double final_time() const { return _final_time; }
+   void set_finall_time(double set) { _final_time = set; }
+   double dt() const { return _dt; }
+   void set_dt(double set) { _dt = set; }
+   void set_from_dynamo(bool set) { bFromDyanmo = set; }
 
 private :
    bool OrderEquations(ContextInfo *info,bool tonly) ;
@@ -64,7 +74,7 @@ private :
 
 
    SymbolNameSpace mSymbolNameSpace ;
-   std::vector<ModelGroup> vGroups;
+   std::vector<ModelGroup*> vGroups;
    std::vector<View*> vViews;
    std::vector<Variable *>vUnamedVars;
    //std::vector<Equation *>vConstantComps ; // actually just assignment
@@ -77,6 +87,9 @@ private :
    std::vector<std::string> vUnitEquivs;
    /* the last could be part of active but it is helpful to split
       out when creating equations for a computer language */
+   double _initial_time;
+   double _final_time;
+   double _dt;
    int iNLevel ;
    int iNAux ;
    Integration_Type iIntegrationType;
@@ -85,6 +98,7 @@ private :
    double *dAux ;
    bool bAsSectors;
    bool bLetterPolarity;
+   bool bFromDyanmo;
 
 };
 

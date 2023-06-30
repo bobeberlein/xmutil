@@ -5,13 +5,14 @@
 #include "../Symbol/Expression.h"
 #include "../Symbol/LeftHandSide.h"
 #include "../XMUtil.h"
+#include "../Dynamo/DynamoFunction.h"
 
 // model Variable - this has subscript (families) units
 // and the comment attached to it - inside of expressions
 // we use an ExpressionVariable which has a pointer back
 // to this
 
-Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, name), _view(NULL)
+Variable::Variable(SymbolNameSpace *sns,const std::string &name) : Symbol(sns, name), _view(NULL), _group(NULL)
 {
    pVariableContent = NULL ;
    mVariableType = XMILE_Type_UNKNOWN; // till typed
@@ -115,8 +116,10 @@ XMILE_Type Variable::MarkTypes(SymbolNameSpace* sns)
 
 	if (equations.empty())
 	{
+		equations = pVariableContent->GetAllInitEquations();
 		// todo data variables have empty equations  - could fill something in here???
-		return mVariableType;
+		if (equations.empty())
+			return mVariableType;
 	}
 
 
@@ -154,7 +157,7 @@ XMILE_Type Variable::MarkTypes(SymbolNameSpace* sns)
 			}
 			return mVariableType;
 		}
-		if (exp->GetType() == EXPTYPE_NumberTable)
+		else if (exp->GetType() == EXPTYPE_NumberTable)
 		{
 			// need to blow this out to separate equations for allentries - only implemented for the single equation version right now
 			std::vector< std::vector< Symbol*> >elms;
@@ -188,14 +191,21 @@ XMILE_Type Variable::MarkTypes(SymbolNameSpace* sns)
 				}
 			}
 		}
-		if (exp->GetType() == EXPTYPE_Function)
+		else if (exp->GetType() == EXPTYPE_Function)
 		{
 			Function* function = static_cast<ExpressionFunction*>(exp)->GetFunction();
 			bool mrl = function->IsMemoryless();
 			if (function->IsDelay())
 				this->MarkUsesMemory();
 			std::string name = function->GetName();
-			if (name == "LOOKUP EXTRAPOLATE")
+			// dynamo only this same place in the call logic lets us fill in the table function info
+			if (function->IsTableCall())
+			{
+				if (!static_cast<const DFunctionTable*>(function)->SetTableXAxis(static_cast<ExpressionFunction*>(exp)->GetArgs()))
+					log("ERROR TABLE call for %s not correctly formmatted.\n", this->GetName().c_str());
+			}
+
+			if (name == "TABXL")
 			{
 				// if we get a LOOKUP_EXTRAPOLATE then try to mark the associated lookup - assume all will extrapolate
 				std::vector<Variable*> vars;
@@ -274,10 +284,6 @@ void Variable::MarkStockFlows(SymbolNameSpace* sns)
 		return; // done
 	}
 
-	// if no active causes we don't need flows
-	if (flow_lists.size() == 1 && flow_lists[0].Empty())
-		return;
-
 	// mismatched for invalid flow equations - create a flow variable and add it to the model
 	std::string basename = this->GetName() + " net flow";
 	std::string name = basename;
@@ -290,6 +296,12 @@ void Variable::MarkStockFlows(SymbolNameSpace* sns)
 	Variable* v = new Variable(sns, name);
 	v->SetVariableType(XMILE_Type_FLOW);
 	v->SetView(this->GetView());
+	ModelGroup* group = this->GetGroup();
+	if (group)
+	{
+		v->SetGroup(group);
+		group->vVariables.push_back(v);
+	}
 	mInflows.push_back(v);
 
 	// now we swap the active part of the INTEG equation for v and set v's equation to
@@ -340,7 +352,16 @@ std::vector<Variable*> VariableContentVar::GetInputVars()
 	return vars;
 }
 
-void Variable::AddEq(Equation *eq) 
+std::vector<Variable*> VariableContentVar::GetInitInputVars()
+{
+	std::vector<Variable*> vars;
+	for (Equation* eq : this->vInitEquations)
+		eq->GetVarsUsed(vars);
+	return vars;
+}
+
+
+void Variable::AddEq(Equation *eq, bool init) 
 {
    if(!pVariableContent) {
       try {
@@ -351,7 +372,7 @@ void Variable::AddEq(Equation *eq)
          throw "Memory failure adding equations" ;
       }
    }
-  pVariableContent->AddEq(eq) ; 
+  pVariableContent->AddEq(eq, init) ; 
 }
 
 void Variable::OutputComputable(ContextInfo* info)

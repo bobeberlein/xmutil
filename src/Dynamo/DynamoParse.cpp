@@ -1,116 +1,95 @@
-// VensimParse.cpp : Read an mdl file into an XModel object
+// DynamoParse.cpp : Read an mdl file into an XModel object
 // we use an in-memory string to simplify look ahead/back
 // we include the tokenizer here because it is as easy as setting
 // up regular expressions for Flex and more easily understood
 
 #include <cstring>
 
-#include "VensimParse.h"
+#include "DynamoParse.h"
+#include "DynamoFunction.h"
 #include "../Symbol/Variable.h"
 #include "../Symbol/LeftHandSide.h"
 #include "../Symbol/ExpressionList.h"
-#define YYSTYPE VensimParse
-#include "VYacc.tab.hpp"
+#define YYSTYPE DynamoParse
+#include "DYacc.tab.hpp"
 #include "../XMUtil.h"
-#include "VensimView.h"
+#include "DynamoView.h"
 
-
-VensimParse *VPObject = NULL ;
-
-VensimParse::VensimParse(Model* model)
+DynamoParse* DPObject = NULL;
+DynamoParse::DynamoParse(Model* model)
 {
-#if YYDEBUG
-	vpyydebug = 0;
-#endif
-   assert(!VPObject) ;
-   VPObject = this ;
+   assert(!DPObject) ;
+   DPObject = this ;
    _model = model;
+   _model->set_from_dynamo(true);
    pSymbolNameSpace = model->GetNameSpace() ;
-   bLongName = false;
+   bLongName = true;
+   bInMacro = false;
    ReadyFunctions();
 }
-VensimParse:: ~VensimParse(void)
+DynamoParse:: ~DynamoParse(void)
 {
-   VPObject = NULL ;
+   DPObject = NULL ;
 }
 
-void VensimParse::ReadyFunctions()
+void DynamoParse::ReadyFunctions()
 {
-	// initialize functions - actually need to split this up for common functions
-	// and those specific to Vensim - later
+	// initialize functions - use only D functions
 	try {
-		new FunctionMin(pSymbolNameSpace);
-		new FunctionMax(pSymbolNameSpace);
-		new FunctionInteg(pSymbolNameSpace);
-		new FunctionActiveInitial(pSymbolNameSpace);
-		new FunctionInitial(pSymbolNameSpace);
-		new FunctionReInitial(pSymbolNameSpace);
-		new FunctionSampleIfTrue(pSymbolNameSpace);
-		new FunctionPulse(pSymbolNameSpace);
-		new FunctionPulseTrain(pSymbolNameSpace);
-		new FunctionQuantum(pSymbolNameSpace);
-		new FunctionIfThenElse(pSymbolNameSpace);
-		new FunctionLog(pSymbolNameSpace);
-		new FunctionZidz(pSymbolNameSpace);
-		new FunctionXidz(pSymbolNameSpace);
-		new FunctionLookupInv(pSymbolNameSpace);
-		new FunctionWithLookup(pSymbolNameSpace); // but WITH_LOOKUP is treated specially by parser
-		new FunctionStep(pSymbolNameSpace);
-		new FunctionTabbedArray(pSymbolNameSpace);
-		new FunctionRamp(pSymbolNameSpace);
-		new FunctionLn(pSymbolNameSpace);
-		new FunctionSmooth(pSymbolNameSpace);
-		new FunctionSmoothI(pSymbolNameSpace);
-		new FunctionSmooth3(pSymbolNameSpace);
-		new FunctionSmooth3I(pSymbolNameSpace);
-		new FunctionTrend(pSymbolNameSpace);
-		new FunctionFrcst(pSymbolNameSpace);
-		new FunctionDelay1(pSymbolNameSpace);
-		new FunctionDelay1I(pSymbolNameSpace);
-		new FunctionDelay3(pSymbolNameSpace);
-		new FunctionDelay3I(pSymbolNameSpace);
-		new FunctionDelay(pSymbolNameSpace);
-		new FunctionDelayN(pSymbolNameSpace);
-		new FunctionSmoothN(pSymbolNameSpace);
-		new FunctionDelayConveyor(pSymbolNameSpace);
-		new FunctionVectorReorder(pSymbolNameSpace);
-		new FunctionVectorLookup(pSymbolNameSpace);
-		new FunctionElmCount(pSymbolNameSpace);
-		new FunctionRandomNormal(pSymbolNameSpace);
-		new FunctionRandomPoisson(pSymbolNameSpace);
-		new FunctionLookupArea(pSymbolNameSpace);
-		new FunctionLookupExtrapolate(pSymbolNameSpace);
-		new FunctionGetDataAtTime(pSymbolNameSpace);
-		new FunctionGetDataLastTime(pSymbolNameSpace);
-		new FunctionModulo(pSymbolNameSpace);
-		new FunctionNPV(pSymbolNameSpace);
-		new FunctionSum(pSymbolNameSpace);
-		new FunctionProd(pSymbolNameSpace);
-		new FunctionVMax(pSymbolNameSpace);
-		new FunctionVMin(pSymbolNameSpace);
-		new FunctionTimeBase(pSymbolNameSpace);
-		new FunctionVectorSelect(pSymbolNameSpace);
-		new FunctionVectorElmMap(pSymbolNameSpace);
-		new FunctionVectorSortOrder(pSymbolNameSpace);
-		new FunctionGame(pSymbolNameSpace);
-		new FunctionRandom01(pSymbolNameSpace);
-		new FunctionRandomUniform(pSymbolNameSpace);
-        new FunctionRandomPink(pSymbolNameSpace);
-		new FunctionAbs(pSymbolNameSpace);
-        new FunctionExp(pSymbolNameSpace);
-        new FunctionSqrt(pSymbolNameSpace);
-		new FunctionNAN(pSymbolNameSpace);
-        
-        new FunctionCosine(pSymbolNameSpace);
-        new FunctionSine(pSymbolNameSpace);
-        new FunctionTangent(pSymbolNameSpace);
-        new FunctionArcCosine(pSymbolNameSpace);
-        new FunctionArcSine(pSymbolNameSpace);
-        new FunctionArcTangent(pSymbolNameSpace);
-		new FunctionInterger(pSymbolNameSpace);
 
-		new FunctionGetDirectData(pSymbolNameSpace);
-		new FunctionGetDataMean(pSymbolNameSpace);
+		new DFunctionTable(pSymbolNameSpace);
+
+
+		new DFunctionMin(pSymbolNameSpace);
+		new DFunctionMax(pSymbolNameSpace);
+		new DFunctionInteg(pSymbolNameSpace);
+		new DFunctionActiveInitial(pSymbolNameSpace);
+		new DFunctionInitial(pSymbolNameSpace);
+		new DFunctionReInitial(pSymbolNameSpace);
+		new DFunctionPulse(pSymbolNameSpace);
+		new DFunctionIfThenElse(pSymbolNameSpace);
+		new DFunctionZidz(pSymbolNameSpace);
+		new DFunctionXidz(pSymbolNameSpace);
+		new DFunctionStep(pSymbolNameSpace);
+		new DFunctionTabbedArray(pSymbolNameSpace);
+		new DFunctionRamp(pSymbolNameSpace);
+		new DFunctionLn(pSymbolNameSpace);
+		new DFunctionSmooth(pSymbolNameSpace);
+		new DFunctionSmoothI(pSymbolNameSpace);
+		new DFunctionSmooth3(pSymbolNameSpace);
+		new DFunctionSmooth3I(pSymbolNameSpace);
+		new DFunctionTrend(pSymbolNameSpace);
+		new DFunctionFrcst(pSymbolNameSpace);
+		new DFunctionDelay1(pSymbolNameSpace);
+		new DFunctionDelay1I(pSymbolNameSpace);
+		new DFunctionDelay3(pSymbolNameSpace);
+		new DFunctionDelay3I(pSymbolNameSpace);
+		new DFunctionDelay(pSymbolNameSpace);
+		new DFunctionDelayN(pSymbolNameSpace);
+		new DFunctionSmoothN(pSymbolNameSpace);
+		new DFunctionModulo(pSymbolNameSpace);
+		new DFunctionNPV(pSymbolNameSpace);
+		new DFunctionSum(pSymbolNameSpace);
+		new DFunctionProd(pSymbolNameSpace);
+		new DFunctionVMax(pSymbolNameSpace);
+		new DFunctionVMin(pSymbolNameSpace);
+		new DFunctionRandom01(pSymbolNameSpace);
+		new DFunctionRandomUniform(pSymbolNameSpace);
+        new DFunctionRandomPink(pSymbolNameSpace);
+		new DFunctionAbs(pSymbolNameSpace);
+        new DFunctionExp(pSymbolNameSpace);
+        new DFunctionSqrt(pSymbolNameSpace);
+        
+        new DFunctionCosine(pSymbolNameSpace);
+        new DFunctionSine(pSymbolNameSpace);
+        new DFunctionTangent(pSymbolNameSpace);
+        new DFunctionArcCosine(pSymbolNameSpace);
+        new DFunctionArcSine(pSymbolNameSpace);
+        new DFunctionArcTangent(pSymbolNameSpace);
+		new DFunctionInterger(pSymbolNameSpace);
+
+		new DFunctionGetDirectData(pSymbolNameSpace);
+		new DFunctionGetDataMean(pSymbolNameSpace);
 
         pSymbolNameSpace->ConfirmAllAllocations();
 	}
@@ -119,7 +98,7 @@ void VensimParse::ReadyFunctions()
 	}
 
 }
-Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int tok) 
+Equation *DynamoParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *exl,int tok) 
  { 
     if(exl) {
        if(exl->Length() == 1) {
@@ -151,7 +130,43 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
 
     return new Equation(pSymbolNameSpace,lhs,ex,tok) ; 
 }
-Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl, bool legacy)
+Equation* DynamoParse::AddStockEq(LeftHandSide* lhs, ExpressionVariable* stock, ExpressionList* exl, int tok)
+{
+	if (stock)
+	{
+		// needs to match lhs or we throu an exception
+		if (lhs->GetVariable() != stock->GetVariable())
+		{
+			mSyntaxError.str = "Level equations must be stock=stock+flow in form ";
+			throw mSyntaxError;
+		}
+	}
+	Expression* ex = NULL;
+	if (exl) {
+		if (exl->Length() == 1) {
+			ex = exl->GetExp(0);
+			delete exl;
+		}
+	}
+	if (ex == NULL)
+	{
+		mSyntaxError.str = "Bad level equation ";
+		throw mSyntaxError;
+	}
+	// wrap the expression/DT in INTEGRATE - the DT will probably just cancel another DT - so could be reduced
+	ex = DPObject->OperatorExpression('(', ex, NULL);
+	Variable* var = this->InsertVariable("DT");
+	Expression* ex2 = DPObject->VarExpression(var, NULL);
+	ex = DPObject->OperatorExpression('/', ex, ex2);
+	ExpressionList* args = DPObject->ChainExpressionList(NULL, ex);
+	var = DPObject->InsertVariable("INTEGRATE");
+	ex = DPObject->FunctionExpression(static_cast<Function*>(static_cast<Symbol*>(var)), args);
+
+	return new Equation(pSymbolNameSpace, lhs, ex, DPTT_dt_to_one);
+}
+
+
+Equation *DynamoParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl, bool legacy)
 {
 	if (!tbl)
 	{
@@ -179,23 +194,26 @@ Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTab
   also assigns the equation to the Variable  - not that inside
   of macros there is a separate symbol space this is going
   against */
-void VensimParse::AddFullEq(Equation *eq,UnitExpression *un)
+void DynamoParse::AddFullEq(Equation *eq,int type)
 {
    pSymbolNameSpace->ConfirmAllAllocations() ; // now independently allocated
    pActiveVar = eq->GetVariable() ;
-   if (!_model->Groups().empty() && pActiveVar->GetAllEquations().empty() && !mInMacro)
+   if (!_model->Groups().empty() && pActiveVar->GetAllEquations().empty() && !bInMacro)
    {
 	   _model->Groups().back()->vVariables.push_back(pActiveVar);
 	   pActiveVar->SetGroup(_model->Groups().back());
    }
-   pActiveVar->AddEq(eq) ;
-   if(un) {
-      if(!pActiveVar->AddUnits(un))
-         delete un ;
+   if (type == DPTT_level)
+   {
+	   pActiveVar->AddEq(eq, false);
    }
+   else if (type == DPTT_init)
+	   pActiveVar->AddEq(eq, true);
+   else
+		pActiveVar->AddEq(eq, false) ;
 }
 
-int VensimParse::yyerror(const char *str)
+int DynamoParse::yyerror(const char *str)
 {
    mSyntaxError.str = str ;
    throw mSyntaxError ;
@@ -207,13 +225,11 @@ static std::string compress_whitespace(const std::string& s)
 	const char *tv = s.c_str();
 	for (; *tv; tv++)
 	{
-		if (*tv != ' ' && *tv != '\t' && *tv != '\n' && *tv != '\r')
+		if (*tv != ' ' && *tv != '\t' && *tv != '\n' && *tv != '\r' && !isdigit(*tv))
 			break;
 	}
 	for (; *tv; tv++)
 	{
-		if (*tv == '~')
-			break; // some comments have supplementary in them
 		if (*tv == ' ' || *tv == '\t' || *tv == '\n' || *tv == '\r')
 		{
 			rval.push_back('_');
@@ -223,68 +239,71 @@ static std::string compress_whitespace(const std::string& s)
 					break;
 			}
 		}
-		else if( (*tv >= 'A' && *tv <= 'Z') || (*tv >= 'a' && *tv <= 'z'))
+		else if ((*tv >= 'A' && *tv <= 'Z') || (*tv >= 'a' && *tv <= 'z') || isdigit(*tv))
 			rval.push_back(*tv); // otherwise ignore
+		else
+			break; // start skipping at any special character
 	}
 	while (rval.back() == '_')
 		rval.pop_back();
 	return rval;
 }
 
-bool VensimParse::ProcessFile(const std::string &filename, const char *contents, size_t contentsLen)
+bool DynamoParse::ProcessFile(const std::string &filename, const char *contents, size_t contentsLen)
 {
    sFilename = filename ;
 
     if(true) {
        bool noerr = true ;
-       mVensimLex.Initialize(contents, contentsLen) ;
-       int endtok = mVensimLex.GetEndToken() ;
-       // now we call the bison built parser which will call back to VensimLex
+       mDynamoLex.Initialize(contents, contentsLen) ;
+       int endtok = mDynamoLex.GetEndToken() ;
+       // now we call the bison built parser which will call back to DynamoLex
        // for the tokenizing - 
        int rval ;
-       do {
+       while(true) {
           rval = 0 ;
           try {
-             mVensimLex.GetReady() ;
-             rval = vpyyparse() ;
-             if(rval == '~') { // comment follows 
+			  mDynamoLex.GetReady() ;
+             rval = dpyyparse() ;
+             if(rval == DPTT_eoq) { // some combination of comment and units probably follows
                 if(!FindNextEq(true))
                    break ;
              } 
-             else if(rval == '|') {
-             }
-             else if(rval == VPTT_groupstar) {
-				//log("%s\n", mVensimLex.CurToken()->c_str());
-				// only change this if a new number
-				 ModelGroup* group_owner = NULL;
-				 char c = mVensimLex.CurToken()->at(0);
-				 if (_model->Groups().empty() ||
-					 (_model->Groups().back()->sName[0] != c && c >= '0' && c <= '9'))
+             else if(rval == DPTT_groupstar) {
+				 int depth = 0;
+				 std::string* cur = mDynamoLex.CurToken();
+				 while (depth < cur->size() && cur->at(depth) == '*')
+					 depth++;
+				 std::string name = cur->substr(depth);
+				ModelGroup* group_owner = NULL;
+				 for (std::vector<ModelGroup*>::const_iterator it = _model->Groups().end(); it-- != _model->Groups().begin();)
 				 {
-					 std::string owner = *mVensimLex.CurToken();
-					 for (ModelGroup* g : _model->Groups())
+					 if ((*it)->iDepth < depth)
 					 {
-						 if (g->sName == owner)
-						 {
-							 group_owner = g;
-							 break;
-						 }
+						 group_owner = (*it);
+						 break;
 					 }
 				 }
-				 if (group_owner == NULL && !_model->Groups().empty())
-					 group_owner = _model->Groups().back();
-				 _model->Groups().push_back(new ModelGroup(*mVensimLex.CurToken(), group_owner));
+				 _model->Groups().push_back(new ModelGroup(name,group_owner,depth));
              }
-             else if(rval != endtok) {
+			 else if (rval == DPTT_specs)
+			 {
+				 ParseSpecs();
+			 }
+			 else if (rval == DPTT_save)
+			 {
+				 ParseSave();
+			 }
+			 else {
                 log("Unknown terminal token %d\n", rval);
                 if(!FindNextEq(false))
                    break ;
              }
 
           }
-          catch(VensimParseSyntaxError& e) {
+          catch(DynamoParseSyntaxError& e) {
              log("%s\n", e.str.c_str());
-             log("Error at line %d position %d in file %s\n", mVensimLex.LineNumber(), mVensimLex.Position(), sFilename.c_str());
+             log("Error at line %d position %d in file %s\n", mDynamoLex.LineNumber(), mDynamoLex.Position(), sFilename.c_str());
              log(".... skipping the associated variable and looking for the next usable content.\n");
              pSymbolNameSpace->DeleteAllUnconfirmedAllocations() ;
              noerr = false ;
@@ -299,99 +318,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
                 break ;
 
           }
-       } while(rval != endtok) ;
-	   char buf[BUFLEN]; // plenty big for sketch info
-	   if (rval == endtok)
-		this->mVensimLex.BufferReadLine(buf, BUFLEN); // get the marker line
-	   while (true)
-	   { // read in the sketch information
-		   if (strncmp(buf, "\\\\\\---///", 9) != 0)
-			   break;
-		   this->mVensimLex.ReadLine(buf, BUFLEN); // version line
-		   if (strncmp(buf, "V300 ", 5) && strncmp(buf, "V364 ", 5))
-		   {
-			   log("Unrecognized version - can't read sketch info\n");
-			   noerr = false;
-			   break;
-		   }
-		   VensimView* view = new VensimView;
-		   
-		   _model->AddView(view);
-		   // next the title
-		   this->mVensimLex.ReadLine(buf, BUFLEN); 
-		   view->SetTitle(buf + 1); // skip the star - we can try to name modules with this eventually subject to name collisions
-		   this->mVensimLex.ReadLine(buf, BUFLEN); // default font info - we can try to grab this later
-		   int pos = 0;
-		   char* tv = buf;
-		   for (; pos < 8; pos++)
-		   {
-			   tv = strchr(tv, '|');
-			   if (tv)
-				   tv++;
-			   else
-				   break;
-		   }
-		   // the following does not really help
-		   //if (tv)
-		   //{
-			  // int ppix = 72;
-			  // int ppiy = 72;
-			  // sscanf(tv,"%d,%d",&ppix,&ppiy);
-			  // _xratio = 72.0 / (double)ppix;
-			  // _yratio = 72.0 / (double)ppiy;
-		   //}
-		   //else
-		   {
-			   _xratio = 1.0;
-			   _yratio = 1.0;
-		   }
-		   view->ReadView(this, buf); // will return with buf populated at next view
-	   }
-	   // there may be options at the end
-	   if (strncmp(buf, "///---\\\\\\", 9) == 0)
-	   {
-		   while (this->mVensimLex.ReadLine(buf, BUFLEN)) // looking for settings maker
-		   {
-			   if (strncmp(buf, ":L\177<%^E!@", 9) == 0)
-			   {
-				   while (this->mVensimLex.ReadLine(buf, BUFLEN))
-				   {
-					   int type;
-					   char *curpos = GetIntChar(buf, type, ':');
-					   if (type == 15) // fourth entry is integration type
-					   {
-						   int im;
-						   for (int i = 0; i < 4; i++)
-							   curpos = GetInt(curpos, im);
-						   Integration_Type it = Integration_Type_EULER;
-						   switch (im)
-						   {
-						   case 0:
-						   case 2:
-						   default:
-							   it = Integration_Type_EULER;
-							   break;
-						   case 1:
-						   case 5:
-							   it = Integration_Type_RK4;
-							   break;
-						   case 3:
-						   case 4:
-							   it = Integration_Type_RK2;
-							   break;
-						   }
-						   _model->SetIntegrationType(it);
-					   }
-					   else if (type == 22) // units equialences
-					   {
-						   _model->UnitEquivs().push_back(curpos);
-					   }
-
-				   }
-				   break;
-			   }
-		   }
-	   }
+       }
 	   _model->SetMacroFunctions(mMacroFunctions);
 
 	   if (bLongName)
@@ -401,10 +328,6 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
 		   for (Variable* var: vars)
 		   {
 			   std::string alt = compress_whitespace(var->Comment());
-			   if (alt == "Backlog")
-			   {
-				   bLongName = true;
-			   }
 			   if (!alt.empty() && alt.size() < 80 &&
 				   pSymbolNameSpace->Rename(var,alt))
 			   {
@@ -421,7 +344,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
        return false ;
 }
 
-char *VensimParse::GetIntChar(char *s, int& val, char c)
+char *DynamoParse::GetIntChar(char *s, int& val, char c)
 {
 	char* tv;
 	for (tv = s; *tv; tv++)
@@ -435,7 +358,7 @@ char *VensimParse::GetIntChar(char *s, int& val, char c)
 	val = atoi(s);
 	return tv;
 }
-char *VensimParse::GetInt(char *s, int& val)
+char *DynamoParse::GetInt(char *s, int& val)
 {
 	char* tv;
 	for (tv = s; *tv; tv++)
@@ -449,7 +372,7 @@ char *VensimParse::GetInt(char *s, int& val)
 	val = atoi(s);
 	return tv;
 }
-char *VensimParse::GetString(char *s, std::string& name)
+char *DynamoParse::GetString(char *s, std::string& name)
 {
 	char* tv = s;
 	if (*tv == '\"')
@@ -482,7 +405,7 @@ char *VensimParse::GetString(char *s, std::string& name)
 	return tv;
 }
 
-Variable *VensimParse::FindVariable(const std::string &name)
+Variable *DynamoParse::FindVariable(const std::string &name)
 {
 	Variable *var = static_cast<Variable *>(pSymbolNameSpace->Find(name));
 	if (var && var->isType() == Symtype_Variable)
@@ -491,7 +414,7 @@ Variable *VensimParse::FindVariable(const std::string &name)
 }
 
 
-Variable *VensimParse::InsertVariable(const std::string &name)
+Variable *DynamoParse::InsertVariable(const std::string &name)
 {
    Variable *var =  static_cast<Variable *>(pSymbolNameSpace->Find(name)) ;
    if(var && var->isType() != Symtype_Variable &&
@@ -505,7 +428,7 @@ Variable *VensimParse::InsertVariable(const std::string &name)
    }
    return var ;
 }
-Units *VensimParse::InsertUnits(const std::string &name)
+Units *DynamoParse::InsertUnits(const std::string &name)
 {
 	std::string uname = ">" + name; // an illegal variable name since we allow the same names to be used for vars and units - could use a separate namespace
    Units *u =  static_cast<Units *>(pSymbolNameSpace->Find(uname)) ;
@@ -519,31 +442,39 @@ Units *VensimParse::InsertUnits(const std::string &name)
    return u ;
 }
 
-UnitExpression *VensimParse::InsertUnitExpression(Units *u) 
+UnitExpression *DynamoParse::InsertUnitExpression(Units *u) 
 {
    UnitExpression *uni = new UnitExpression(pSymbolNameSpace,u) ;
    return uni ;
 }
 
 // find the beginning of the next equation - for error recovery
-bool VensimParse::FindNextEq(bool want_comment)
+bool DynamoParse::FindNextEq(bool want_comment)
 {
 	if (want_comment && this->pActiveVar)
 	{
-		std::string comment = mVensimLex.GetComment("|");
-		if (! comment.empty()) // multile appearances okay - take last non empty
+		std::string units;
+		std::string comment = mDynamoLex.GetComment(units);
+		if (!comment.empty()) // multile appearances okay - take last non empty
 			this->pActiveVar->SetComment(comment);
+		if (!units.empty())
+			this->pActiveVar->SetUnitsString(units);
+	}
+	else
+	{
+		// consume the rest of the current line then try again
+		mDynamoLex.ConsumeCurrentLine();
 	}
    // just zip through to the first | then whatever follows is it
-   return mVensimLex.FindToken("|") ;
+   return mDynamoLex.FindStartToken() ;
 }
 
 
-LeftHandSide *VensimParse::AddExceptInterp(ExpressionVariable *var,SymbolListList *except,int interpmode) 
+LeftHandSide *DynamoParse::AddExceptInterp(ExpressionVariable *var,SymbolListList *except,int interpmode) 
 { 
    return new LeftHandSide(pSymbolNameSpace,var,NULL, except,interpmode) ;
 }
-SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,bool bang,Variable *end) 
+SymbolList *DynamoParse::SymList(SymbolList *in,Variable *add,bool bang,Variable *end) 
 {
    SymbolList *sl ;
    if(in)
@@ -582,7 +513,7 @@ SymbolList *VensimParse::SymList(SymbolList *in,Variable *add,bool bang,Variable
    return sl ;
 }
 
-SymbolList *VensimParse::MapSymList(SymbolList* in, Variable* range, SymbolList *list)
+SymbolList *DynamoParse::MapSymList(SymbolList* in, Variable* range, SymbolList *list)
 {
 	list->SetMapRange(range);
 	if (in) {
@@ -591,24 +522,24 @@ SymbolList *VensimParse::MapSymList(SymbolList* in, Variable* range, SymbolList 
 	}
 	return list;
 }
-UnitExpression *VensimParse::UnitsDiv(UnitExpression *num,UnitExpression *denom) 
+UnitExpression *DynamoParse::UnitsDiv(UnitExpression *num,UnitExpression *denom) 
 {
    return num->Divide(denom) ;
 }
-UnitExpression *VensimParse::UnitsMult(UnitExpression *f,UnitExpression *s) 
+UnitExpression *DynamoParse::UnitsMult(UnitExpression *f,UnitExpression *s) 
 { 
    return f->Multiply(s) ;
 }
-UnitExpression *VensimParse::UnitsRange(UnitExpression *e,double minval,double maxval,double increment) 
+UnitExpression *DynamoParse::UnitsRange(UnitExpression *e,double minval,double maxval,double increment) 
 { 
 	if (e == NULL)	{
-		e = VPObject->InsertUnitExpression(VPObject->InsertUnits("1"));
+		e = DPObject->InsertUnitExpression(DPObject->InsertUnits("1"));
 	}
    e->SetRange(minval,maxval,increment) ;
    return e ;
 }
 
-SymbolListList *VensimParse::ChainSublist(SymbolListList *sll,SymbolList *nsl) 
+SymbolListList *DynamoParse::ChainSublist(SymbolListList *sll,SymbolList *nsl) 
 { 
 	if (!sll)
 		sll = new SymbolListList(pSymbolNameSpace, nsl);
@@ -616,29 +547,29 @@ SymbolListList *VensimParse::ChainSublist(SymbolListList *sll,SymbolList *nsl)
 		sll->Append(nsl);
 	return sll;
 }
-ExpressionList *VensimParse::ChainExpressionList(ExpressionList *el,Expression *e) 
+ExpressionList *DynamoParse::ChainExpressionList(ExpressionList *el,Expression *e) 
 {
    if(!el)
       el = new ExpressionList(pSymbolNameSpace) ;
    return el->Append(e) ;
 }
-Expression *VensimParse::NumExpression(double num) 
+Expression *DynamoParse::NumExpression(double num) 
 { 
    return new ExpressionNumber(pSymbolNameSpace,num) ;
 }
-Expression *VensimParse::LiteralExpression(const char* lit)
+Expression *DynamoParse::LiteralExpression(const char* lit)
 {
 	return new ExpressionLiteral(pSymbolNameSpace, lit);
 }
-ExpressionVariable *VensimParse::VarExpression(Variable *var,SymbolList *subs)
+ExpressionVariable *DynamoParse::VarExpression(Variable *var,SymbolList *subs)
 { 
    return new ExpressionVariable(pSymbolNameSpace,var,subs) ;
 }
-ExpressionSymbolList *VensimParse::SymlistExpression(SymbolList *subs,SymbolList *map) 
+ExpressionSymbolList *DynamoParse::SymlistExpression(SymbolList *subs,SymbolList *map) 
 { 
    return new ExpressionSymbolList(pSymbolNameSpace,subs,map) ;
 }
-Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression *exp2) 
+Expression *DynamoParse::OperatorExpression(int oper,Expression *exp1,Expression *exp2) 
 {  
    switch(oper) {
    case '*' :
@@ -665,14 +596,14 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
       return new ExpressionParen(pSymbolNameSpace,exp1,NULL) ;
    case '<':
    case '>':
-   case VPTT_le:
-   case VPTT_ge:
-   case VPTT_ne:
-   case VPTT_and:
-   case VPTT_or:
+   case DPTT_le:
+   case DPTT_ge:
+   case DPTT_ne:
+   case DPTT_and:
+   case DPTT_or:
    case '=':
 	   return new ExpressionLogical(pSymbolNameSpace, exp1, exp2, oper);
-   case VPTT_not:
+   case DPTT_not:
 	   assert(exp2 == NULL);
 	   return new ExpressionLogical(pSymbolNameSpace, NULL, exp1, oper);
    default :
@@ -680,9 +611,15 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
      throw mSyntaxError ;
    }
 }
-Expression *VensimParse::FunctionExpression(Function *func,ExpressionList *eargs) 
+Expression *DynamoParse::FunctionExpression(Function *func,ExpressionList *eargs) 
 {  
-   if(func->NumberArgs() >= 0 && 
+	if (func->IsIntegrator()) {
+		if (eargs->Length() != 1) {
+			mSyntaxError.str = "Invalid Level Equation internal error";
+			throw mSyntaxError;
+		}
+	}
+   else if(func->NumberArgs() >= 0 && 
 	   ((!eargs && func->NumberArgs() > 0)  
 	   || (eargs && func->NumberArgs() != eargs->Length()))) {
       mSyntaxError.str = "Argument count mismatch for "  ;
@@ -693,7 +630,7 @@ Expression *VensimParse::FunctionExpression(Function *func,ExpressionList *eargs
        return new ExpressionFunction(pSymbolNameSpace,func,eargs) ;
    return new ExpressionFunctionMemory(pSymbolNameSpace,func,eargs) ;
 }
-Expression *VensimParse::LookupExpression(ExpressionVariable *var, ExpressionList *args)
+Expression *DynamoParse::LookupExpression(ExpressionVariable *var, ExpressionList *args)
 {
 	if (args->Length() == 1)
 		return new ExpressionLookup(pSymbolNameSpace,var,args->GetExp(0));
@@ -703,7 +640,7 @@ Expression *VensimParse::LookupExpression(ExpressionVariable *var, ExpressionLis
 	return new ExpressionFunction(pSymbolNameSpace, f, args);
 }
 
-ExpressionTable *VensimParse::TablePairs(ExpressionTable *table,double x,double y) 
+ExpressionTable *DynamoParse::TablePairs(ExpressionTable *table,double x,double y) 
 {
    if(!table)
       table = new ExpressionTable(pSymbolNameSpace) ;
@@ -711,44 +648,54 @@ ExpressionTable *VensimParse::TablePairs(ExpressionTable *table,double x,double 
    return table ;
 }
 
-ExpressionTable *VensimParse::XYTableVec(ExpressionTable *table, double val)
+ExpressionTable *DynamoParse::XYTableVec(ExpressionTable *table, double val)
 {
 	if (!table)
 		table = new ExpressionTable(pSymbolNameSpace);
-	table->AddPair(val, 0); // fix these after reducing
+	table->AddYVal(val); // fix these after reducing
 	return table;
 }
 
-ExpressionTable *VensimParse::TableRange(ExpressionTable *table,double x1,double y1,double x2,double y2) 
+ExpressionTable *DynamoParse::TableRange(ExpressionTable *table,double x1,double y1,double x2,double y2) 
 {
    table->AddRange(x1,y1,x2,y2) ;
    return table ;
 }
 
-void VensimParse::MacroStart()
+void DynamoParse::MacroStart()
 {
-	mInMacro = true;
+	bInMacro = true;
 	pMainSymbolNameSpace = pSymbolNameSpace;
 	pSymbolNameSpace = new SymbolNameSpace(); // local name space for macro variables and macro name - macro name will go into the main name space on close
 	ReadyFunctions(); // against this new name space - somewhat duplicative
 }
 
-void VensimParse::MacroExpression(Variable* name, ExpressionList *margs)
+void DynamoParse::MacroExpression(Variable* name, ExpressionList *margs)
 {
 	// the macro functiongoes against the main name space - everything else is local
 	mMacroFunctions.push_back(new MacroFunction(pMainSymbolNameSpace, pSymbolNameSpace, name->GetName(), margs));
 }
-void VensimParse::MacroEnd()
+void DynamoParse::MacroEnd()
 {
 	pSymbolNameSpace = pMainSymbolNameSpace;
-	mInMacro = false;
+	bInMacro = false;
 }
 
-bool VensimParse::LetterPolarity() const
+bool DynamoParse::LetterPolarity() const
 { 
 	return _model->LetterPolarity(); 
 }
-void VensimParse::SetLetterPolarity(bool set)
+void DynamoParse::SetLetterPolarity(bool set)
 {
 	_model->SetLetterPolarity(set); 
+}
+
+void DynamoParse::ParseSpecs()
+{
+	mDynamoLex.ParseSpecs(_model);
+}
+
+void DynamoParse::ParseSave()
+{
+	mDynamoLex.ParseSpecs(NULL);
 }

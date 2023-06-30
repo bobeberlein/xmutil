@@ -28,6 +28,8 @@ public:
 	virtual std::string ComputableName(void) { return ""; }
 	virtual std::string ComputableNameInit(void) { return ""; }
 	virtual bool IsActiveInit() { return false; }
+	virtual bool IsIntegrator() const { return false; }
+	virtual bool IsTableCall() const { return false; }
 	int NumberArgs(void) { return iNumberArgs; }
 protected:
 	int iNumberArgs;
@@ -223,7 +225,9 @@ public:
 };
 
 
-FSubclassMemory(FunctionInteg, "INTEG", 2, 0b10, 0b01, "integ_active", "integ_init")
+FSubclassMemoryStart(FunctionInteg, "INTEG", 2, 0b10, 0b01, "integ_active", "integ_init")
+virtual bool IsIntegrator() const override { return true; }
+};
 FSubclassMemoryStart(FunctionActiveInitial, "ACTIVE INITIAL", 2, 0b10, 0b01, "ai_active", "ai_init")
 virtual bool IsActiveInit() override { return true; }
 };

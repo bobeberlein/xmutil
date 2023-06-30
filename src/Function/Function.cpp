@@ -93,7 +93,7 @@ void FunctionMemoryBase::OutputComputable(ContextInfo *info,ExpressionList *arg)
 			arg->OutputComputable(info, iInitArgMark);
 			*info << ")";
 		}
-		else if (fname == "INTEG" || info->InitEqn())
+		else if (this->IsIntegrator() || info->InitEqn())
 			arg->OutputComputable(info, iInitArgMark);
 		else
 			arg->OutputComputable(info, iActiveArgMark);
