@@ -52,6 +52,7 @@ public:
    virtual void OutputComputable(ContextInfo *info) = 0 ; // again don't skip - todo modify this to make dumping equations easy - possibly returning std::string
    virtual bool IsActiveInit() { return false; }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) = 0; // but will also create a flow when the INTEG equation has other stuff
+   virtual void CheckTableUses(Variable* lhs) {}
    virtual void GetVarsUsed(std::vector<Variable*>& vars) = 0; // list of variables used
    virtual void MarkType(XMILE_Type type) = 0; // only called with flow after test returns true
    virtual Expression* GetArg(int pos) { return NULL; }
@@ -172,6 +173,7 @@ public :
    virtual void OutputComputable(ContextInfo *info) override { pFunction->OutputComputable(info, pArgs); }
    virtual bool IsActiveInit() override { return pFunction->IsActiveInit(); }
    virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) override { return false; }
+   virtual void CheckTableUses(Variable* lhs) override;
    virtual void GetVarsUsed(std::vector<Variable*>& vars) override; // list of variables used
    virtual void MarkType(XMILE_Type type) override {}
 
@@ -272,6 +274,7 @@ public :
       }
       return false;
    }
+   virtual void CheckTableUses(Variable* lhs) { if (pE1) pE1->CheckTableUses(lhs); if (pE2) pE2->CheckTableUses(lhs); }
    virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pE1)pE1->GetVarsUsed(vars); if (pE2)pE2->GetVarsUsed(vars); } // list of variables used
    virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
    virtual Expression* GetArg(int pos) { return pos == 0 ? pE1 : pos == 1 ? pE2 : NULL; }
@@ -318,6 +321,7 @@ public:
 		}
 		return false;
 	}
+	virtual void CheckTableUses(Variable* lhs) { if (pE1) pE1->CheckTableUses(lhs); if (pE2) pE2->CheckTableUses(lhs); }
 	virtual void GetVarsUsed(std::vector<Variable*>& vars){ if (pE1)pE1->GetVarsUsed(vars); if (pE2)pE2->GetVarsUsed(vars); } // list of variables used
 	virtual void MarkType(XMILE_Type type) { if (pE1)pE1->MarkType(type); if (pE2)pE2->MarkType(type); }
 private:

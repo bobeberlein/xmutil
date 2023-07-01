@@ -293,7 +293,7 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 
 extern "C" {
 // returns NULL on error or a string containing XMILE that the caller now owns
-char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, bool isCompact, bool isLongName, bool isAsSectors) {
+char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, bool isCompact, int isLongName, bool isAsSectors) {
     Model m{};
 	std::string ext;
 	if (fileName == nullptr) {
@@ -308,7 +308,7 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
 	if (ext == "dyn" || ext == "DYN")
 	{
 		DynamoParse dp{ &m };
-		dp.SetLongName(isLongName);
+		dp.SetLongName(isLongName != 0);
 		m.SetAsSectors(isAsSectors);
 		if (!dp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
 			return nullptr;

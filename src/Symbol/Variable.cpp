@@ -197,34 +197,13 @@ XMILE_Type Variable::MarkTypes(SymbolNameSpace* sns)
 			bool mrl = function->IsMemoryless();
 			if (function->IsDelay())
 				this->MarkUsesMemory();
-			std::string name = function->GetName();
-			// dynamo only this same place in the call logic lets us fill in the table function info
-			if (function->IsTableCall())
-			{
-				if (!static_cast<const DFunctionTable*>(function)->SetTableXAxis(static_cast<ExpressionFunction*>(exp)->GetArgs()))
-					log("ERROR TABLE call for %s not correctly formmatted.\n", this->GetName().c_str());
-			}
-
-			if (name == "TABXL")
-			{
-				// if we get a LOOKUP_EXTRAPOLATE then try to mark the associated lookup - assume all will extrapolate
-				std::vector<Variable*> vars;
-				exp->GetVarsUsed(vars);
-				// the first should be a graphical
-				std::vector<Equation*> eqs = vars[0]->GetAllEquations();
-				for (Equation* eq : eqs)
-				{
-					Expression* exp = eq->GetExpression();
-					if (exp->GetType() == EXPTYPE_Table)
-						static_cast<ExpressionTable*>(exp)->SetExtrapolate(true);
-				}
-			}
 		}
 		if (exp->TestMarkFlows(sns, NULL, NULL))
 		{
 			gotone = true;
 			break; // one is all that is needed
 		}
+		exp->CheckTableUses(this);
 	}
 	if (!gotone)
 	{

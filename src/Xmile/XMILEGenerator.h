@@ -25,6 +25,7 @@ protected:
 	void generateModelUnits(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateDimensions(tinyxml2::XMLElement* element, std::vector<std::string>& errs);
 	void generateModelAsSectors(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns, bool wantDiagram);
+	void generateEquation(Variable* var, tinyxml2::XMLDocument* doc, tinyxml2::XMLElement* variables);
 	void generateEquations(std::set<Variable*>& included, tinyxml2::XMLDocument* doc, tinyxml2::XMLElement* variables);
 	void generateModelAsModules(tinyxml2::XMLElement* element, std::vector<std::string>& errs, SymbolNameSpace* ns);
 	bool generateModelAsGroups(tinyxml2::XMLElement* elemeGnt, std::vector<std::string>& errs, SymbolNameSpace* ns);

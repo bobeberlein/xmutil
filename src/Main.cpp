@@ -42,7 +42,7 @@ int cliMain(int argc, char *argv[], Model *m) {
     const char *path = nullptr;
     bool useStdio = false;
     bool wantComplete = false;
-    bool longNames = false;
+    int longNames = -1;
     bool sectors = false;
 
     for (argv0 = argv[0], argv++, argc--; argc > 0; argv++, argc--) {
@@ -54,7 +54,9 @@ int cliMain(int argc, char *argv[], Model *m) {
         } else if (strcmp("--want-complete", arg) == 0) {
             wantComplete = true;
         } else if (strcmp("--longnames", arg) == 0) {
-            longNames = true;
+            longNames = 1;
+        } else if (strcmp("--shortnames", arg) == 0) {
+            longNames = 0;
         } else if (strcmp("--sectors", arg) == 0) {
             sectors = true;
         } else if (arg[0] == '-') {

@@ -322,295 +322,7 @@ void XMILEGenerator::generateModelAsSectors(tinyxml2::XMLElement* element, std::
 	{
 		if (var->Unwanted())
 			continue;
-		XMILE_Type type = var->VariableType();
-		std::string tag;
-		switch (type)
-		{
-		case XMILE_Type_DELAYAUX:
-		case XMILE_Type_AUX:
-			tag = "aux";
-			break;
-		case XMILE_Type_STOCK:
-			tag = "stock";
-			break;
-		case XMILE_Type_FLOW:
-			tag = "flow";
-			break;
-		case XMILE_Type_ARRAY:
-			continue;
-		case XMILE_Type_ARRAY_ELM:
-			continue;
-		default:
-			continue;
-			break;
-		}
-		tinyxml2::XMLElement* xvar = doc->NewElement(tag.c_str());
-
-		variables->InsertEndChild(xvar);
-		xvar->SetAttribute("name", var->GetAlternateName().c_str());
-
-		if (type == XMILE_Type_DELAYAUX)
-		{
-			tinyxml2::XMLElement* xcomment = doc->NewElement("isee:delay_aux");
-			xvar->InsertEndChild(xcomment);
-		}
-
-		std::vector<Equation*> eqns;
-		// for vensim models init equations will always be empty
-		std::vector<Equation*> init_eqns = var->GetAllInitEquations();
-		bool wrap_init = false;
-		if (init_eqns.empty())
-			eqns = var->GetAllEquations();
-		else if (type == XMILE_Type_STOCK)
-			eqns.swap(init_eqns); // init_eqns is used for init values of aux otherwise
-		else {
-			eqns = var->GetAllEquations();
-			if (eqns.empty())
-			{
-				eqns.swap(init_eqns); // dynamo convention can have N equations which should translate to INIT
-				wrap_init = true;
-			}
-		}
-
-		size_t eq_count = eqns.size();
-
-		// dimensions
-		std::vector<Variable*> elmlist;
-		int dim_count = var->SubscriptCountVars(elmlist);
-
-		std::string comment = var->Comment();
-		if (!comment.empty())
-		{
-			tinyxml2::XMLElement* xcomment = doc->NewElement("doc");
-			xvar->InsertEndChild(xcomment);
-			xcomment->SetText(comment.c_str());
-		}
-		if (type == XMILE_Type_STOCK)
-		{
-			for (Variable* in : var->Inflows())
-			{
-				tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
-				xvar->InsertEndChild(inflow);
-				inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
-			}
-			for (Variable* out : var->Outflows())
-			{
-				tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
-				xvar->InsertEndChild(outflow);
-				outflow->SetText(SpaceToUnderBar(out->GetAlternateName()).c_str());
-			}
-		}
-
-
-		tinyxml2::XMLElement* xelement = xvar; // usually these are the same - but for non a2a we have element entries
-		size_t eq_ind = 0;
-		size_t eq_pos = 0;
-		std::vector<Symbol*> subs; // [ship,location]
-		std::vector<std::vector<Symbol*> > elms; // [s1,l1]
-		std::vector<std::set<Symbol*> > entries;
-		std::vector<Symbol*> dims;
-		while (eq_ind < eq_count)
-		{
-			Equation* eqn = eqns[eq_ind];
-			if (eq_count > 1)
-			{
-				if (entries.empty())
-					entries.resize(dim_count);
-				// we will blow up everything to single elements
-				if (elms.empty())
-				{
-					eq_pos = 0;
-					elms.clear();
-					eqn->SubscriptExpand(elms, subs);
-					if (!elms.empty())
-					{
-						for (std::vector<Symbol*> elm : elms)
-						{
-							for (int i = 0; i < dim_count; i++)
-							{
-								entries[i].insert(elm[i]);
-							}
-						}
-					}
-				}
-				if (!elms.empty())
-				{
-					dims = elms[eq_pos];
-					std::string s;
-					int dim_count = dims.size();
-					for (int j = 0; j < dim_count; j++)
-					{
-						if (j)
-							s += ", ";
-						s += dims[j]->GetName();
-					}
-					xelement = doc->NewElement("element");
-					xelement->SetAttribute("subscript", s.c_str());
-					xvar->InsertEndChild(xelement);
-				}
-			}
-			// skip it altogether if it is an A FUNCTION OF equation
-			std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false);
-			if (eq_count <= 1 || rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
-			{
-				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
-				xelement->InsertEndChild(xeqn);
-				if (wrap_init)
-					rhs = "INIT(" + rhs + ")";
-				xeqn->SetText(rhs.c_str());
-
-
-				// it it is active init we need to store that separately
-				if (eqn->IsActiveInit() || !init_eqns.empty())
-				{
-					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
-					xelement->InsertEndChild(xieqn);
-					if (eqn->IsActiveInit())
-						xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
-					else
-					{
-						// this will not work correctly for complicated situations
-						if(eq_ind < init_eqns.size())
-							xieqn->SetText(init_eqns[eq_ind]->RHSFormattedXMILE(var, subs, dims, true).c_str());
-						else
-							xieqn->SetText(init_eqns[0]->RHSFormattedXMILE(var, subs, dims, true).c_str());
-					}
-				}
-
-				// if it has a lookup we need to store that separately
-				ExpressionTable* et = eqn->GetTable();
-				if (et)
-				{
-					assert(type == XMILE_Type_AUX || type == XMILE_Type_FLOW);
-					std::vector<double>* xvals = et->GetXVals();
-					std::vector<double>* yvals = et->GetYVals();
-					tinyxml2::XMLElement* gf = doc->NewElement("gf");
-					if (et->Extrapolate())
-						gf->SetAttribute("type", "extrapolate");
-					xelement->InsertEndChild(gf);
-					tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
-					gf->InsertEndChild(yscale);
-					tinyxml2::XMLElement* xpts = doc->NewElement("xpts");
-					gf->InsertEndChild(xpts);
-					tinyxml2::XMLElement* ypts = doc->NewElement("ypts");
-					gf->InsertEndChild(ypts);
-
-					std::string xstr;
-					for (size_t i = 0; i < xvals->size(); i++)
-					{
-						if (i)
-							xstr += ",";
-						xstr += StringFromDouble((*xvals)[i]);
-					}
-					xpts->SetText(xstr.c_str());
-
-					std::string ystr;
-					double ymin = 0;
-					double ymax = 0;
-					for (size_t i = 0; i < yvals->size(); i++)
-					{
-						if (i)
-						{
-							ystr += ",";
-							if ((*yvals)[i] < ymin)
-								ymin = (*yvals)[i];
-							else if ((*yvals)[i] > ymax)
-								ymax = (*yvals)[i];
-						}
-						else
-							ymin = ymax = (*yvals)[i];
-						ystr += StringFromDouble((*yvals)[i]);
-					}
-					ypts->SetText(ystr.c_str());
-
-					if (ymin == ymax)
-						ymax = ymin + 1;
-					yscale->SetAttribute("min", StringFromDouble(ymin).c_str());
-					yscale->SetAttribute("max", StringFromDouble(ymax).c_str());
-				}
-			}
-			if (eq_count > 1)
-			{
-				eq_pos++;
-				if (eq_pos >= elms.size())
-				{
-					elms.clear();
-					eq_ind++;
-				}
-			}
-			else
-				eq_ind++;
-		}
-
-
-		// use entries to try to figure out the appropriate dimensions
-		if (dim_count)
-		{
-			// Vensim allowed partial definition sets - XMILE uses subranges as separate dimensions so we 
-			// try to find the most compact set of dimensions possible that inlcude all the equations include
-			std::vector<Variable*> dimensions;
-
-			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
-			for (int i = 0; i < dim_count; i++)
-			{
-				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
-				if (entries.empty())
-				{
-					// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
-					if (eq_count > 1 || elmlist[i]->GetAllEquations().empty())
-						xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
-					else
-						xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
-				}
-				else
-				{
-					std::set<Symbol*>& entry = entries[i];
-					Symbol* parent = (*entry.begin())->Owner();
-					Symbol* best = parent;
-					if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
-					{
-						for (Symbol* subrange : *parent->Subranges())
-						{
-							if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
-								static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
-							{
-								// does it have them all
-								bool complete = true;
-								std::vector<Symbol*> telms;
-								Equation::GetSubscriptElements(telms, subrange);
-								for (Symbol* elm : entries[i])
-								{
-									if (std::find(telms.begin(), telms.end(), elm) == telms.end())
-									{
-										complete = false;
-										break;
-									}
-								}
-								if (complete)
-									best = subrange;
-							}
-						}
-					}
-					xdim->SetAttribute("name", best->GetName().c_str());
-				}
-				xdims->InsertEndChild(xdim);
-			}
-			xvar->InsertEndChild(xdims);
-		}
-
-		UnitExpression* un = var->Units();
-		if (un)
-		{
-			tinyxml2::XMLElement* units = doc->NewElement("units");
-			xvar->InsertEndChild(units);
-			units->SetText(un->GetEquationString().c_str());
-		}
-		else if (!var->GetUnitsString().empty())
-		{
-			tinyxml2::XMLElement* units = doc->NewElement("units");
-			xvar->InsertEndChild(units);
-			units->SetText(var->GetUnitsString().c_str());
-		}
+		generateEquation(var, doc, variables);
 	}
 	if (want_diagram)
 	{
@@ -624,296 +336,316 @@ void XMILEGenerator::generateEquations(std::set<Variable*>& included, tinyxml2::
 {
 	for (Variable* var : included)
 	{
-		XMILE_Type type = var->VariableType();
-		std::string tag;
-		switch (type)
+		generateEquation(var, doc, variables);
+	}
+}
+
+void XMILEGenerator::generateEquation(Variable* var, tinyxml2::XMLDocument* doc, tinyxml2::XMLElement* variables)
+{
+	XMILE_Type type = var->VariableType();
+	std::string tag;
+	switch (type)
+	{
+	case XMILE_Type_DELAYAUX:
+	case XMILE_Type_AUX:
+		tag = "aux";
+		break;
+	case XMILE_Type_STOCK:
+		tag = "stock";
+		break;
+	case XMILE_Type_FLOW:
+		tag = "flow";
+		break;
+	case XMILE_Type_ARRAY:
+		return;
+	case XMILE_Type_ARRAY_ELM:
+		return;
+	default:
+		return;
+		break;
+	}
+	tinyxml2::XMLElement* xvar = doc->NewElement(tag.c_str());
+
+	variables->InsertEndChild(xvar);
+	xvar->SetAttribute("name", var->GetAlternateName().c_str());
+
+	if (type == XMILE_Type_DELAYAUX)
+	{
+		tinyxml2::XMLElement* xcomment = doc->NewElement("isee:delay_aux");
+		xvar->InsertEndChild(xcomment);
+	}
+
+	std::vector<Equation*> eqns;
+	// for vensim models init equations will always be empty
+	std::vector<Equation*> init_eqns = var->GetAllInitEquations();
+	bool wrap_init = false;
+	if (init_eqns.empty())
+		eqns = var->GetAllEquations();
+	else if (type == XMILE_Type_STOCK)
+		eqns.swap(init_eqns); // init_eqns is used for init values of aux otherwise
+	else {
+		eqns = var->GetAllEquations();
+		if (eqns.empty())
 		{
-		case XMILE_Type_DELAYAUX:
-		case XMILE_Type_AUX:
-			tag = "aux";
-			break;
-		case XMILE_Type_STOCK:
-			tag = "stock";
-			break;
-		case XMILE_Type_FLOW:
-			tag = "flow";
-			break;
-		case XMILE_Type_ARRAY:
-			continue;
-		case XMILE_Type_ARRAY_ELM:
-			continue;
-		default:
-			continue;
-			break;
+			eqns.swap(init_eqns); // dynamo convention can have N equations which should translate to INIT
+			wrap_init = true;
 		}
-		tinyxml2::XMLElement* xvar = doc->NewElement(tag.c_str());
+	}
+	size_t eq_count = eqns.size();
 
-		variables->InsertEndChild(xvar);
-		xvar->SetAttribute("name", var->GetAlternateName().c_str());
 
-		if (type == XMILE_Type_DELAYAUX)
+	// dimensions
+	std::vector<Variable*> elmlist;
+	int dim_count = var->SubscriptCountVars(elmlist);
+
+	std::string comment = var->Comment();
+	if (!comment.empty())
+	{
+		tinyxml2::XMLElement* xcomment = doc->NewElement("doc");
+		xvar->InsertEndChild(xcomment);
+		xcomment->SetText(comment.c_str());
+	}
+	if (type == XMILE_Type_STOCK)
+	{
+		for (Variable* in : var->Inflows())
 		{
-			tinyxml2::XMLElement* xcomment = doc->NewElement("isee:delay_aux");
-			xvar->InsertEndChild(xcomment);
+			tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
+			xvar->InsertEndChild(inflow);
+			inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
 		}
+		for (Variable* out : var->Outflows())
+		{
+			tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
+			xvar->InsertEndChild(outflow);
+			outflow->SetText(SpaceToUnderBar(out->GetAlternateName()).c_str());
+		}
+	}
 
-		std::vector<Equation*> eqns;
-		// for vensim models init equations will always be empty
-		std::vector<Equation*> init_eqns = var->GetAllInitEquations();
-		bool wrap_init = false;
-		if (init_eqns.empty())
-			eqns = var->GetAllEquations();
-		else if (type == XMILE_Type_STOCK)
-			eqns.swap(init_eqns); // init_eqns is used for init values of aux otherwise
-		else {
-			eqns = var->GetAllEquations();
-			if (eqns.empty())
+
+	tinyxml2::XMLElement* xelement = xvar; // usually these are the same - but for non a2a we have element entries
+	size_t eq_ind = 0;
+	size_t eq_pos = 0;
+	std::vector<Symbol*> subs; // [ship,location]
+	std::vector<std::vector<Symbol*> > elms; // [s1,l1]
+	std::vector<std::set<Symbol*> > entries;
+	std::vector<Symbol*> dims;
+	while (eq_ind < eq_count)
+	{
+		Equation* eqn = eqns[eq_ind];
+		if (eq_count > 1)
+		{
+			if (entries.empty())
+				entries.resize(dim_count);
+			// we will blow up everything to single elements
+			if (elms.empty())
 			{
-				eqns.swap(init_eqns); // dynamo convention can have N equations which should translate to INIT
-				wrap_init = true;
-			}
-		}
-		size_t eq_count = eqns.size();
-
-
-		// dimensions
-		std::vector<Variable*> elmlist;
-		int dim_count = var->SubscriptCountVars(elmlist);
-
-		std::string comment = var->Comment();
-		if (!comment.empty())
-		{
-			tinyxml2::XMLElement* xcomment = doc->NewElement("doc");
-			xvar->InsertEndChild(xcomment);
-			xcomment->SetText(comment.c_str());
-		}
-		if (type == XMILE_Type_STOCK)
-		{
-			for (Variable* in : var->Inflows())
-			{
-				tinyxml2::XMLElement* inflow = doc->NewElement("inflow");
-				xvar->InsertEndChild(inflow);
-				inflow->SetText(SpaceToUnderBar(in->GetAlternateName()).c_str());
-			}
-			for (Variable* out : var->Outflows())
-			{
-				tinyxml2::XMLElement* outflow = doc->NewElement("outflow");
-				xvar->InsertEndChild(outflow);
-				outflow->SetText(SpaceToUnderBar(out->GetAlternateName()).c_str());
-			}
-		}
-
-
-		tinyxml2::XMLElement* xelement = xvar; // usually these are the same - but for non a2a we have element entries
-		size_t eq_ind = 0;
-		size_t eq_pos = 0;
-		std::vector<Symbol*> subs; // [ship,location]
-		std::vector<std::vector<Symbol*> > elms; // [s1,l1]
-		std::vector<std::set<Symbol*> > entries;
-		std::vector<Symbol*> dims;
-		while (eq_ind < eq_count)
-		{
-			Equation* eqn = eqns[eq_ind];
-			if (eq_count > 1)
-			{
-				if (entries.empty())
-					entries.resize(dim_count);
-				// we will blow up everything to single elements
-				if (elms.empty())
-				{
-					eq_pos = 0;
-					elms.clear();
-					eqn->SubscriptExpand(elms, subs);
-					if (!elms.empty())
-					{
-						for (std::vector<Symbol*> elm : elms)
-						{
-							for (int i = 0; i < dim_count; i++)
-							{
-								entries[i].insert(elm[i]);
-							}
-						}
-					}
-				}
+				eq_pos = 0;
+				elms.clear();
+				eqn->SubscriptExpand(elms, subs);
 				if (!elms.empty())
 				{
-					dims = elms[eq_pos];
-					std::string s;
-					int dim_count = dims.size();
-					for (int j = 0; j < dim_count; j++)
+					for (std::vector<Symbol*> elm : elms)
 					{
-						if (j)
-							s += ", ";
-						s += dims[j]->GetName();
-					}
-					xelement = doc->NewElement("element");
-					xelement->SetAttribute("subscript", s.c_str());
-					xvar->InsertEndChild(xelement);
-				}
-			}
-			// skip it altogether if it is an A FUNCTION OF equation
-			std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false);
-			if (eq_count <= 1 || rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
-			{
-				tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
-				xelement->InsertEndChild(xeqn);
-				if (wrap_init)
-					rhs = "INIT(" + rhs + ")";
-				xeqn->SetText(rhs.c_str());
-
-
-
-				// it it is active init we need to store that separately
-				if (eqn->IsActiveInit() || !init_eqns.empty())
-				{
-					tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
-					xelement->InsertEndChild(xieqn);
-					if (eqn->IsActiveInit())
-						xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
-					else
-					{
-						// this will not work correctly for complicated situations
-						if (eq_ind < init_eqns.size())
-							xieqn->SetText(init_eqns[eq_ind]->RHSFormattedXMILE(var, subs, dims, true).c_str());
-						else
-							xieqn->SetText(init_eqns[0]->RHSFormattedXMILE(var, subs, dims, true).c_str());
-					}
-				}
-
-				// if it has a lookup we need to store that separately
-				ExpressionTable* et = eqn->GetTable();
-				if (et)
-				{
-					assert(type == XMILE_Type_AUX || type == XMILE_Type_FLOW);
-					std::vector<double>* xvals = et->GetXVals();
-					std::vector<double>* yvals = et->GetYVals();
-					tinyxml2::XMLElement* gf = doc->NewElement("gf");
-					if (et->Extrapolate())
-						gf->SetAttribute("type", "extrapolate");
-					xelement->InsertEndChild(gf);
-					tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
-					gf->InsertEndChild(yscale);
-					tinyxml2::XMLElement* xpts = doc->NewElement("xpts");
-					gf->InsertEndChild(xpts);
-					tinyxml2::XMLElement* ypts = doc->NewElement("ypts");
-					gf->InsertEndChild(ypts);
-
-					std::string xstr;
-					for (size_t i = 0; i < xvals->size(); i++)
-					{
-						if (i)
-							xstr += ",";
-						xstr += StringFromDouble((*xvals)[i]);
-					}
-					xpts->SetText(xstr.c_str());
-
-					std::string ystr;
-					double ymin = 0;
-					double ymax = 0;
-					for (size_t i = 0; i < yvals->size(); i++)
-					{
-						if (i)
+						for (int i = 0; i < dim_count; i++)
 						{
-							ystr += ",";
-							if ((*yvals)[i] < ymin)
-								ymin = (*yvals)[i];
-							else if ((*yvals)[i] > ymax)
-								ymax = (*yvals)[i];
+							entries[i].insert(elm[i]);
 						}
-						else
-							ymin = ymax = (*yvals)[i];
-						ystr += StringFromDouble((*yvals)[i]);
 					}
-					ypts->SetText(ystr.c_str());
-
-					if (ymin == ymax)
-						ymax = ymin + 1;
-					yscale->SetAttribute("min", StringFromDouble(ymin).c_str());
-					yscale->SetAttribute("max", StringFromDouble(ymax).c_str());
 				}
 			}
-			if (eq_count > 1)
+			if (!elms.empty())
 			{
-				eq_pos++;
-				if (eq_pos >= elms.size())
+				dims = elms[eq_pos];
+				std::string s;
+				int dim_count = dims.size();
+				for (int j = 0; j < dim_count; j++)
 				{
-					elms.clear();
-					eq_ind++;
+					if (j)
+						s += ", ";
+					s += dims[j]->GetName();
 				}
+				xelement = doc->NewElement("element");
+				xelement->SetAttribute("subscript", s.c_str());
+				xvar->InsertEndChild(xelement);
 			}
-			else
-				eq_ind++;
 		}
-
-
-		// use entries to try to figure out the appropriate dimensions
-		if (dim_count)
+		// skip it altogether if it is an A FUNCTION OF equation
+		std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false);
+		if (eq_count <= 1 || rhs.size() < 42 || rhs.substr(28, 13) != "A FUNCTION OF")
 		{
-			// Vensim allowed partial definition sets - XMILE uses subranges as separate dimensions so we 
-			// try to find the most compact set of dimensions possible that inlcude all the equations include
-			std::vector<Variable*> dimensions;
+			tinyxml2::XMLElement* xeqn = doc->NewElement("eqn");
+			xelement->InsertEndChild(xeqn);
+			if (wrap_init)
+				rhs = "INIT(" + rhs + ")";
+			xeqn->SetText(rhs.c_str());
 
-			tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
-			for (int i = 0; i < dim_count; i++)
+
+
+			// it it is active init we need to store that separately
+			if (eqn->IsActiveInit() || !init_eqns.empty())
 			{
-				tinyxml2::XMLElement* xdim = doc->NewElement("dim");
-				if (entries.empty())
-				{
-					// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
-					if (eq_count > 1 || elmlist[i]->GetAllEquations().empty())
-						xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
-					else
-						xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
-				}
+				tinyxml2::XMLElement* xieqn = doc->NewElement("init_eqn");
+				xelement->InsertEndChild(xieqn);
+				if (eqn->IsActiveInit())
+					xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
 				else
 				{
-					std::set<Symbol*>& entry = entries[i];
-					Symbol* parent = (*entry.begin())->Owner();
-					Symbol* best = parent;
-					if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
+					// this will not work correctly for complicated situations
+					if (eq_ind < init_eqns.size())
+						xieqn->SetText(init_eqns[eq_ind]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+					else
+						xieqn->SetText(init_eqns[0]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+				}
+			}
+
+			// if it has a lookup we need to store that separately
+			ExpressionTable* et = eqn->GetTable();
+			if (et)
+			{
+				assert(type == XMILE_Type_AUX || type == XMILE_Type_FLOW);
+				std::vector<double>* xvals = et->GetXVals();
+				std::vector<double>* yvals = et->GetYVals();
+				tinyxml2::XMLElement* gf = doc->NewElement("gf");
+				if (et->Extrapolate())
+					gf->SetAttribute("type", "extrapolate");
+				xelement->InsertEndChild(gf);
+				tinyxml2::XMLElement* yscale = doc->NewElement("yscale");
+				gf->InsertEndChild(yscale);
+				tinyxml2::XMLElement* xpts = doc->NewElement("xpts");
+				gf->InsertEndChild(xpts);
+				tinyxml2::XMLElement* ypts = doc->NewElement("ypts");
+				gf->InsertEndChild(ypts);
+
+				if (xvals->empty())
+				{
+					// most likely a translation error - fill in with 0,1 based on ysize
+					log("WARNING The graphical %s does not have a known x axis assuming 0,1", var->GetAlternateName().c_str());
+					int n = yvals->size();
+					if (n)
 					{
-						for (Symbol* subrange : *parent->Subranges())
+						double increment = 1.0 / (double)n;
+						double val = 0;
+						for (int i = 0; i < n; i++, val += increment)
 						{
-							if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
-								static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
-							{
-								// does it have them all
-								bool complete = true;
-								std::vector<Symbol*> telms;
-								Equation::GetSubscriptElements(telms, subrange);
-								for (Symbol* elm : entries[i])
-								{
-									if (std::find(telms.begin(), telms.end(), elm) == telms.end())
-									{
-										complete = false;
-										break;
-									}
-								}
-								if (complete)
-									best = subrange;
-							}
+							xvals->push_back(val);
 						}
 					}
-					xdim->SetAttribute("name", best->GetName().c_str());
 				}
-				xdims->InsertEndChild(xdim);
-			}
-			xvar->InsertEndChild(xdims);
-		}
+				std::string xstr;
+				for (size_t i = 0; i < xvals->size(); i++)
+				{
+					if (i)
+						xstr += ",";
+					xstr += StringFromDouble((*xvals)[i]);
+				}
+				xpts->SetText(xstr.c_str());
 
-		UnitExpression* un = var->Units();
-		if (un)
-		{
-			tinyxml2::XMLElement* units = doc->NewElement("units");
-			xvar->InsertEndChild(units);
-			units->SetText(un->GetEquationString().c_str());
+				std::string ystr;
+				double ymin = 0;
+				double ymax = 0;
+				for (size_t i = 0; i < yvals->size(); i++)
+				{
+					if (i)
+					{
+						ystr += ",";
+						if ((*yvals)[i] < ymin)
+							ymin = (*yvals)[i];
+						else if ((*yvals)[i] > ymax)
+							ymax = (*yvals)[i];
+					}
+					else
+						ymin = ymax = (*yvals)[i];
+					ystr += StringFromDouble((*yvals)[i]);
+				}
+				ypts->SetText(ystr.c_str());
+
+				if (ymin == ymax)
+					ymax = ymin + 1;
+				yscale->SetAttribute("min", StringFromDouble(ymin).c_str());
+				yscale->SetAttribute("max", StringFromDouble(ymax).c_str());
+			}
 		}
-		else if (!var->GetUnitsString().empty())
+		if (eq_count > 1)
 		{
-			tinyxml2::XMLElement* units = doc->NewElement("units");
-			xvar->InsertEndChild(units);
-			units->SetText(var->GetUnitsString().c_str());
+			eq_pos++;
+			if (eq_pos >= elms.size())
+			{
+				elms.clear();
+				eq_ind++;
+			}
 		}
+		else
+			eq_ind++;
+	}
+
+
+	// use entries to try to figure out the appropriate dimensions
+	if (dim_count)
+	{
+		// Vensim allowed partial definition sets - XMILE uses subranges as separate dimensions so we 
+		// try to find the most compact set of dimensions possible that inlcude all the equations include
+		std::vector<Variable*> dimensions;
+
+		tinyxml2::XMLElement* xdims = doc->NewElement("dimensions");
+		for (int i = 0; i < dim_count; i++)
+		{
+			tinyxml2::XMLElement* xdim = doc->NewElement("dim");
+			if (entries.empty())
+			{
+				// we might get a subrange in elmlist so need to get parent - but only if there is more than 1 equation
+				if (eq_count > 1 || elmlist[i]->GetAllEquations().empty())
+					xdim->SetAttribute("name", elmlist[i]->Owner()->GetName().c_str());
+				else
+					xdim->SetAttribute("name", elmlist[i]->GetName().c_str());
+			}
+			else
+			{
+				std::set<Symbol*>& entry = entries[i];
+				Symbol* parent = (*entry.begin())->Owner();
+				Symbol* best = parent;
+				if (parent->Subranges() != NULL && static_cast<Variable*>(parent)->Nelm() > entry.size())
+				{
+					for (Symbol* subrange : *parent->Subranges())
+					{
+						if (static_cast<Variable*>(subrange)->Nelm() >= entry.size() &&
+							static_cast<Variable*>(subrange)->Nelm() < static_cast<Variable*>(best)->Nelm())
+						{
+							// does it have them all
+							bool complete = true;
+							std::vector<Symbol*> telms;
+							Equation::GetSubscriptElements(telms, subrange);
+							for (Symbol* elm : entries[i])
+							{
+								if (std::find(telms.begin(), telms.end(), elm) == telms.end())
+								{
+									complete = false;
+									break;
+								}
+							}
+							if (complete)
+								best = subrange;
+						}
+					}
+				}
+				xdim->SetAttribute("name", best->GetName().c_str());
+			}
+			xdims->InsertEndChild(xdim);
+		}
+		xvar->InsertEndChild(xdims);
+	}
+
+	UnitExpression* un = var->Units();
+	if (un)
+	{
+		tinyxml2::XMLElement* units = doc->NewElement("units");
+		xvar->InsertEndChild(units);
+		units->SetText(un->GetEquationString().c_str());
+	}
+	else if (!var->GetUnitsString().empty())
+	{
+		tinyxml2::XMLElement* units = doc->NewElement("units");
+		xvar->InsertEndChild(units);
+		units->SetText(var->GetUnitsString().c_str());
 	}
 }
 

@@ -42,6 +42,41 @@ void ExpressionFunction::CheckPlaceholderVars(Model *m,bool isfirst)
     pArgs->CheckPlaceholderVars(m) ; 
 }
 
+void ExpressionFunction::CheckTableUses(Variable* var)
+{
+	if (!pArgs) {
+		return;
+	}
+	// dynamo only this same place in the call logic lets us fill in the table function info
+	if (pFunction && pFunction->IsTableCall())
+	{
+		std::string name = pFunction->GetName();
+		if (!static_cast<const DFunctionTable*>(pFunction)->SetTableXAxis(pArgs))
+			log("ERROR TABLE call in equation for %s not correctly formmatted.\n", var->GetName().c_str());
+
+		if (name == "TABXL")
+		{
+			// if we get a LOOKUP_EXTRAPOLATE then try to mark the associated lookup - assume all will extrapolate
+			std::vector<Variable*> vars;
+			const_cast<Expression*>((*pArgs)[0])->GetVarsUsed(vars);
+			// the first should be a graphical
+			std::vector<Equation*> eqs = vars[0]->GetAllEquations();
+			for (Equation* eq : eqs)
+			{
+				Expression* exp = eq->GetExpression();
+				if (exp->GetType() == EXPTYPE_Table)
+					static_cast<ExpressionTable*>(exp)->SetExtrapolate(true);
+			}
+		}
+	}
+
+	int n = pArgs->Length();
+	for (int i = 0; i < n; i++) {
+		pArgs->GetExp(i)->CheckTableUses(var);
+	}
+
+}
+
 void ExpressionFunction::GetVarsUsed(std::vector<Variable*>& vars)
 {
     if (!pArgs) {
