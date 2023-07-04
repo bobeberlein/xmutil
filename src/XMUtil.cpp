@@ -319,7 +319,7 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
 	else
     {
         VensimParse vp{&m};
-        vp.SetLongName(isLongName);
+        vp.SetLongName(isLongName == 1);
         m.SetAsSectors(isAsSectors);
         if (!vp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
             return nullptr;
