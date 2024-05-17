@@ -646,16 +646,16 @@ Expression *VensimParse::OperatorExpression(int oper,Expression *exp1,Expression
    case '/' :
       return new ExpressionDivide(pSymbolNameSpace,exp1,exp2) ;
    case '+' :
-      if(!exp2 && exp1 && exp1->GetType() == EXPTYPE_Number)
-         return exp1 ; /* unary plus just ignore */
+      if(!exp1 && exp2 && exp2->GetType() == EXPTYPE_Number)
+         return exp2 ; /* unary plus just ignore */
       return new ExpressionAdd(pSymbolNameSpace,exp1,exp2) ;
    case '-' :
-      if(!exp2) {
-         if(exp1 && exp1->GetType() == EXPTYPE_Number) {
-            exp1->FlipSign() ;
-            return exp1 ;
+      if(!exp1) {
+         if(exp2 && exp2->GetType() == EXPTYPE_Number) {
+            exp2->FlipSign() ;
+            return exp2 ;
          }
-         return new ExpressionUnaryMinus(pSymbolNameSpace,exp1,NULL) ; 
+         return new ExpressionUnaryMinus(pSymbolNameSpace,exp2,NULL) ; 
       }
       return new ExpressionSubtract(pSymbolNameSpace,exp1,exp2) ;
    case '^' :
