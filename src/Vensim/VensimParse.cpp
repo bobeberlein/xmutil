@@ -148,8 +148,7 @@ Equation *VensimParse::AddEq(LeftHandSide *lhs,Expression *ex,ExpressionList *ex
           ex = ent ;
        }
     }
-
-    return new Equation(pSymbolNameSpace,lhs,ex,tok) ; 
+	return new Equation(pSymbolNameSpace,lhs,ex,tok) ; 
 }
 Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTable* tbl, bool legacy)
 {

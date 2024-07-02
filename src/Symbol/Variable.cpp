@@ -91,6 +91,23 @@ void Variable::PurgeAFOEq()
 	if (!pVariableContent)
 		return;
 	std::vector<Equation*>equations = pVariableContent->GetAllEquations();
+	// drop any equations with no expressions - Vensim allos a= as an equation but it is not valid
+	std::vector<int> drop;
+	int i = 0;
+	for (Equation* eq : equations)
+	{
+		if (eq->GetExpression() == NULL)
+			drop.push_back(i);
+		i++;
+	}
+	if (!drop.empty())
+	{
+		for (int i : drop)
+		{
+			pVariableContent->DropEquation(0);
+		}
+		equations = pVariableContent->GetAllEquations();
+	}
 	if (equations.size() <= 1)
 		return;
 	// if the first equation is an A FUNCTION OF equation then delete it
@@ -136,74 +153,77 @@ XMILE_Type Variable::MarkTypes(SymbolNameSpace* sns)
 	{
 		Equation* eq = equations[i];
 		Expression* exp = eq->GetExpression();
-		if (exp->GetType() == EXPTYPE_Symlist)
+		if (exp)
 		{
-			// the array should be a list of elements - we need to point those back to the array so that we can propery dimension variables
-			SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
-			std::string name = this->GetName();
-			symlist->SetOwner(this); // this can recur
-			mVariableType = XMILE_Type_ARRAY;
-			// anything untyped in the symlist should be marked an elm - may contain other arrays
-			int n = symlist->Length();
-			for (int i = 0; i < n; i++)
+			if (exp->GetType() == EXPTYPE_Symlist)
 			{
-				const SymbolList::SymbolListEntry& sle = (*symlist)[i];
-				if (sle.eType == SymbolList::EntryType_SYMBOL)
+				// the array should be a list of elements - we need to point those back to the array so that we can propery dimension variables
+				SymbolList* symlist = static_cast<ExpressionSymbolList*>(exp)->SymList();
+				std::string name = this->GetName();
+				symlist->SetOwner(this); // this can recur
+				mVariableType = XMILE_Type_ARRAY;
+				// anything untyped in the symlist should be marked an elm - may contain other arrays
+				int n = symlist->Length();
+				for (int i = 0; i < n; i++)
 				{
-					const Variable* elm = static_cast<const Variable*>(sle.u.pSymbol);
-					if (elm->mVariableType == XMILE_Type_UNKNOWN)
-						const_cast<Variable*>(elm)->mVariableType = XMILE_Type_ARRAY_ELM;
-				}
-			}
-			return mVariableType;
-		}
-		else if (exp->GetType() == EXPTYPE_NumberTable)
-		{
-			// need to blow this out to separate equations for allentries - only implemented for the single equation version right now
-			std::vector< std::vector< Symbol*> >elms;
-			std::vector<Symbol*>subs;
-			eq->SubscriptExpand(elms, subs);
-			if (!elms.empty()) // can do something - otherwise just put out ???
-			{
-				ExpressionNumberTable* t = static_cast<ExpressionNumberTable*>(exp);
-				const std::vector<double>& vals = t->GetVals();
-				if (vals.size() != elms.size())
-				{
-					log("Error the number of entries does not match array size for \"%s\"\n", this->GetName().c_str());
-				}
-				else
-				{
-					equations.erase(equations.begin() + i);
-					size_t n2 = vals.size();
-					for (size_t j = 0; j < n2; j++)
+					const SymbolList::SymbolListEntry& sle = (*symlist)[i];
+					if (sle.eType == SymbolList::EntryType_SYMBOL)
 					{
-						SymbolList* entry = new SymbolList(sns, elms[j][0], SymbolList::EntryType_SYMBOL);
-						for (size_t k = 1; k < elms[j].size(); k++)
-							entry->Append(elms[j][k], false);
-						LeftHandSide* lhs = new LeftHandSide(sns, eq->GetLeft()->GetExpressionVariable(), entry, NULL, 0);
-						ExpressionNumber* expnum = new ExpressionNumber(sns, vals[j]);
-						Equation* neq = new Equation(sns, lhs, expnum, '=');
-						equations.push_back(neq);
+						const Variable* elm = static_cast<const Variable*>(sle.u.pSymbol);
+						if (elm->mVariableType == XMILE_Type_UNKNOWN)
+							const_cast<Variable*>(elm)->mVariableType = XMILE_Type_ARRAY_ELM;
 					}
-					// now reenter with new equations
-					pVariableContent->SetAllEquations(equations);
-					return MarkTypes(sns);
+				}
+				return mVariableType;
+			}
+			else if (exp->GetType() == EXPTYPE_NumberTable)
+			{
+				// need to blow this out to separate equations for allentries - only implemented for the single equation version right now
+				std::vector< std::vector< Symbol*> >elms;
+				std::vector<Symbol*>subs;
+				eq->SubscriptExpand(elms, subs);
+				if (!elms.empty()) // can do something - otherwise just put out ???
+				{
+					ExpressionNumberTable* t = static_cast<ExpressionNumberTable*>(exp);
+					const std::vector<double>& vals = t->GetVals();
+					if (vals.size() != elms.size())
+					{
+						log("Error the number of entries does not match array size for \"%s\"\n", this->GetName().c_str());
+					}
+					else
+					{
+						equations.erase(equations.begin() + i);
+						size_t n2 = vals.size();
+						for (size_t j = 0; j < n2; j++)
+						{
+							SymbolList* entry = new SymbolList(sns, elms[j][0], SymbolList::EntryType_SYMBOL);
+							for (size_t k = 1; k < elms[j].size(); k++)
+								entry->Append(elms[j][k], false);
+							LeftHandSide* lhs = new LeftHandSide(sns, eq->GetLeft()->GetExpressionVariable(), entry, NULL, 0);
+							ExpressionNumber* expnum = new ExpressionNumber(sns, vals[j]);
+							Equation* neq = new Equation(sns, lhs, expnum, '=');
+							equations.push_back(neq);
+						}
+						// now reenter with new equations
+						pVariableContent->SetAllEquations(equations);
+						return MarkTypes(sns);
+					}
 				}
 			}
+			else if (exp->GetType() == EXPTYPE_Function)
+			{
+				Function* function = static_cast<ExpressionFunction*>(exp)->GetFunction();
+				bool mrl = function->IsMemoryless();
+				if (function->IsDelay())
+					this->MarkUsesMemory();
+			}
+			if (exp->TestMarkFlows(sns, NULL, NULL))
+			{
+				gotone = true;
+				break; // one is all that is needed
+			}
+			exp->CheckTableUses(this);
 		}
-		else if (exp->GetType() == EXPTYPE_Function)
-		{
-			Function* function = static_cast<ExpressionFunction*>(exp)->GetFunction();
-			bool mrl = function->IsMemoryless();
-			if (function->IsDelay())
-				this->MarkUsesMemory();
-		}
-		if (exp->TestMarkFlows(sns, NULL, NULL))
-		{
-			gotone = true;
-			break; // one is all that is needed
-		}
-		exp->CheckTableUses(this);
 	}
 	if (!gotone)
 	{
