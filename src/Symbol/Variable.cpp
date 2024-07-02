@@ -102,9 +102,9 @@ void Variable::PurgeAFOEq()
 	}
 	if (!drop.empty())
 	{
-		for (int i : drop)
+		for (int i = drop.size(); i-- > 0;)
 		{
-			pVariableContent->DropEquation(0);
+			pVariableContent->DropEquation(drop[i]);
 		}
 		equations = pVariableContent->GetAllEquations();
 	}
