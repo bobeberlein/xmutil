@@ -84,7 +84,7 @@ void SymbolList::OutputComputable(ContextInfo *info)
 			Symbol* s = vSymbols[i].u.pSymbol;
 			if (s->Owner() != s)
 			{
-				*info << "*:" << SpaceToUnderBar(s->GetName()); // new convention for XMILE to allow subrange use
+				*info  << SpaceToUnderBar(s->GetName()) << ".*"; // new convention for XMILE to allow subrange use
  
 				//// if this is a contiguous subrange we can use a:b notation - otherwise can't do it
 				//std::vector<Symbol*> elms;

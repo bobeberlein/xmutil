@@ -57,6 +57,17 @@ void FunctionVectorLookup::OutputComputable(ContextInfo* info, ExpressionList* a
 	Function::OutputComputable(info, arg);
 }
 
+void FunctionElmCount::OutputComputable(ContextInfo* info, ExpressionList* arg)
+{
+  if (arg && arg->Length() == 1 && arg->GetExp(0)->GetType() == EXPTYPE_Variable) {
+    *info << "SIZE(";
+    Variable *var = static_cast<ExpressionVariable *>(arg->GetExp(0))->GetVariable();
+    *info << var->GetName();
+    *info << ")";
+    return;
+  }
+  Function::OutputComputable(info, arg);
+}
 
 void FunctionTimeBase::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
