@@ -112,6 +112,8 @@ void VensimParse::ReadyFunctions()
 		new FunctionGetDirectData(pSymbolNameSpace);
 		new FunctionGetDataMean(pSymbolNameSpace);
 
+		new FunctionAllocateByPriority(pSymbolNameSpace);
+
         pSymbolNameSpace->ConfirmAllAllocations();
 	}
 	catch (...) {

@@ -240,6 +240,13 @@ FSubclassTime(FunctionRamp, "RAMP", 3, "RAMP")
 FSubclass(FunctionLn, "LN", 1, "LN")
 FSubclassTime(FunctionStep, "STEP", 2, "step")
 
+// allocation
+FSubclassStart(FunctionAllocateByPriority, "ALLOCATE BY PRIORITY", 5, "ALLOCATE")
+public:
+virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+};
+
+
 FSubclassKeyword(FunctionTabbedArray, "TABBED ARRAY", 1)
 
 // functions that will never translate - but easier to catch error on other side

@@ -34,7 +34,7 @@ class Variable;
 class ContextInfo :  public std::ostringstream
 {
 public:
-	ContextInfo(Variable* lhs) { pLHS = lhs;  iComputeType = 0; bInitEqn = false;  bInSubList = false;  bSelfIsPrevious = false; pEquations = NULL; }
+	ContextInfo(Variable* lhs) { pLHS = lhs;  iComputeType = 0; bInitEqn = false;  bInSubList = false;  bSelfIsPrevious = false; pEquations = NULL; bWantFinalStar = false;}
    ~ContextInfo(void) { }
    friend class Model ;
   // ContextInfo& operator << (const char *s) { std::cout << s ; return *this; }
@@ -60,6 +60,8 @@ public:
    void SetInSubList(bool set) { bInSubList = set; }
    bool SelfIsPrevious() const { return bSelfIsPrevious; }
    void SetSelfIsPrevious(bool set) { bSelfIsPrevious = set; }
+   bool WantFinalStar() const { return bWantFinalStar;}
+   void SetWantFinalStar(bool set) { bWantFinalStar = set; }
    Variable* LHS() { return pLHS; }
 private:
    double dTime,dDT ;
@@ -76,6 +78,7 @@ private:
    bool bInitEqn; // for xmile
    bool bInSubList;
    bool bSelfIsPrevious;
+   bool bWantFinalStar;
 };
 
 #endif
