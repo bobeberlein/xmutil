@@ -101,6 +101,42 @@
         ],
         'sources': [
             './src/Main.cpp',
+            '<@(common_sources)',
+        ],
+        'defines' : [
+            
+        ],
+        'include_dirs': [
+            'src',
+        ]
+    }, {
+        'target_name': 'XMUtil_wasm',
+        'type': 'none',
+        'dependencies': [],
+        'sources': [
+            './src/emscripten_wrapper.cpp',
+            '<@(common_sources)',
+        ],
+        'actions': [{
+            'action_name': 'build_wasm',
+            'inputs': [
+                '<@(_sources)',
+                '<(cwd)/build_wasm_action.sh',
+            ],
+            'outputs': [
+                '<(PRODUCT_DIR)/xmutil.js',
+                '<(PRODUCT_DIR)/xmutil.wasm',
+            ],
+            'action': [
+                'bash',
+                '<(cwd)/build_wasm_action.sh',
+                '<(PRODUCT_DIR)',
+                '<@(_sources)',
+            ],
+        }],
+    }],
+    'variables': {
+        'common_sources': [
             './src/XMUtil.h',
             './src/XMUtil.cpp',
             './src/Log.h',
@@ -123,7 +159,6 @@
             './src/Vensim/VensimParseFunctions.cpp',
             './src/Vensim/VensimView.h',
             './src/Vensim/VensimView.cpp',
-#            './src/Vensim/VLex.y',
             './src/Vensim/VYacc.tab.cpp',
             './src/Vensim/VYacc.tab.hpp',
             './src/Vensim/VYacc.y',
@@ -177,11 +212,5 @@
             './src/Function/TableFunction.h',
             './src/Function/TableFunction.cpp',
         ],
-        'defines' : [
-            
-        ],
-        'include_dirs': [
-            'src',
-        ]
-    }]
+    },
 }
