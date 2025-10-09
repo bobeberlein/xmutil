@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>XMUtil WASM Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .output {
+            background: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>XMUtil WASM - MDL to XMILE Converter</h1>
+
+    <h2>Input MDL:</h2>
+    <textarea id="mdlInput" placeholder="Paste MDL content here...">
+{UTF-8}
+Population = 100
+~	Person
+~		|
+
+FINAL TIME  = 10
+~	Month
+~	The final time for the simulation.
+~|
+
+INITIAL TIME  = 0
+~	Month
+~	The initial time for the simulation.
+~|
+
+SAVEPER  = TIME STEP
+~	Month [0,?]
+~	The frequency with which output is stored.
+~|
+
+TIME STEP  = 1
+~	Month [0,?]
+~	The time step for the simulation.
+~|
+    </textarea>
+
+    <button onclick="convert()">Convert to XMILE</button>
+
+    <h2>Output XMILE:</h2>
+    <div class="output">
+        <pre id="xmileOutput">Click "Convert to XMILE" to see the output...</pre>
+    </div>
+
+    <script src="out/Release/xmutil.js"></script>
+    <script>
+        let xmutilModule;
+
+        createXMUtilModule().then(function(Module) {
+            xmutilModule = Module;
+            console.log('XMUtil WASM module loaded successfully');
+            document.getElementById('xmileOutput').textContent = 'Module loaded! Ready to convert.';
+        }).catch(function(err) {
+            console.error('Failed to load XMUtil WASM module:', err);
+            document.getElementById('xmileOutput').textContent = 'Error loading WASM module: ' + err;
+        });
+
+        function convert() {
+            if (!xmutilModule) {
+                alert('WASM module not yet loaded. Please wait and try again.');
+                return;
+            }
+
+            const mdlContent = document.getElementById('mdlInput').value;
+            const outputElement = document.getElementById('xmileOutput');
+
+            try {
+                // Call with default parameters (only mdlContent is required)
+                const xmileResult = xmutilModule.convertMdlToXmile(mdlContent);
+
+                if (xmileResult && xmileResult.length > 0) {
+                    outputElement.textContent = xmileResult;
+                } else {
+                    outputElement.textContent = 'Error: Conversion returned empty result. Check console for details.';
+                }
+            } catch (error) {
+                outputElement.textContent = 'Error during conversion: ' + error.message + '\n\nStack: ' + error.stack;
+                console.error('Conversion error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

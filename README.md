@@ -119,3 +119,77 @@ Switch to the directory where your `.mdl` file is located. Run XMUtil on the `.m
 ~~~
 {/path/to/xmutil/debug}/XMUtil.exe {mdl-file}
 ~~~
+
+# WebAssembly Build
+
+XMUtil can be compiled to WebAssembly for use in web browsers.
+
+## Prerequisites
+
+- Emscripten SDK installed at `~/tools/emsdk`
+
+## Building for WebAssembly
+
+```bash
+./configure.sh --use-wasm
+make XMUtil_wasm BUILDTYPE=Debug|Release
+```
+
+The build outputs will be created in `out/BUILDTYPE/`:
+- `xmutil.js` - JavaScript loader
+- `xmutil.wasm` - WebAssembly binary
+
+## WebAssembly API
+
+The WASM module exposes a single function:
+
+```javascript
+convertMdlToXmile(mdlContent, isCompact=false, isLongName=1, isAsSectors=false)
+```
+
+**Parameters:**
+- `mdlContent` (string): The MDL model content to convert
+- `isCompact` (boolean, optional): Whether to generate compact XMILE output (default: false)
+- `isLongName` (number, optional): Use long names (1) or short names (0) (default: 1)
+- `isAsSectors` (boolean, optional): Generate as sectors (default: false)
+
+**Returns:** XMILE XML content as a string, or empty string on error
+
+## Usage Example
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XMUtil WASM Example</title>
+    <script src="out/Debug/xmutil.js"></script>
+</head>
+<body>
+    <script>
+        createXMUtilModule().then(function(Module) {
+            const mdl = `{UTF-8}
+Population = 100
+~  Person
+~  |`;
+
+            const xmile = Module.convertMdlToXmile(mdl);
+            console.log(xmile);
+        });
+    </script>
+</body>
+</html>
+```
+
+## Testing WebAssembly Build
+
+A test HTML file is provided at `test_wasm.html`:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open http://localhost:8000/test_wasm.html in your browser.
+
+## Implementation Notes
+
+The WASM build uses a simplified Unicode implementation (`src/Unicode_stub.cpp`) that provides basic ASCII lowercase conversion instead of full ICU Unicode support. This avoids the complexity of linking ICU libraries in the WASM build.
