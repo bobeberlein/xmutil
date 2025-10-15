@@ -11,7 +11,7 @@ extern "C" {
 #ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
 // JavaScript-friendly wrapper that takes a string and returns a string
-std::string convertMdlToXmile(const std::string& mdlContent, bool isCompact = false, int isLongName = 1, bool isAsSectors = false) {
+std::string convertMdlToXmile(const std::string& mdlContent, bool isCompact = false, int isLongName = 0, bool isAsSectors = false) {
     const char* mdlSource = mdlContent.c_str();
     uint32_t mdlSourceLen = mdlContent.length();
     const char* fileName = "input.mdl";

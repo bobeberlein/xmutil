@@ -44,26 +44,37 @@ Population = 100
 ~	Person
 ~		|
 
-FINAL TIME  = 10
-~	Month
-~	The final time for the simulation.
-~|
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
 
 INITIAL TIME  = 0
-~	Month
-~	The initial time for the simulation.
-~|
+	~	Month
+	~	The initial time for the simulation.
+	|
 
-SAVEPER  = TIME STEP
-~	Month [0,?]
-~	The frequency with which output is stored.
-~|
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
 
 TIME STEP  = 1
-~	Month [0,?]
-~	The time step for the simulation.
-~|
-    </textarea>
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+</textarea>
 
     <button onclick="convert()">Convert to XMILE</button>
 
