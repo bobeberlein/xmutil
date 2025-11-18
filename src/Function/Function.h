@@ -303,6 +303,20 @@ public:
 	virtual void OutputComputable(ContextInfo* info, ExpressionList* arg);
 private:
 };
+class FunctionRandomBinomial : public Function {
+public:
+  FunctionRandomBinomial(SymbolNameSpace *sns) : Function(sns, "RANDOM BINOMIAL", 7) {
+  }
+  ~FunctionRandomBinomial(void) {
+  }
+  std::string ComputableName(void) {
+    return "RandomBinomial";
+  }
+  virtual void OutputComputable(ContextInfo *info, ExpressionList *arg);
+
+private:
+};
+
 class FunctionRandomNormal : public Function
 {
 public:

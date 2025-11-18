@@ -204,6 +204,28 @@ void FunctionQuantum::OutputComputable(ContextInfo* info, ExpressionList* arg)
 	Function::OutputComputable(info, arg);
 }
 
+void FunctionRandomBinomial::OutputComputable(ContextInfo *info, ExpressionList *arg) {
+  if (arg->Length() == 7) {
+    *info << "((";
+    const_cast<Expression *>((*arg)[4])->OutputComputable(info);
+    *info << ")+(";
+    const_cast<Expression *>((*arg)[5])->OutputComputable(info);
+    *info << ")*";
+    *info << "BINOMIAL(";
+    const_cast<Expression *>((*arg)[3])->OutputComputable(info);  // OutputComputable should really be const
+    *info << ", ";
+    const_cast<Expression *>((*arg)[2])->OutputComputable(info);  // OutputComputable should really be const
+    *info << ", ";
+    const_cast<Expression *>((*arg)[6])->OutputComputable(info);  // OutputComputable should really be const
+    *info << ", ";
+    const_cast<Expression *>((*arg)[0])->OutputComputable(info);  // OutputComputable should really be const
+    *info << ", ";
+    const_cast<Expression *>((*arg)[1])->OutputComputable(info);  // OutputComputable should really be const
+    *info << "))";
+    return;
+  }
+  Function::OutputComputable(info, arg);
+}
 
 void FunctionRandomNormal::OutputComputable(ContextInfo *info, ExpressionList *arg)
 {
