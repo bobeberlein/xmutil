@@ -3,25 +3,23 @@
 
 #include <QMainWindow>
 
-namespace Ui 
-{
-	class Main_Window;
+namespace Ui {
+class Main_Window;
 }
 
-class Main_Window : public QMainWindow
-{
-    Q_OBJECT
+class Main_Window : public QMainWindow {
+  Q_OBJECT
 
 public:
-	Main_Window(QWidget* parent=NULL);
+  Main_Window(QWidget *parent = NULL);
 
 protected slots:
-	void choose_file();
+  void choose_file();
 
 private:
-    typedef QMainWindow super;
-    
-	Ui::Main_Window* ui;	
+  typedef QMainWindow super;
+
+  Ui::Main_Window *ui;
 };
 
 #endif
