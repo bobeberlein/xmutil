@@ -180,6 +180,7 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement *element, std::vector
     element->SetAttribute("isee:save_interval", std::to_string(saveper).c_str());
   }
 
+  _model->SetUnwanted("TIME", "TIME");
   _model->SetUnwanted("INITIAL TIME", "STARTTIME");
   _model->SetUnwanted("FINAL TIME", "STOPTIME");
   _model->SetUnwanted("TIME STEP", "DT");
@@ -1056,7 +1057,9 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
               to = static_cast<VensimVariableElement *>(elements[cele->To() + 1]);
             if (from->Type() == VensimViewElement::ElementTypeVARIABLE && to &&
                 to->Type() == VensimViewElement::ElementTypeVARIABLE && to->GetVariable() &&
-                to->GetVariable()->VariableType() != XMILE_Type_STOCK) {
+                to->GetVariable()->VariableType() != XMILE_Type_STOCK && 
+                !from->GetVariable()->Unwanted() &&
+                !to->GetVariable()->Unwanted()) {
               // valid xmile connector
               tinyxml2::XMLElement *xconnector = doc->NewElement("connector");
               element->InsertEndChild(xconnector);

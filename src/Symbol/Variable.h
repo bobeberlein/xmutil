@@ -287,7 +287,7 @@ public:
     pVariableContent->SetActiveValue(off, val);
   }
   inline void SetAlternateName(const std::string &altname) {
-    pVariableContent->SetAlternateName(altname);
+    if (pVariableContent) pVariableContent->SetAlternateName(altname);
   }
   std::string GetAlternateName(void);
 
