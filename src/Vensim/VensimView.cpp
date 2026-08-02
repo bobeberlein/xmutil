@@ -97,13 +97,15 @@ VensimValveElement::VensimValveElement(char *curpos, char *buf, VensimParse *par
     _attached = false;
 }
 
-bool VensimVariableElement::Ghost(std::set<Variable *> *adds) {
+bool VensimVariableElement::Ghost(std::set<Variable *> *adds, bool update) {
   if (_ghost && !_cross_level) {
     if (adds) {
       std::set<Variable *>::iterator it = adds->find(this->GetVariable());
       if (it != adds->end()) {
-        adds->erase(it);
-        _cross_level = true;  // so it will continue to return false
+        if (update) {
+          adds->erase(it);
+          _cross_level = true;  // so it will continue to return false
+        }
         return false;
       }
     }
@@ -269,7 +271,7 @@ bool VensimView::UpgradeGhost(Variable *var) {
     if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE) {
       VensimVariableElement *vele = static_cast<VensimVariableElement *>(ele);
       if (vele->GetVariable() == var) {
-        assert(vele->Ghost(NULL));
+        assert(vele->Ghost(NULL, false));
         vele->SetGhost(false);
         var->SetView(this);  // now done
         return true;
@@ -369,7 +371,7 @@ void VensimView::CheckLinksIn() {
     if (ele && ele->Type() == VensimViewElement::ElementTypeVARIABLE) {
       VensimVariableElement *vele = static_cast<VensimVariableElement *>(ele);
       Variable *var = vele->GetVariable();
-      if (var && var->VariableType() != XMILE_Type_STOCK && !vele->Ghost(NULL)) {
+      if (var && var->VariableType() != XMILE_Type_STOCK && !vele->Ghost(NULL, false)) {
         std::vector<Variable *> ins = var->GetInputVars();
         for (Variable *in : ins) {
           if (!this->FindInArrow(in, uid) && in->VariableType() != XMILE_Type_ARRAY &&

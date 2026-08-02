@@ -881,7 +881,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
         // skip time altogether - this never shows up under xmil
         if (!var || StringMatch(vele->GetVariable()->GetName(), "Time") || var->Unwanted())
           ;  // do nothing
-        else if (vele->Ghost(adds)) {
+        else if (vele->Ghost(adds, true)) {
           assert(vele->GetVariable()->VariableType() != XMILE_Type_ARRAY);
           tinyxml2::XMLElement *xghost = doc->NewElement("alias");
           element->InsertEndChild(xghost);
@@ -932,7 +932,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
           } else {
             // pretty big things - Vensim's default size is 80x40 - width and height are half vals so a fair bit bigger
             // 90x50 then bring size across
-            if (type == XMILE_Type_STOCK && !vele->CrossLevel() && !vele->Ghost(NULL) &&
+            if (type == XMILE_Type_STOCK && !vele->CrossLevel() && !vele->Ghost(NULL, false) &&
                 (vele->Width() > 45 || vele->Height() > 25)) {
               int x = vele->X();
               int y = vele->Y();
@@ -1059,7 +1059,8 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
                 to->Type() == VensimViewElement::ElementTypeVARIABLE && to->GetVariable() &&
                 to->GetVariable()->VariableType() != XMILE_Type_STOCK && 
                 !from->GetVariable()->Unwanted() &&
-                !to->GetVariable()->Unwanted()) {
+                !to->GetVariable()->Unwanted() &&
+                !to->Ghost(NULL,false) && !to->CrossLevel()) {
               // valid xmile connector
               tinyxml2::XMLElement *xconnector = doc->NewElement("connector");
               element->InsertEndChild(xconnector);
@@ -1080,7 +1081,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
               }
               tinyxml2::XMLElement *xfrom = doc->NewElement("from");
               xconnector->InsertEndChild(xfrom);
-              if (from->Ghost(NULL)) {
+              if (from->Ghost(adds, false)) {
                 tinyxml2::XMLElement *xalias = doc->NewElement("alias");
                 xfrom->InsertEndChild(xalias);
                 xalias->SetAttribute("uid", view->UIDOffset() + cele->From());

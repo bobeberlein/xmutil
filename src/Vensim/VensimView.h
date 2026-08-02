@@ -62,7 +62,7 @@ public:
   virtual Variable *GetVariable() const override {
     return _variable;
   }
-  bool Ghost(std::set<Variable *> *adds);
+  bool Ghost(std::set<Variable *> *adds, bool update);
   bool CrossLevel() {
     return _cross_level;
   }
