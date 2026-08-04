@@ -409,7 +409,7 @@ bool Model::MarkVariableTypes(SymbolNameSpace *ns) {
     }
     // repeat this for flows after all stocks marked
     for (Variable *var : vars) {
-      var->MarkStockFlows(ns);  // may change number of entries so can't be in above loop
+      var->MarkStockFlows(ns, this->AsSectors());  // may change number of entries so can't be in above loop
     }
     // don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();
   } catch (...) {

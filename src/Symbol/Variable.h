@@ -293,7 +293,9 @@ public:
 
   void PurgeAFOEq();
   XMILE_Type MarkTypes(SymbolNameSpace *sns);  // mark the variableType of inflows/outflows
-  void MarkStockFlows(SymbolNameSpace *sns);   // mark the variableType of inflows/outflows
+  Variable *AddRelated(SymbolNameSpace *sns, const char* suffix, XMILE_Type type);
+  Variable *PreventFlowGhost(SymbolNameSpace *sns, Variable* v);
+  void MarkStockFlows(SymbolNameSpace *sns, bool as_sectors);  // mark the variableType of inflows/outflows
   XMILE_Type VariableType() {
     return mVariableType;
   }

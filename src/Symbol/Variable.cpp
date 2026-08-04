@@ -207,7 +207,34 @@ XMILE_Type Variable::MarkTypes(SymbolNameSpace *sns) {
   return mVariableType;
 }
 
-void Variable::MarkStockFlows(SymbolNameSpace *sns) {
+Variable *Variable::AddRelated(SymbolNameSpace *sns, const char* suffix, XMILE_Type type) {
+  std::string name = this->GetName() + suffix;
+  Variable *v = new Variable(sns, name);
+  v->SetVariableType(XMILE_Type_FLOW);
+  v->SetView(this->GetView());
+  ModelGroup *group = this->GetGroup();
+  if (group) {
+    v->SetGroup(group);
+    group->vVariables.push_back(v);
+  }
+  return v;
+}
+
+Variable *Variable::PreventFlowGhost(SymbolNameSpace *sns, Variable* v) {
+  Variable *newv = this->AddRelated(sns, " flow", XMILE_Type_AUX);
+  std::vector<Equation *> veq = v->GetAllEquations();
+  for (Equation *eq : veq) {
+    // left hand side for this variable
+    LeftHandSide *lhs = new LeftHandSide(sns, *eq->GetLeft(), newv);  // replace var in lhs equation
+    ExpressionVariable *exvar = new ExpressionVariable(sns, v, NULL);
+    Equation *neweq = new Equation(sns, lhs, exvar, '=');
+    newv->AddEq(neweq);
+  }
+ return newv;
+}
+
+
+void Variable::MarkStockFlows(SymbolNameSpace *sns, bool as_sectors) {
   // second pass, get the flow lists for everyone -- NOTE there is a bug in this code
   // because we don't check subscripts on the flows list so they may match even though
   // they shouldn't eg STOCK[A]=INTEG(FLOW[B],0) STOCK[B]=INTEG(FLOW[A],0)
@@ -231,11 +258,19 @@ void Variable::MarkStockFlows(SymbolNameSpace *sns) {
     i++;
   }
   if (match) {
+    // got inflows/outflows but we need to check if any of them are defined
+    // in a different view and would therefore end up in a different module
     for (Variable *v : flow_lists[0].Inflows()) {
+      if (!as_sectors && v->GetView() != _view) {
+        v = this->PreventFlowGhost(sns, v);
+      }
       v->SetVariableType(XMILE_Type_FLOW);
       mInflows.push_back(v);
     }
     for (Variable *v : flow_lists[0].Outflows()) {
+      if (!as_sectors && v->GetView() != _view) {
+        v = this->PreventFlowGhost(sns, v);
+      }
       v->SetVariableType(XMILE_Type_FLOW);
       mOutflows.push_back(v);
     }
@@ -243,21 +278,7 @@ void Variable::MarkStockFlows(SymbolNameSpace *sns) {
   }
 
   // mismatched for invalid flow equations - create a flow variable and add it to the model
-  std::string basename = this->GetName() + " net flow";
-  std::string name = basename;
-  i = 0;
-  while (sns->Find(name)) {
-    ++i;
-    name = basename + "_" + std::to_string(i);
-  }
-  Variable *v = new Variable(sns, name);
-  v->SetVariableType(XMILE_Type_FLOW);
-  v->SetView(this->GetView());
-  ModelGroup *group = this->GetGroup();
-  if (group) {
-    v->SetGroup(group);
-    group->vVariables.push_back(v);
-  }
+  Variable *v = this->AddRelated(sns, " net flow", XMILE_Type_FLOW);
   mInflows.push_back(v);
 
   // now we swap the active part of the INTEG equation for v and set v's equation to

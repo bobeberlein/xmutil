@@ -9,12 +9,19 @@
 // does not manage self needs to be part of a collection
 
 Symbol::Symbol(SymbolNameSpace *sns, const std::string &name) : SymbolTableBase(sns) {
-  sName = name;
   pOwner = NULL;
   pSubranges = NULL;
   // insert into the name space sns if it has a name - empty get special treatment
-  if (!name.empty())
+  if (!name.empty()) {
+      // make sure it is a unique name
+    sName = name;
+    int i = 0;
+    while (sns->Find(sName)) {
+      ++i;
+      sName = name + "_" + std::to_string(i);
+    }
     sns->Insert(this);
+  }
 }
 
 Symbol::~Symbol(void) {
