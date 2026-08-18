@@ -1,19 +1,26 @@
 #include "Model.h"
 
+#include <algorithm>
+#include <unordered_set>
 #include <vector>
 
+#include "Mdl/MDLGenerator.h"
 #include "Symbol/Equation.h"
+#include "Symbol/ExpressionList.h"
 #include "Symbol/LeftHandSide.h"
 #include "Symbol/Symbol.h"
+#include "Symbol/SymbolList.h"
 #include "Vensim/VensimView.h"
 #include "XMUtil.h"
 #include "Xmile/XMILEGenerator.h"
+#include "Xmile/XmileReader.h"
 
 Model::Model(void) {
   dLevel = dRate = dAux = NULL;
   bAsSectors = false;
   iIntegrationType = Integration_Type_EULER;
   bLetterPolarity = false;
+  bFromXmile = false;
   _initial_time = -1;
   _final_time = 200;
   _dt = 1;
@@ -22,6 +29,146 @@ Model::Model(void) {
 
 Model::~Model(void) {
   // allocation is no longer clean ClearCompEquations() ;
+}
+
+bool Model::ParseXMILE(const std::string &filename, const char *contents, size_t len, std::vector<std::string> &errs) {
+  // Recorded before the parse rather than after a successful one: the flag
+  // describes where this Model's contents are coming from, and a half-populated
+  // Model from a failed parse came from XMILE just as much as a complete one.
+  bFromXmile = true;
+  XmileReader reader{this};
+  return reader.ProcessFile(filename, contents, len, errs);
+}
+
+void Model::RunPostParsePipeline() {
+  // VensimParse confirms allocations after each equation; XMILE parsing does
+  // not. Calling ConfirmAllAllocations here is idempotent for Vensim (the
+  // unconfirmed set is already empty) and required for XMILE so that objects
+  // created during parsing are not treated as abandoned allocations by any
+  // later DeleteAllUnconfirmedAllocations call on the exception path.
+  mSymbolNameSpace.ConfirmAllAllocations();
+  MarkVariableTypes(nullptr);
+  // AdjustGroupNames mutates ModelGroup::sName to disambiguate collisions; the
+  // writer must emit the post-adjustment names so re-parsing reproduces the
+  // model faithfully.
+  AdjustGroupNames();
+  for (MacroFunction *mf : mMacroFunctions)
+    MarkVariableTypes(mf->NameSpace());
+  // Ghosts that are never defined elsewhere have their first appearance
+  // promoted to owner so the model graph is consistent.
+  CheckGhostOwners();
+  // Element/family ownership is now established, so bare `*` wildcards from the
+  // XMILE reader can be bound to their concrete dimensions. Any that cannot be
+  // bound are recorded in vUnresolvedWildcards for the writers to reject.
+  vUnresolvedWildcards.clear();
+  ResolveWildcardSubscripts(nullptr);
+  for (MacroFunction *mf : mMacroFunctions)
+    ResolveWildcardSubscripts(mf->NameSpace());
+}
+
+void Model::ResolveWildcardSubscripts(SymbolNameSpace *ns) {
+  for (Variable *v : GetVariables(ns)) {
+    for (Equation *eq : v->GetAllEquations())
+      ResolveWildcardsInExpr(eq->GetExpression());
+    for (Equation *eq : v->GetAllInitEquations())
+      ResolveWildcardsInExpr(eq->GetExpression());
+  }
+}
+
+void Model::ResolveWildcardsInExpr(Expression *e) {
+  if (!e)
+    return;
+  switch (e->GetType()) {
+  case EXPTYPE_Variable:
+    ResolveWildcardsInVarRef(static_cast<ExpressionVariable *>(e));
+    break;
+  case EXPTYPE_Operator:
+    // Covers +, -, *, /, ^, parens and unary minus (all ExpressionOperator2).
+    ResolveWildcardsInExpr(e->GetArg(0));
+    ResolveWildcardsInExpr(e->GetArg(1));
+    break;
+  case EXPTYPE_Logical: {
+    ExpressionLogical *lg = static_cast<ExpressionLogical *>(e);
+    ResolveWildcardsInExpr(lg->GetLeft());
+    ResolveWildcardsInExpr(lg->GetRight());
+    break;
+  }
+  case EXPTYPE_Function:
+  case EXPTYPE_FunctionMemory: {
+    ExpressionList *args = static_cast<ExpressionFunction *>(e)->GetArgs();
+    if (args) {
+      for (int i = 0; i < args->Length(); i++)
+        ResolveWildcardsInExpr(args->GetExp(i));
+    }
+    break;
+  }
+  case EXPTYPE_Lookup: {
+    ExpressionLookup *lk = static_cast<ExpressionLookup *>(e);
+    ResolveWildcardsInExpr(lk->GetInput());
+    ResolveWildcardsInExpr(lk->GetLookupVariable());
+    break;
+  }
+  default:
+    // Number, literal, table, symlist: no variable-reference subscripts.
+    break;
+  }
+}
+
+void Model::ResolveWildcardsInVarRef(ExpressionVariable *ev) {
+  if (!ev)
+    return;
+  SymbolList *subs = ev->GetSubs();
+  if (!subs)
+    return;
+  Variable *target = ev->GetVariable();
+  for (int i = 0; i < subs->Length(); i++) {
+    const SymbolList::SymbolListEntry &entry = (*subs)[i];
+    // Only a bare `*` needs binding: `*:Dim` and named subscripts already carry
+    // a concrete symbol.
+    if (entry.eType != SymbolList::EntryType_BANG_SYMBOL || entry.u.pSymbol != NULL)
+      continue;
+    if (Symbol *fam = target ? FamilyAtPosition(target, i) : nullptr) {
+      subs->BindWildcard(i, fam);
+    } else {
+      // The reference uses `[*]` but the target is not an arrayed variable at
+      // this position (non-arrayed, or has no equation to read dimensions
+      // from). There is no dimension to bind, so this wildcard cannot be
+      // rendered as valid output; record it so the writer fails cleanly.
+      std::string name = target ? target->GetName() : std::string("<unknown>");
+      vUnresolvedWildcards.push_back("cannot resolve '*' wildcard at subscript position " + std::to_string(i + 1) +
+                                     " of reference to '" + name + "': the target is not an arrayed variable");
+    }
+  }
+}
+
+Symbol *Model::FamilyAtPosition(Variable *target, int pos) {
+  std::vector<Equation *> eqs = target->GetAllEquations();
+  if (eqs.empty())
+    return nullptr;
+  // Every equation of an arrayed variable shares the same dimensionality, so
+  // the first equation's LHS subscript list gives the family (apply-to-all,
+  // `x[Dim]`) or an element (per-element, `x[Elem]`) at each position. Walk an
+  // element up to its owning dimension family -- the form a Vensim bang names.
+  LeftHandSide *lhs = eqs[0]->GetLeft();
+  SymbolList *lhsSubs = lhs ? lhs->GetSubs() : nullptr;
+  if (!lhsSubs || pos < 0 || pos >= lhsSubs->Length())
+    return nullptr;
+  const SymbolList::SymbolListEntry &e = (*lhsSubs)[pos];
+  if (e.eType != SymbolList::EntryType_SYMBOL)
+    return nullptr;
+  Symbol *s = e.u.pSymbol;
+  // An apply-to-all declaration (`x[Dim]`) already names the dimension family at
+  // this position; return it verbatim. Walking Owner() here would be wrong: when
+  // two dimensions share the same elements (a reordered alias, e.g. DimX over the
+  // same members as DimA), the family's owner can point at the alias, and which
+  // one wins depends on dimension declaration order -- unstable across a round
+  // trip. Only a per-element declaration (`x[Elem]`) needs the element walked up
+  // to its owning family.
+  if (s && s->isType() == Symtype_Variable && static_cast<Variable *>(s)->VariableType() == XMILE_Type_ARRAY)
+    return s;
+  while (s && s->Owner() != s)
+    s = s->Owner();
+  return s;
 }
 
 Equation *Model::AddUnnamedVariable(ExpressionFunctionMemory *e) {
@@ -409,7 +556,7 @@ bool Model::MarkVariableTypes(SymbolNameSpace *ns) {
     }
     // repeat this for flows after all stocks marked
     for (Variable *var : vars) {
-      var->MarkStockFlows(ns, this->AsSectors());  // may change number of entries so can't be in above loop
+      var->MarkStockFlows(ns);  // may change number of entries so can't be in above loop
     }
     // don't do this - we have broken the allocation setup mSymbolNameSpace.ConfirmAllAllocations();
   } catch (...) {
@@ -541,6 +688,32 @@ void Model::AttachStragglers() {
   }
 }
 
+void Model::LocalizeCrossViewFlows() {
+  // Snapshot first: PreventFlowGhost registers new symbols, and GetVariables
+  // walks the namespace's hash table.
+  std::vector<Variable *> vars = GetVariables(nullptr);
+  std::vector<Variable *> displaced;
+  for (Variable *var : vars)
+    var->LocalizeCrossViewFlows(&mSymbolNameSpace, displaced);
+  if (displaced.empty())
+    return;
+  // A displaced flow may still be a same-view flow of some other stock, in
+  // which case FLOW is its right type; only one no stock lists any more gets
+  // its pre-promotion type back. Decided after every stock has been processed
+  // so the answer does not depend on stock order.
+  std::unordered_set<Variable *> still_listed;
+  for (Variable *var : vars) {
+    if (var->VariableType() != XMILE_Type_STOCK)
+      continue;
+    still_listed.insert(var->Inflows().begin(), var->Inflows().end());
+    still_listed.insert(var->Outflows().begin(), var->Outflows().end());
+  }
+  for (Variable *var : displaced) {
+    if (!still_listed.count(var))
+      var->UndoFlowPromotion();
+  }
+}
+
 void Model::MakeViewNamesUnique() {
   std::vector<View *> &views = Views();
   std::set<std::string> names;
@@ -645,10 +818,40 @@ std::vector<Variable *> Model::GetVariables(SymbolNameSpace *ns) {
     if (s->isType() == Symtype_Variable)
       vars.push_back(static_cast<Variable *>(s));
   }
+  // Bucket order records the namespace's insertion history, not anything about
+  // the model, and it reaches emitted output: the XMILE writer emits <variables>
+  // in this order, and the passes that assign views and groups walk it too. That
+  // made XMILE -> XMILE non-idempotent -- each conversion re-inserted the symbols
+  // in the previous document's order, which permuted the next one, forever. Sort
+  // here rather than at each writer's call site so no future caller can
+  // reintroduce the same defect -- and so exactly one place owns the invariant:
+  // the .mdl writer's own by-name sorts over this result were the same compare
+  // applied twice, with two comments each claiming to be why the output is
+  // stable, and they are gone. Name order is total: names are unique within a
+  // namespace (see SymbolNameLess), and the empty name
+  // Model::AddUnnamedVariable uses never enters the hash table at all --
+  // Symbol::Symbol skips Insert for it.
+  std::sort(vars.begin(), vars.end(), SymbolNameLess());
   return vars;
 }
 
 std::string Model::PrintXMILE(bool isCompact, std::vector<std::string> &errs, double xscale, double yscale) {
+  if (!vUnresolvedWildcards.empty()) {
+    errs.insert(errs.end(), vUnresolvedWildcards.begin(), vUnresolvedWildcards.end());
+    return "";
+  }
   XMILEGenerator generator(this, xscale, yscale, bFromDyanmo);
-  return generator.Print(isCompact, errs, bAsSectors);
+  // See bFromXmile (Model.h): the module decomposition emits sibling <model>
+  // elements, which this project's own XMILE reader rejects, so an XMILE-sourced
+  // model takes the single-<model> sector path whatever the caller asked for.
+  return generator.Print(isCompact, errs, bAsSectors || bFromXmile);
+}
+
+std::string Model::PrintMDL(std::vector<std::string> &errs) {
+  if (!vUnresolvedWildcards.empty()) {
+    errs.insert(errs.end(), vUnresolvedWildcards.begin(), vUnresolvedWildcards.end());
+    return "";
+  }
+  MDLGenerator generator(this);
+  return generator.Print();
 }

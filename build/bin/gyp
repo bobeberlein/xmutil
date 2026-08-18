@@ -5,4 +5,16 @@
 
 set -e
 base=$(dirname "$0")
-exec python "${base}/gyp_main.py" "$@"
+
+# Prefer an unversioned "python", but fall back to "python3" on systems
+# (e.g. modern Fedora) that no longer provide the unversioned name.
+if command -v python >/dev/null 2>&1; then
+  python_bin=python
+elif command -v python3 >/dev/null 2>&1; then
+  python_bin=python3
+else
+  echo "error: no python interpreter found on PATH" >&2
+  exit 1
+fi
+
+exec "${python_bin}" "${base}/gyp_main.py" "$@"

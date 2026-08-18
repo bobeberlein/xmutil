@@ -6,6 +6,7 @@
 #include "VensimParse.h"
 
 #include <cstring>
+#include <stdexcept>
 
 #include "../Symbol/ExpressionList.h"
 #include "../Symbol/LeftHandSide.h"
@@ -17,105 +18,166 @@
 
 VensimParse *VPObject = NULL;
 
+namespace {
+
+// A Vensim group banner names the group by its whole path: levels separated by
+// '.', with a leading '.' on the outermost one (".Physics",
+// ".Physics.Forcing", ".Physics.Forcing.Aerosols+CO+BC" -- all three appear in
+// C-LEARN v77). xmutil's ModelGroup name is that path with the separators
+// folded to '-', because the name also becomes an XMILE <module name=...>,
+// which cannot carry a '.'. The fold drops a leading separator rather than
+// emitting a leading '-'.
+std::string FlattenGroupPath(const std::string &path) {
+  std::string out;
+  for (char c : path) {
+    if (c != '.')
+      out.push_back(c);
+    else if (!out.empty())
+      out.push_back('-');
+  }
+  return out;
+}
+
+// The path one level up, or "" when the banner names a top-level group.
+std::string ParentGroupPath(const std::string &path) {
+  const std::string::size_type sep = path.rfind('.');
+  if (sep == std::string::npos)
+    return std::string();
+  return path.substr(0, sep);
+}
+
+}  // namespace
+
 VensimParse::VensimParse(Model *model) {
 #if YYDEBUG
   vpyydebug = 0;
 #endif
-  assert(!VPObject);
+  // Same process-global invariant XmileReader carries, and the same reason for
+  // enforcing it at runtime: the bison actions reach the parser only through
+  // VPObject, an assert evaporates under NDEBUG, and a second parser that took
+  // the global over would leave the first resolving names against nothing.
+  if (VPObject)
+    throw std::runtime_error("VensimParse: another Vensim parse is already active in this process");
   VPObject = this;
   _model = model;
   pSymbolNameSpace = model->GetNameSpace();
   bLongName = false;
+  // mInMacro gates whether a parsed equation joins the most recent group banner
+  // (group membership is suppressed inside :MACRO: bodies). It is only ever set
+  // true/false at macro start/end, so without this initialization it holds
+  // uninitialized garbage and the !mInMacro group-assignment guard in AddFullEq
+  // fails for ordinary (non-macro) models, dropping every variable's group.
+  mInMacro = false;
   ReadyFunctions();
 }
 VensimParse::~VensimParse(void) {
-  VPObject = NULL;
+  // Only the parser that claimed the global may clear it.
+  if (VPObject == this)
+    VPObject = NULL;
 }
 
-void VensimParse::ReadyFunctions() {
-  // initialize functions - actually need to split this up for common functions
-  // and those specific to Vensim - later
+void RegisterXmutilFunctions(SymbolNameSpace *sns) {
+  // Common Function table shared by VensimParse and XmileReader. Each ctor
+  // self-registers in sns via Symbol's base ctor; the namespace owns the
+  // resulting allocations after ConfirmAllAllocations.
   try {
-    new FunctionMin(pSymbolNameSpace);
-    new FunctionMax(pSymbolNameSpace);
-    new FunctionInteg(pSymbolNameSpace);
-    new FunctionActiveInitial(pSymbolNameSpace);
-    new FunctionInitial(pSymbolNameSpace);
-    new FunctionReInitial(pSymbolNameSpace);
-    new FunctionSampleIfTrue(pSymbolNameSpace);
-    new FunctionPulse(pSymbolNameSpace);
-    new FunctionPulseTrain(pSymbolNameSpace);
-    new FunctionQuantum(pSymbolNameSpace);
-    new FunctionIfThenElse(pSymbolNameSpace);
-    new FunctionLog(pSymbolNameSpace);
-    new FunctionZidz(pSymbolNameSpace);
-    new FunctionXidz(pSymbolNameSpace);
-    new FunctionLookupInv(pSymbolNameSpace);
-    new FunctionWithLookup(pSymbolNameSpace);  // but WITH_LOOKUP is treated specially by parser
-    new FunctionStep(pSymbolNameSpace);
-    new FunctionTabbedArray(pSymbolNameSpace);
-    new FunctionRamp(pSymbolNameSpace);
-    new FunctionLn(pSymbolNameSpace);
-    new FunctionSmooth(pSymbolNameSpace);
-    new FunctionSmoothI(pSymbolNameSpace);
-    new FunctionSmooth3(pSymbolNameSpace);
-    new FunctionSmooth3I(pSymbolNameSpace);
-    new FunctionTrend(pSymbolNameSpace);
-    new FunctionFrcst(pSymbolNameSpace);
-    new FunctionDelay1(pSymbolNameSpace);
-    new FunctionDelay1I(pSymbolNameSpace);
-    new FunctionDelay3(pSymbolNameSpace);
-    new FunctionDelay3I(pSymbolNameSpace);
-    new FunctionDelay(pSymbolNameSpace);
-    new FunctionDelayN(pSymbolNameSpace);
-    new FunctionSmoothN(pSymbolNameSpace);
-    new FunctionDelayConveyor(pSymbolNameSpace);
-    new FunctionVectorReorder(pSymbolNameSpace);
-    new FunctionVectorLookup(pSymbolNameSpace);
-    new FunctionElmCount(pSymbolNameSpace);
-    new FunctionRandomBinomial(pSymbolNameSpace);
-    new FunctionRandomNormal(pSymbolNameSpace);
-    new FunctionRandomPoisson(pSymbolNameSpace);
-    new FunctionLookupArea(pSymbolNameSpace);
-    new FunctionLookupExtrapolate(pSymbolNameSpace);
-    new FunctionGetDataAtTime(pSymbolNameSpace);
-    new FunctionGetDataLastTime(pSymbolNameSpace);
-    new FunctionModulo(pSymbolNameSpace);
-    new FunctionNPV(pSymbolNameSpace);
-    new FunctionSum(pSymbolNameSpace);
-    new FunctionProd(pSymbolNameSpace);
-    new FunctionVMax(pSymbolNameSpace);
-    new FunctionVMin(pSymbolNameSpace);
-    new FunctionTimeBase(pSymbolNameSpace);
-    new FunctionVectorSelect(pSymbolNameSpace);
-    new FunctionVectorElmMap(pSymbolNameSpace);
-    new FunctionVectorSortOrder(pSymbolNameSpace);
-    new FunctionGame(pSymbolNameSpace);
-    new FunctionRandom01(pSymbolNameSpace);
-    new FunctionRandomUniform(pSymbolNameSpace);
-    new FunctionRandomPink(pSymbolNameSpace);
-    new FunctionAbs(pSymbolNameSpace);
-    new FunctionExp(pSymbolNameSpace);
-    new FunctionSqrt(pSymbolNameSpace);
-    new FunctionNAN(pSymbolNameSpace);
+    new FunctionMin(sns);
+    new FunctionMax(sns);
+    new FunctionInteg(sns);
+    new FunctionActiveInitial(sns);
+    new FunctionInitial(sns);
+    new FunctionReInitial(sns);
+    new FunctionSampleIfTrue(sns);
+    new FunctionPulse(sns);
+    new FunctionPulseTrain(sns);
+    new FunctionQuantum(sns);
+    new FunctionIfThenElse(sns);
+    new FunctionLog(sns);
+    new FunctionZidz(sns);
+    new FunctionXidz(sns);
+    new FunctionLookupInv(sns);
+    new FunctionWithLookup(sns);  // but WITH_LOOKUP is treated specially by parser
+    new FunctionStep(sns);
+    new FunctionTabbedArray(sns);
+    // RAMP's end-time argument is optional in XMILE (ramp(slope, start[, end])),
+    // so the XMILE reader accepts 2 or 3 args though Vensim writes exactly 3.
+    FunctionRamp *ramp = new FunctionRamp(sns);
+    ramp->SetArgRange(2, 3);
+    new FunctionLn(sns);
+    new FunctionSmooth(sns);
+    new FunctionSmoothI(sns);
+    new FunctionSmooth3(sns);
+    new FunctionSmooth3I(sns);
+    // TREND's and DELAY FIXED's initial-value argument is optional in XMILE
+    // (trend(input, avg[, init]); delay(input, delay[, init])), so the XMILE
+    // reader accepts 2 or 3 args though Vensim writes exactly 3.
+    FunctionTrend *trend = new FunctionTrend(sns);
+    trend->SetArgRange(2, 3);
+    new FunctionFrcst(sns);
+    new FunctionDelay1(sns);
+    new FunctionDelay1I(sns);
+    new FunctionDelay3(sns);
+    new FunctionDelay3I(sns);
+    FunctionDelay *delayFixed = new FunctionDelay(sns);
+    delayFixed->SetArgRange(2, 3);
+    new FunctionDelayN(sns);
+    new FunctionSmoothN(sns);
+    new FunctionDelayConveyor(sns);
+    new FunctionVectorReorder(sns);
+    new FunctionVectorLookup(sns);
+    new FunctionElmCount(sns);
+    new FunctionRandomBinomial(sns);
+    new FunctionRandomNormal(sns);
+    new FunctionRandomPoisson(sns);
+    new FunctionLookupArea(sns);
+    new FunctionLookupExtrapolate(sns);
+    new FunctionGetDataAtTime(sns);
+    new FunctionGetDataLastTime(sns);
+    new FunctionModulo(sns);
+    new FunctionNPV(sns);
+    new FunctionSum(sns);
+    new FunctionProd(sns);
+    new FunctionVMax(sns);
+    new FunctionVMin(sns);
+    new FunctionTimeBase(sns);
+    new FunctionVectorSelect(sns);
+    new FunctionVectorElmMap(sns);
+    new FunctionVectorSortOrder(sns);
+    new FunctionGame(sns);
+    new FunctionRandom01(sns);
+    // RANDOM UNIFORM's trailing seed is optional in XMILE (uniform(min, max[,
+    // seed])); the reorder-free translation is sound for either count, so the
+    // XMILE reader accepts 2 or 3 args. The reorder-dependent RANDOM NORMAL is
+    // deliberately left strict -- a reduced-arity call would mistranslate.
+    FunctionRandomUniform *randUniform = new FunctionRandomUniform(sns);
+    randUniform->SetArgRange(2, 3);
+    new FunctionRandomPink(sns);
+    new FunctionAbs(sns);
+    new FunctionExp(sns);
+    new FunctionSqrt(sns);
+    new FunctionNAN(sns);
 
-    new FunctionCosine(pSymbolNameSpace);
-    new FunctionSine(pSymbolNameSpace);
-    new FunctionTangent(pSymbolNameSpace);
-    new FunctionArcCosine(pSymbolNameSpace);
-    new FunctionArcSine(pSymbolNameSpace);
-    new FunctionArcTangent(pSymbolNameSpace);
-    new FunctionInterger(pSymbolNameSpace);
+    new FunctionCosine(sns);
+    new FunctionSine(sns);
+    new FunctionTangent(sns);
+    new FunctionArcCosine(sns);
+    new FunctionArcSine(sns);
+    new FunctionArcTangent(sns);
+    new FunctionInterger(sns);
 
-    new FunctionGetDirectData(pSymbolNameSpace);
-    new FunctionGetDataMean(pSymbolNameSpace);
+    new FunctionGetDirectData(sns);
+    new FunctionGetDataMean(sns);
 
-    new FunctionAllocateByPriority(pSymbolNameSpace);
+    new FunctionAllocateByPriority(sns);
 
-    pSymbolNameSpace->ConfirmAllAllocations();
+    sns->ConfirmAllAllocations();
   } catch (...) {
     log("Failed to initialize symbol table");
   }
+}
+
+void VensimParse::ReadyFunctions() {
+  RegisterXmutilFunctions(pSymbolNameSpace);
 }
 Equation *VensimParse::AddEq(LeftHandSide *lhs, Expression *ex, ExpressionList *exl, int tok) {
   if (exl) {
@@ -233,22 +295,30 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
             break;
         } else if (rval == '|') {
         } else if (rval == VPTT_groupstar) {
-          // log("%s\n", mVensimLex.CurToken()->c_str());
-          //  only change this if a new number
+          // The banner names the group by its whole path; the level above it is
+          // the only thing that can own it. Owning each new banner by the
+          // PREVIOUS one instead -- which is what this did -- turned every
+          // model into a single linear chain regardless of what the file said,
+          // so a flat model came back nested, ".Control" was adopted by
+          // whatever user group was emitted last, and C-LEARN's real
+          // three-level forest arrived as a ~50-deep spine.
+          const std::string path = *mVensimLex.CurToken();
+          const std::string parent = FlattenGroupPath(ParentGroupPath(path));
           ModelGroup *group_owner = NULL;
-          char c = mVensimLex.CurToken()->at(0);
-          if (_model->Groups().empty() || (_model->Groups().back()->sName[0] != c && c >= '0' && c <= '9')) {
-            std::string owner = *mVensimLex.CurToken();
+          if (!parent.empty()) {
             for (ModelGroup *g : _model->Groups()) {
-              if (g->sName == owner) {
+              if (g->sName == parent) {
                 group_owner = g;
                 break;
               }
             }
           }
-          if (group_owner == NULL && !_model->Groups().empty())
-            group_owner = _model->Groups().back();
-          _model->Groups().push_back(new ModelGroup(*mVensimLex.CurToken(), group_owner));
+          // A path whose intermediate level was never itself declared as a
+          // banner (C-LEARN has ".Input.Policy1" with no ".Input") leaves the
+          // group at the root rather than synthesizing the missing level: an
+          // invented group holds no variables, and a group with no variables
+          // is not emitted by either writer.
+          _model->Groups().push_back(new ModelGroup(FlattenGroupPath(path), group_owner));
         } else if (rval != endtok) {
           log("Unknown terminal token %d\n", rval);
           if (!FindNextEq(false))
@@ -349,7 +419,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
               _model->SetIntegrationType(it);
             } else if (type == 22)  // units equialences
             {
-              _model->UnitEquivs().push_back(curpos);
+              _model->UnitEquivs().push_back(UnitEquiv::ParseMdlPayload(curpos));
             }
           }
           break;
@@ -471,7 +541,12 @@ bool VensimParse::FindNextEq(bool want_comment) {
       this->pActiveVar->SetComment(comment);
   }
   // just zip through to the first | then whatever follows is it
-  return mVensimLex.FindToken("|");
+  bool rval =  mVensimLex.FindToken("|");
+  if (rval) {  // if eof file then give up
+    if (mVensimLex.EndOfFile())
+      return false;
+  }
+  return rval;
 }
 
 LeftHandSide *VensimParse::AddExceptInterp(ExpressionVariable *var, SymbolListList *except, int interpmode) {
@@ -616,6 +691,23 @@ Expression *VensimParse::FunctionExpression(Function *func, ExpressionList *earg
 Expression *VensimParse::LookupExpression(ExpressionVariable *var, ExpressionList *args) {
   if (args->Length() == 1)
     return new ExpressionLookup(pSymbolNameSpace, var, args->GetExp(0));
+  // TABXL(table, x) is the extrapolating-lookup call the MDL writer emits to
+  // preserve a graphical function's extrapolate kind (MDL has no
+  // definition-level flag). Rewrite it to a lookup on `table` with input `x` and
+  // flag it so the post-parse CheckTableUses pass marks table's GF extrapolating;
+  // otherwise it would degrade to an UnknownFunction and lose the lookup
+  // semantics. The first argument must be a bare variable reference (the table).
+  if (args->Length() == 2 && args->GetExp(0)->GetType() == EXPTYPE_Variable) {
+    std::string *canon = SymbolNameSpace::ToLowerSpace(var->GetVariable()->GetName());
+    bool isTabxl = *canon == "tabxl";
+    delete canon;
+    if (isTabxl) {
+      ExpressionVariable *tableVar = static_cast<ExpressionVariable *>(args->GetExp(0));
+      ExpressionLookup *lk = new ExpressionLookup(pSymbolNameSpace, tableVar, args->GetExp(1));
+      lk->SetExtrapolate();
+      return lk;
+    }
+  }
   // really an error so we use uknown function
   const std::string &name = var->GetVariable()->GetName();
   Function *f = new UnknownFunction(new SymbolNameSpace(), name, args->Length());

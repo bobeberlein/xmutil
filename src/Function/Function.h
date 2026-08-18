@@ -53,9 +53,26 @@ public:
   int NumberArgs(void) {
     return iNumberArgs;
   }
+  // Accepted argument-count range for the XMILE reader. Vensim's grammar
+  // demands exactly NumberArgs(), but several XMILE builtins let a trailing
+  // argument (an initial value, a random seed) be omitted, so the XMILE layer
+  // checks a [min, max] range instead of a single count. Both default to
+  // NumberArgs(); RegisterXmutilFunctions widens the few that differ.
+  int MinNumberArgs(void) {
+    return iMinArgs;
+  }
+  int MaxNumberArgs(void) {
+    return iMaxArgs;
+  }
+  void SetArgRange(int lo, int hi) {
+    iMinArgs = lo;
+    iMaxArgs = hi;
+  }
 
 protected:
   int iNumberArgs;
+  int iMinArgs;
+  int iMaxArgs;
 };
 
 class DFunction : public Function {

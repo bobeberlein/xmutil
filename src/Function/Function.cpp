@@ -8,6 +8,8 @@
 Function::Function(SymbolNameSpace *sns, const std::string &name, int nargs) : Symbol(sns, name) {
   assert(nargs < 32);  // the way initial argument identification is implemented requires this
   iNumberArgs = nargs;
+  iMinArgs = nargs;
+  iMaxArgs = nargs;
 }
 
 Function::~Function(void) {

@@ -169,13 +169,13 @@ int VensimLex::NextToken()  // also sets token type
         ;
       while (c == '\r' || c == '\n' || c == ' ' || c == '\t')
         c = GetNextChar(false);
+      // The banner line carries the group's whole path, '.'-separated. The
+      // separators are kept here and folded by VensimParse::ProcessFile, which
+      // needs the unfolded path to resolve the parent group before it can name
+      // the child (a '.' and a '-' inside a name are indistinguishable once
+      // folded, and real names carry both -- "C-ROADS", ".Physics.Forcing").
       do {
         this->sToken.push_back(c);
-        if (c == '.') {
-          sToken.pop_back();
-          if (!sToken.empty())
-            sToken.push_back('-');  // can't use . in a module name
-        }
         c = GetNextChar(false);
       } while (c != '\r' && c != '\n' && c != ' ' && c != '\t');
       while ((c = GetNextChar(false)) != '*' && c != '|')
@@ -587,6 +587,19 @@ bool VensimLex::FindToken(const char *tok) {
       }
   }
   return false;
+}
+
+bool VensimLex::EndOfFile() {
+  while (true) {
+    char c = GetNextChar(false);
+    if (c == 0)
+      break;
+    if (c != '\r' && c != '\n' && c != '\t' && c != ' ') {
+      PushBack(c, false);
+      return false;
+    }
+  }
+  return true;
 }
 
 bool VensimLex::BufferReadLine(char *buf, size_t buflen) {

@@ -1,8 +1,25 @@
 #!/bin/sh
 if uname -a | grep -q 'MINGW'; then
-	#windows  
-	export GYP_MSVS_VERSION='2017'
-	export QTDIR="C:/Qt/x64/Qt5.11.0/5.11.0/msvc2017_64"
+	#windows
+	# VS 2017 and later stop populating the HKLM\...\VisualStudio\SxS keys gyp
+	# probes, so hand it the install root from vswhere: with
+	# GYP_MSVS_OVERRIDE_PATH set, gyp skips registry detection entirely.
+	if [ -z "${GYP_MSVS_VERSION:-}" ]; then
+		vswhere="/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+		if [ -x "$vswhere" ]; then
+			vs_root=$("$vswhere" -latest -products '*' \
+				-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \
+				-property installationPath | tr -d '\r')
+			vs_year=$("$vswhere" -latest -products '*' \
+				-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \
+				-property catalog_productLineVersion | tr -d '\r')
+		fi
+	fi
+	export GYP_MSVS_VERSION="${GYP_MSVS_VERSION:-${vs_year:-2017}}"
+	if [ -n "${vs_root:-}" ] && [ -z "${GYP_MSVS_OVERRIDE_PATH:-}" ]; then
+		export GYP_MSVS_OVERRIDE_PATH="$vs_root"
+	fi
+	export QTDIR="${QTDIR:-C:/Qt/x64/Qt5.11.0/5.11.0/msvc2017_64}"
 elif  uname -a | grep -q 'Linux'; then
 	export QTDIR="$HOME/Qt5.11.0/5.11.0/gcc_64"
 else

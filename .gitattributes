@@ -1,0 +1,4 @@
+# Vendored real-world model corpus driven by the corpus tests. Mark it so
+# GitHub collapses these files in diffs and leaves them out of the language
+# statistics; the models are third-party inputs, not code we author.
+test/fixtures/** linguist-generated=true linguist-vendored=true

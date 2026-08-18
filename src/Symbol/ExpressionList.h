@@ -29,6 +29,10 @@ public:
   void CheckPlaceholderVars(Model *m);
   bool CheckComputed(ContextInfo *info, unsigned wantargs);
   void OutputComputable(ContextInfo *info, unsigned wantargs);
+  // Deep-copy the list into sns by cloning each element. Returns NULL if any
+  // element is not cloneable (Expression::Clone returned NULL), so a partial,
+  // data-losing copy is never produced.
+  ExpressionList *Clone(SymbolNameSpace *sns);
 
 private:
   std::vector<Expression *> vExpressions;

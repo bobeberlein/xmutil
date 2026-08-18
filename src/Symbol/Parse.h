@@ -47,4 +47,11 @@ typedef union _tag_parse_union {
 #define NULL 0
 #endif
 
+// Vensim's missing-data sentinel: the value of the :NA: literal. Producers
+// and consumers must agree on this exact bit pattern -- the Vensim grammar
+// (VYacc.y, the VPTT_na action's -1E38 literal), the XMILE equation lexer
+// (:NA: / nan), and the .mdl writer (MDLFormat::FormatMDLNumber, which folds
+// the value back to the literal ":NA:" with an exact == compare).
+constexpr double kVensimNaSentinel = -1e38;
+
 #endif

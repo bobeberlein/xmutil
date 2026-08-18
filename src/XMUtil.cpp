@@ -2,7 +2,9 @@
 //
 #include "XMUtil.h"
 
+#include <charconv>
 #include <cstring>
+#include <exception>
 
 #include "Dynamo/DynamoParse.h"
 #include "Model.h"
@@ -19,6 +21,12 @@ std::string StringFromDouble(double val) {
   char buf[128];
   sprintf(buf, "%g", val);
   return std::string(buf);
+}
+
+std::string ShortestDouble(double val) {
+  char buf[64];
+  auto res = std::to_chars(buf, buf + sizeof(buf), val);
+  return std::string(buf, res.ptr);
 }
 
 std::string SpaceToUnderBar(const std::string &s) {
@@ -251,26 +259,55 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
   return 33;
 }
 
-extern "C" {
-// returns NULL on error or a string containing XMILE that the caller now owns
-char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, bool isCompact,
-                           int isLongName, bool isAsSectors) {
-  Model m{};
-  std::string ext;
-  if (fileName == nullptr) {
-    fileName = "<in memory>";
-  } else if (strlen(fileName) > 5)
-    ext = fileName + strlen(fileName) - 3;
+namespace {
 
-  // parse the input
-  double xscale = 1.0;
-  double yscale = 1.0;
-  if (ext == "dyn" || ext == "DYN") {
+// File-extension dispatch for the C entry points: case-insensitive match
+// anchored at the last '.'. The old length-based slice (strlen > 5, last
+// three bytes) misrouted the shortest legal names like "x.dyn" to the
+// Vensim parser and missed mixed-case extensions entirely.
+bool HasExtension(const char *fileName, const char *ext) {
+  const char *dot = strrchr(fileName, '.');
+  return dot != nullptr && StringMatch(dot + 1, ext);
+}
+
+// The engine reports some failures by throwing (string literals out of
+// Variable::AddEq and the subscript machinery, plus std::bad_alloc from any
+// allocation). An exception unwinding across the extern "C" boundary is
+// undefined behavior, so every conversion entry point catches near the
+// boundary and funnels through here (called from a catch block) to log the
+// reason and turn it into the documented NULL return.
+char *LogConversionFailure() {
+  try {
+    throw;
+  } catch (const char *msg) {
+    log("error: %s\n", msg);
+  } catch (const std::exception &e) {
+    log("error: %s\n", e.what());
+  } catch (...) {
+    log("error: unexpected exception during conversion\n");
+  }
+  return nullptr;
+}
+
+void LogAll(const std::vector<std::string> &msgs) {
+  for (const std::string &m : msgs) {
+    log("%s\n", m.c_str());
+  }
+}
+
+// Parse native (Vensim or Dynamo) source into m, dispatching on the .dyn
+// extension, and report the parser's sketch scale ratios. isLongName keeps its
+// historical per-parser interpretation -- any non-zero value for Dynamo, but
+// exactly 1 for Vensim -- because both C entry points have always behaved that
+// way and it is part of the extern "C" contract.
+bool ParseNativeInput(Model &m, const char *source, uint32_t len, const char *fileName, int isLongName,
+                      bool isAsSectors, double &xscale, double &yscale) {
+  if (HasExtension(fileName, "dyn")) {
     DynamoParse dp{&m};
     dp.SetLongName(isLongName != 0);
     m.SetAsSectors(isAsSectors);
-    if (!dp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
-      return nullptr;
+    if (!dp.ProcessFile(fileName, source, len)) {
+      return false;
     }
     xscale = dp.Xratio();
     yscale = dp.Yratio();
@@ -278,30 +315,69 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
     VensimParse vp{&m};
     vp.SetLongName(isLongName == 1);
     m.SetAsSectors(isAsSectors);
-    if (!vp.ProcessFile(fileName, mdlSource, mdlSourceLen)) {
-      return nullptr;
+    if (!vp.ProcessFile(fileName, source, len)) {
+      return false;
     }
     xscale = vp.Xratio();
     yscale = vp.Yratio();
   }
+  return true;
+}
 
-  // if(m->AnalyzeEquations()) {
-  //   m->Simulate() ;
-  //   m->OutputComputable(true);
-  // }
+// Parse XMILE source into m, logging any diagnostics. A successful parse can
+// still leave advisory diagnostics in errs (e.g. <gf type="discrete"> mapped
+// to continuous); they are surfaced here and not carried forward, so the
+// post-Print checks in FinishXmile/FinishMdl only see genuine serialization
+// errors. There is no sectors argument to pass along: Model::ParseXMILE marks
+// the Model as XMILE-sourced and PrintXMILE emits those as sectors outright.
+bool ParseXmileInput(Model &m, const char *source, uint32_t len, const char *fileName) {
+  std::vector<std::string> errs;
+  bool ok = m.ParseXMILE(fileName, source, len, errs);
+  LogAll(errs);
+  return ok;
+}
 
-  // mark variable types and potentially convert INTEG equations
-  // involving expressions into flows (a single net flow on the first
-  // pass though this)
-  m.MarkVariableTypes(nullptr);
-  m.AdjustGroupNames();  // have to be unique and not elsewhere in the model
+// Serialization epilogues: print the model, and on any reported error log and
+// return NULL; otherwise return the strdup'd text the caller now owns.
+// TODO: expose errs through the C API instead of only logging them.
+char *FinishXmile(Model &m, bool isCompact, double xscale, double yscale) {
+  std::vector<std::string> errs;
+  std::string xmile = m.PrintXMILE(isCompact, errs, xscale, yscale);
+  if (!errs.empty()) {
+    LogAll(errs);
+    return nullptr;
+  }
+  return strdup(xmile.c_str());
+}
 
-  for (MacroFunction *mf : m.MacroFunctions()) {
-    m.MarkVariableTypes(mf->NameSpace());
+char *FinishMdl(Model &m) {
+  std::vector<std::string> errs;
+  std::string mdl = m.PrintMDL(errs);
+  if (!errs.empty()) {
+    LogAll(errs);
+    return nullptr;
+  }
+  return strdup(mdl.c_str());
+}
+
+}  // namespace
+
+extern "C" {
+// returns NULL on error or a string containing XMILE that the caller now owns
+char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, bool isCompact,
+                           int isLongName, bool isAsSectors) try {
+  Model m{};
+  if (fileName == nullptr) {
+    fileName = "<in memory>";
   }
 
-  // any ghosts that are never defined make the first appearance not a ghost
-  m.CheckGhostOwners();
+  double xscale = 1.0;
+  double yscale = 1.0;
+  if (!ParseNativeInput(m, mdlSource, mdlSourceLen, fileName, isLongName, isAsSectors, xscale, yscale)) {
+    return nullptr;
+  }
+
+  m.RunPostParsePipeline();
 
   // if there is a view then try to make sure everything is defined in
   // the views put unknowns in a heap in the first view at 20,20 but
@@ -312,16 +388,85 @@ char *convert_mdl_to_xmile(const char *mdlSource, uint32_t mdlSourceLen, const c
     m.AttachStragglers();
   }
 
-  // TODO: expose errs
-  std::vector<std::string> errs;
-  std::string xmile = m.PrintXMILE(isCompact, errs, xscale, yscale);
+  return FinishXmile(m, isCompact, xscale, yscale);
+} catch (...) {
+  return LogConversionFailure();
+}
 
-  if (errs.size() != 0) {
+// returns NULL on error or a string containing XMILE that the caller now owns
+char *convert_xmile_to_xmile(const char *source, uint32_t len, const char *fileName, int isLongName,
+                             bool isAsSectors) try {
+  Model m{};
+  if (fileName == nullptr) {
+    fileName = "<in memory>";
+  }
+  // Neither trailing option is consumed on the XMILE path; both are accepted
+  // for API symmetry with convert_mdl_to_xmile so embedders can use a
+  // consistent call shape.
+  //
+  // isLongName: v1 of the XMILE reader has no use for it -- XMILE has no
+  // long/short name distinction at the envelope level and PrintXMILE reads
+  // naming state from the populated Model.
+  //
+  // isAsSectors: the sector form is the only form an XMILE-sourced model is
+  // emitted in. What `false` selects is the module decomposition, which emits
+  // one <model> per group or per view -- a document this project's own reader
+  // rejects ("multiple <model> elements are not supported"), so honoring it
+  // would mean normalizing XMILE into XMILE nothing here can read back. See
+  // Model::PrintXMILE.
+  (void)isLongName;
+  (void)isAsSectors;
+
+  if (!ParseXmileInput(m, source, len, fileName)) {
     return nullptr;
   }
 
-  char *result = strdup(xmile.c_str());
+  m.RunPostParsePipeline();
 
-  return result;
+  // XMILE input does not carry the Vensim sketch x/y scaling factors; emit at
+  // unit scale. Embedders that need scale awareness can layer it on top.
+  return FinishXmile(m, /*isCompact=*/false, /*xscale=*/1.0, /*yscale=*/1.0);
+} catch (...) {
+  return LogConversionFailure();
+}
+
+// returns NULL on error or a string containing Vensim .mdl that the caller now owns
+char *convert_xmile_to_mdl(const char *source, uint32_t len, const char *fileName, int isLongName) try {
+  Model m{};
+  if (fileName == nullptr) {
+    fileName = "<in memory>";
+  }
+  (void)isLongName;  // see convert_xmile_to_xmile
+
+  if (!ParseXmileInput(m, source, len, fileName)) {
+    return nullptr;
+  }
+
+  m.RunPostParsePipeline();
+
+  return FinishMdl(m);
+} catch (...) {
+  return LogConversionFailure();
+}
+
+// returns NULL on error or a string containing Vensim .mdl that the caller now owns
+char *convert_to_mdl(const char *mdlSource, uint32_t mdlSourceLen, const char *fileName, int isLongName) try {
+  Model m{};
+  if (fileName == nullptr) {
+    fileName = "<in memory>";
+  }
+
+  // .mdl output carries no sketch scaling, so the parsed ratios are unused.
+  double xscale = 1.0;
+  double yscale = 1.0;
+  if (!ParseNativeInput(m, mdlSource, mdlSourceLen, fileName, isLongName, /*isAsSectors=*/false, xscale, yscale)) {
+    return nullptr;
+  }
+
+  m.RunPostParsePipeline();
+
+  return FinishMdl(m);
+} catch (...) {
+  return LogConversionFailure();
 }
 }  // extern "C"

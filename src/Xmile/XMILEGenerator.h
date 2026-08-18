@@ -9,6 +9,8 @@ class Model;
 #include <set>
 #include <string>
 #include <vector>
+
+#include "../Symbol/Symbol.h"
 class VensimView;
 class SymbolNameSpace;
 class Variable;
@@ -27,13 +29,16 @@ protected:
   void generateModelAsSectors(tinyxml2::XMLElement *element, std::vector<std::string> &errs, SymbolNameSpace *ns,
                               bool wantDiagram);
   void generateEquation(Variable *var, tinyxml2::XMLDocument *doc, tinyxml2::XMLElement *variables);
-  void generateEquations(std::set<Variable *> &included, tinyxml2::XMLDocument *doc, tinyxml2::XMLElement *variables);
+  // Ordered by name (SymbolNameLess), not pointer value: iteration order of
+  // these sets determines the order variables are emitted in the document.
+  void generateEquations(std::set<Variable *, SymbolNameLess> &included, tinyxml2::XMLDocument *doc,
+                         tinyxml2::XMLElement *variables);
   void generateModelAsModules(tinyxml2::XMLElement *element, std::vector<std::string> &errs, SymbolNameSpace *ns);
   bool generateModelAsGroups(tinyxml2::XMLElement *elemeGnt, std::vector<std::string> &errs, SymbolNameSpace *ns);
   void generateSectorViews(tinyxml2::XMLElement *views, tinyxml2::XMLElement *vars, std::vector<std::string> &errs,
                            bool mainmodel);
   void generateView(VensimView *view, tinyxml2::XMLElement *element, std::vector<std::string> &errs,
-                    std::set<Variable *> *needed);
+                    std::set<Variable *, SymbolNameLess> *needed);
 
 private:
   Model *_model;

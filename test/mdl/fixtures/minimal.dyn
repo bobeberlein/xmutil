@@ -1,0 +1,9 @@
+L Population=Population+DT*Births
+   (people)
+A Births=Population*frac
+   (people/Year)
+C frac=0.02
+   (1/Year)
+N Population=1000
+   (people)
+SPEC DT=0.25

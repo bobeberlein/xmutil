@@ -101,4 +101,10 @@ private:
 
 extern VensimParse *VPObject;
 
+// Populate the namespace with the full xmutil Function table (INTEG, IF THEN
+// ELSE, SMOOTH, ZIDZ, XIDZ, ...). Each ctor self-registers via Symbol's base
+// ctor. Exposed as a free function so the XMILE reader can call it without
+// instantiating a VensimParse; both readers share the same Function set.
+extern void RegisterXmutilFunctions(SymbolNameSpace *sns);
+
 #endif

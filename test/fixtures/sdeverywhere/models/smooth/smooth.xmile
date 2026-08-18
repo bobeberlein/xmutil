@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE" xmlns:simlin="https://simlin.com/XMILE/v1.0">
+    <header>
+        <vendor>Simlin</vendor>
+        <product version="0.1.0" lang="en">Simlin</product>
+    </header>
+    <sim_specs method="euler" time_units="Months">
+        <start>0</start>
+        <stop>40</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <dimensions>
+        <dim name="subb">
+            <elem name="b2"></elem>
+            <elem name="b3"></elem>
+        </dim>
+        <dim name="suba">
+            <elem name="a2"></elem>
+            <elem name="a3"></elem>
+            <isee:maps_to>subb</isee:maps_to>
+        </dim>
+        <dim name="dima">
+            <elem name="a1"></elem>
+            <elem name="a2"></elem>
+            <elem name="a3"></elem>
+            <isee:maps_to>dimb</isee:maps_to>
+        </dim>
+        <dim name="dimb">
+            <elem name="b1"></elem>
+            <elem name="b2"></elem>
+            <elem name="b3"></elem>
+        </dim>
+    </dimensions>
+    <model>
+        <variables>
+            <aux name="delay">
+                <eqn>2</eqn>
+            </aux>
+            <aux name="delay 2">
+                <dimensions>
+                    <dim name="suba"></dim>
+                </dimensions>
+                <eqn>2</eqn>
+            </aux>
+            <aux name="delay 3">
+                <dimensions>
+                    <dim name="dima"></dim>
+                </dimensions>
+                <eqn>2</eqn>
+            </aux>
+            <aux name="input">
+                <eqn>3+( IF TIME &gt;= (10) AND TIME &lt; ((10) + MAX(DT,10)) THEN 1 ELSE 0 )</eqn>
+            </aux>
+            <aux name="input 2">
+                <dimensions>
+                    <dim name="suba"></dim>
+                </dimensions>
+                <eqn>3+( IF TIME &gt;= (10) AND TIME &lt; ((10) + MAX(DT,10)) THEN 1 ELSE 0 )</eqn>
+            </aux>
+            <aux name="input 2x3">
+                <dimensions>
+                    <dim name="suba"></dim>
+                    <dim name="dimb"></dim>
+                </dimensions>
+                <eqn>3+( IF TIME &gt;= (10) AND TIME &lt; ((10) + MAX(DT,10)) THEN 1 ELSE 0 )</eqn>
+            </aux>
+            <aux name="input 3">
+                <dimensions>
+                    <dim name="dima"></dim>
+                </dimensions>
+                <eqn>3+( IF TIME &gt;= (10) AND TIME &lt; ((10) + MAX(DT,10)) THEN 1 ELSE 0 )</eqn>
+            </aux>
+            <aux name="input 3x3">
+                <dimensions>
+                    <dim name="dima"></dim>
+                    <dim name="dimb"></dim>
+                </dimensions>
+                <eqn>3+( IF TIME &gt;= (10) AND TIME &lt; ((10) + MAX(DT,10)) THEN 1 ELSE 0 )</eqn>
+            </aux>
+            <aux name="s1">
+                <eqn>SMTH1(input, delay)</eqn>
+            </aux>
+            <aux name="s10">
+                <dimensions>
+                    <dim name="suba"></dim>
+                    <dim name="dimb"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_2[SubA], delay)</eqn>
+            </aux>
+            <aux name="s2">
+                <dimensions>
+                    <dim name="dima"></dim>
+                </dimensions>
+                <eqn>SMTH1(input, delay)</eqn>
+            </aux>
+            <aux name="s3">
+                <dimensions>
+                    <dim name="dima"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_3[DimA], delay_3[DimA])</eqn>
+            </aux>
+            <aux name="s4">
+                <dimensions>
+                    <dim name="suba"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_2[SubA], delay_2[SubA])</eqn>
+            </aux>
+            <aux name="s5">
+                <dimensions>
+                    <dim name="suba"></dim>
+                </dimensions>
+                <eqn>SMTH3(input_2[SubA], delay_2[SubA])</eqn>
+            </aux>
+            <aux name="s6">
+                <dimensions>
+                    <dim name="dimb"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_3[DimA], delay_3[DimA])</eqn>
+            </aux>
+            <aux name="s7">
+                <dimensions>
+                    <dim name="subb"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_2[SubA], delay_2[SubA])</eqn>
+            </aux>
+            <aux name="s8">
+                <dimensions>
+                    <dim name="dima"></dim>
+                    <dim name="dimb"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_3x3[DimA, DimB], delay)</eqn>
+            </aux>
+            <aux name="s9">
+                <dimensions>
+                    <dim name="suba"></dim>
+                    <dim name="dimb"></dim>
+                </dimensions>
+                <eqn>SMTH1(input_2x3[SubA, DimB], delay)</eqn>
+            </aux>
+        </variables>
+        <views>
+        </views>
+    </model>
+</xmile>

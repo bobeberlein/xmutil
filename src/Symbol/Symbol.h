@@ -1,6 +1,7 @@
 #ifndef _XMUTIL_SYMBOL_H
 #define _XMUTIL_SYMBOL_H
 
+#include <set>
 #include <string>
 
 #include "../ContextInfo.h"
@@ -69,6 +70,25 @@ private:
   std::string sName;
   Symbol *pOwner;
   std::set<Symbol *> *pSubranges;  // backward from SetOwber
+};
+
+// Orders Symbol (or Variable) pointers by display name so that set iteration
+// is deterministic. A std::set keyed on raw pointers iterates in heap-address
+// order, which silently varies with allocation history and allocator, and any
+// such order that reaches serialized output makes the output nondeterministic.
+// Name-only ordering is a strict weak ordering with no ties here because
+// name uniqueness per namespace is enforced by the find-before-create
+// discipline at every symbol-creation site (SymbolNameSpace::Insert's assert
+// only backstops it in debug builds), so two distinct symbols in one
+// namespace never share a name -- and every container ordered this way holds
+// symbols from a single namespace. Variables created by
+// Model::AddUnnamedVariable share an empty name and must never be put in a
+// SymbolNameLess-keyed set; they are unreachable by the current users of this
+// comparator.
+struct SymbolNameLess {
+  bool operator()(Symbol *a, Symbol *b) const {
+    return a->GetName() < b->GetName();
+  }
 };
 
 #endif  // once

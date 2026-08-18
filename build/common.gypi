@@ -71,7 +71,15 @@
                         'ExceptionHandling': '2',  # /EHsc
                         'AdditionalOptions': [
                             '/MP',
+                            '/std:c++17',
+                            # Sources carry UTF-8 literals; without this MSVC
+                            # decodes them with the machine's ANSI codepage.
+                            '/utf-8',
                         ],
+                        # MSVC writes every .obj into one flat directory, so
+                        # same-named sources in different directories (the two
+                        # RoundTrip.cpp helpers) would overwrite each other.
+                        'ObjectFile': '$(IntDir)%(RelativeDir)',
                     },
                     'VCLinkerTool': {
                         'AdditionalLibraryDirectories': [
@@ -80,15 +88,11 @@
                         'SubSystem' : '1',
                     },
                 },
-                'include_dirs': [
-                    '-L<(cwd)/third_party/include',
-                ],
                 'link_settings': {
                     'ldflags': [
                         '-L<(cwd)/third_party/win/lib',
                     ],
                     'libraries': [
-                        '<(cwd)/third_party/win/lib/tinyxml2.lib',
                         '<(cwd)/third_party/win/lib/icudt.lib',
                         '<(cwd)/third_party/win/lib/icuin.lib',
                         '<(cwd)/third_party/win/lib/icuio.lib',
@@ -96,14 +100,16 @@
                         '<(cwd)/third_party/win/lib/icuuc.lib',
                     ]
                 }, 
+                # ICU ships as DLLs whose names carry the major version, so this
+                # list tracks whatever third_party/win/lib/dlls was provisioned
+                # with (U_ICU_VERSION_MAJOR_NUM in unicode/uvernum.h).
                 'copies': [{
                     'files': [
-                        '$(SolutionDir)third_party/win/lib/dlls/icudt67.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icuin67.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icudt67.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icuio67.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icutu67.dll',
-                        '$(SolutionDir)third_party/win/lib/dlls/icuuc67.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icudt78.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuin78.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuio78.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icutu78.dll',
+                        '$(SolutionDir)third_party/win/lib/dlls/icuuc78.dll',
                     ],
                     'destination': '$(SolutionDir)$(CONFIGURATION)',
                 }]

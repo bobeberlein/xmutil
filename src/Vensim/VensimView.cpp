@@ -53,6 +53,10 @@ VensimVariableElement::VensimVariableElement(VensimView *view, Variable *var, in
   _width = _height = 0;
   _ghost = var->GetView() != NULL;
   _cross_level = false;
+  // _attached is set later by MarkAttachedToFlow / equivalent caller logic when
+  // a valve adopts this variable as its flow label; default it to false so the
+  // comparator's attached-state check is deterministic across the round trip.
+  _attached = false;
   _variable = var;
   _variable->SetView(view);
 #ifndef NDEBUG
@@ -97,10 +101,10 @@ VensimValveElement::VensimValveElement(char *curpos, char *buf, VensimParse *par
     _attached = false;
 }
 
-bool VensimVariableElement::Ghost(std::set<Variable *> *adds, bool update) {
+bool VensimVariableElement::Ghost(std::set<Variable *, SymbolNameLess> *adds, bool update) {
   if (_ghost && !_cross_level) {
     if (adds) {
-      std::set<Variable *>::iterator it = adds->find(this->GetVariable());
+      std::set<Variable *, SymbolNameLess>::iterator it = adds->find(this->GetVariable());
       if (it != adds->end()) {
         if (update) {
           adds->erase(it);
@@ -145,10 +149,25 @@ VensimConnectorElement::VensimConnectorElement(char *curpos, char *buf, VensimPa
   curpos = parser->GetString(curpos, name);  // this might be an index number
 }
 
-VensimConnectorElement::VensimConnectorElement(int from, int to, int x, int y) {
+VensimConnectorElement::VensimConnectorElement(int from, int to, int x, int y, char polarity) {
   _from = from;
   _to = to;
   _npoints = 1;
+  _x = x;
+  _y = y;
+  _polarity = polarity;
+}
+
+VensimValveElement::VensimValveElement(int x, int y) {
+  _x = x;
+  _y = y;
+  // The MDL sketch records a "shape bits" word whose bit-5 means "attached to
+  // a flow variable". XMILE-synthesized valves are always paired with a
+  // following VensimVariableElement, so they are attached.
+  _attached = true;
+}
+
+VensimCommentElement::VensimCommentElement(int x, int y) {
   _x = x;
   _y = y;
 }
@@ -204,9 +223,24 @@ void VensimView::ReadView(VensimParse *parser, char *buf) {
 }
 
 int VensimView::GetNextUID() {
-  for (size_t i = vElements.size(); --i > 0;) {
-    if (!vElements[i])
-      return i;
+  // Walk from the top of the vector down looking for a NULL slot. The Vensim
+  // sketch convention reserves UID 0 (the Vensim parser populates from index 1
+  // upward, then connectors reference those indices), so the scan stops at
+  // index 1. When the vector is empty or fully packed, grow by 25 NULL slots
+  // and re-scan; the recursion terminates because the resize guarantees at
+  // least one NULL slot above index 0.
+  //
+  // Pre-Phase-7 callers (the Vensim sketch parser) always pre-sized the vector
+  // to at least the highest UID + 25 before invoking GetNextUID, so an empty
+  // vector never reached the for-loop. The XMILE reader path can hit this with
+  // an empty vector, so the size-0 guard is now mandatory: the original
+  // `--i > 0` underflows size_t when vElements.size() == 0 and would deref
+  // garbage at the first iteration.
+  if (!vElements.empty()) {
+    for (size_t i = vElements.size() - 1; i > 0; --i) {
+      if (!vElements[i])
+        return static_cast<int>(i);
+    }
   }
   vElements.resize(vElements.size() + 25, NULL);
   return GetNextUID();
@@ -220,12 +254,26 @@ int VensimView::SetViewStart(int startx, int starty, double xratio, double yrati
   int min_y = INT32_MAX;
   for (VensimViewElement *ele : vElements) {
     if (ele) {
+      // A connector is an edge, not a positioned box: its _x/_y is a routing
+      // waypoint (and a straight connector carries a degenerate (0,0) point).
+      // Letting one define the view's minimum would peg the origin at (0,0) and
+      // translate the whole diagram on every round trip, since SetViewStart then
+      // shifts min to (startx,starty) and the connector's points move with it.
+      // Bound the view by the actual boxed elements; connectors are translated
+      // by the same offset below via ScalePoints.
+      if (ele->Type() == VensimViewElement::ElementTypeCONNECTOR)
+        continue;
       if (ele->X() < min_x)
         min_x = ele->X();
       if (ele->Y() < min_y)
         min_y = ele->Y();
     }
   }
+  // A view with no boxed elements at all (only connectors) has no meaningful
+  // origin to normalize against; leave coordinates untranslated rather than
+  // shifting by the INT32_MAX sentinel.
+  if (min_x == INT32_MAX || min_y == INT32_MAX)
+    return _uid_offset + vElements.size();
   int off_x = std::round(startx - min_x * xratio);
   int off_y = std::round(starty - min_y * yratio);
   for (VensimViewElement *ele : vElements) {

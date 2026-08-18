@@ -101,41 +101,135 @@
         ],
         'sources': [
             './src/Main.cpp',
+            # CLI-only: the wasm and library entry points never derive an
+            # output filename, so this stays out of common_sources.
+            './src/OutputPath.h',
+            './src/OutputPath.cpp',
             '<@(common_sources)',
+            '<@(platform_sources)',
         ],
         'defines' : [
-            
+
         ],
         'include_dirs': [
             'src',
-        ]
-    }, {
-        'target_name': 'XMUtil_wasm',
-        'type': 'none',
-        'dependencies': [],
-        'sources': [
-            './src/emscripten_wrapper.cpp',
-            '<@(common_sources)',
         ],
-        'actions': [{
-            'action_name': 'build_wasm',
-            'inputs': [
-                '<@(_sources)',
-                '<(cwd)/build_wasm_action.sh',
-            ],
-            'outputs': [
-                '<(PRODUCT_DIR)/xmutil.js',
-                '<(PRODUCT_DIR)/xmutil.wasm',
-            ],
-            'action': [
-                'bash',
-                '<(cwd)/build_wasm_action.sh',
-                '<(PRODUCT_DIR)',
-                '<@(_sources)',
-            ],
-        }],
+    }, {
+        # The custom test harness links the same engine sources as XMUtil but
+        # swaps Main.cpp for the test entry point.
+        'target_name': 'xmutil_test',
+        'type': 'executable',
+        'product_name': 'xmutil_test',
+        'mac_bundle': 0,
+        'sources': [
+            '<@(common_sources)',
+            '<@(platform_sources)',
+            # Main.cpp is replaced by the harness, so the CLI-only sources it
+            # depends on have to be listed here too.
+            './src/OutputPath.h',
+            './src/OutputPath.cpp',
+            './test/TestHarness.cpp',
+            './test/UnicodeTest.cpp',
+            './test/OutputPathTest.cpp',
+            './test/mdl/ModelComparator.cpp',
+            './test/mdl/RoundTrip.cpp',
+            './test/mdl/MDLGeneratorTest.cpp',
+            './test/mdl/MDLFormatTest.cpp',
+            './test/mdl/WalkerTest.cpp',
+            './test/mdl/ModelComparatorTest.cpp',
+            './test/mdl/EquationRoundTripTest.cpp',
+            './test/mdl/ControlRoundTripTest.cpp',
+            './test/mdl/SketchRoundTripTest.cpp',
+            './test/mdl/MacroRoundTripTest.cpp',
+            './test/mdl/WriterBugRegressionTest.cpp',
+            './test/mdl/GroupNestingTest.cpp',
+            './test/mdl/CorpusRoundTripTest.cpp',
+            './test/mdl/CEntryTest.cpp',
+            './test/mdl/DynamoToMdlTest.cpp',
+            './test/mdl/CrossViewFlowTest.cpp',
+            './test/xmile/RoundTrip.cpp',
+            './test/xmile/BasicSmokeTest.cpp',
+            './test/xmile/XmileFunctionsTest.cpp',
+            './test/xmile/EquationParseTest.cpp',
+            './test/xmile/AuxRoundTripTest.cpp',
+            './test/xmile/SimSpecsRoundTripTest.cpp',
+            './test/xmile/StockFlowRoundTripTest.cpp',
+            './test/xmile/ArrayRoundTripTest.cpp',
+            './test/xmile/LookupRoundTripTest.cpp',
+            './test/xmile/FreeTextSanitizeRoundTripTest.cpp',
+            './test/xmile/ModelUnitsRoundTripTest.cpp',
+            './test/xmile/ExtrapolateRoundTripTest.cpp',
+            './test/xmile/ViewRoundTripTest.cpp',
+            './test/xmile/GroupRoundTripTest.cpp',
+            './test/xmile/SingleModelNormalizationTest.cpp',
+            './test/xmile/CorpusRoundTripTest.cpp',
+            './test/xmile/XmileCorpusTest.cpp',
+            './test/xmile/FixpointTest.cpp',
+            './test/xmile/ErrorRejectTest.cpp',
+            './test/xmile/BuiltinNameCollisionTest.cpp',
+            './test/xmile/PiKeywordTest.cpp',
+            './test/xmile/ReaderLifetimeTest.cpp',
+            './test/xmile/DiagnosticsTest.cpp',
+            './test/xmile/CEntryTest.cpp',
+            './test/xmile/MdlXmileByteIdentityTest.cpp',
+        ],
+        'defines' : [
+            # <(cwd) is the repo root: configure.sh passes -Dcwd=`pwd` and the
+            # same variable resolves third_party paths elsewhere in this build.
+            # The corpus test joins it with a relative fixture path so it can
+            # locate on-disk fixtures regardless of the test binary's CWD.
+            'XMUTIL_SRC_ROOT="<(cwd)"',
+        ],
+        'include_dirs': [
+            'src',
+        ],
     }],
+    'conditions': [
+        # The wasm target drives emcc through a shell script, so it only exists
+        # on the platforms that can run it -- keeping it out of the Visual
+        # Studio solution leaves the CLI (and its tests) as the only projects.
+        ['OS!="win"', {
+            'targets': [{
+                'target_name': 'XMUtil_wasm',
+                'type': 'none',
+                'dependencies': [],
+                'sources': [
+                    './src/emscripten_wrapper.cpp',
+                    '<@(common_sources)',
+                ],
+                'actions': [{
+                    'action_name': 'build_wasm',
+                    'inputs': [
+                        '<@(_sources)',
+                        '<(cwd)/build_wasm_action.sh',
+                    ],
+                    'outputs': [
+                        '<(PRODUCT_DIR)/xmutil.js',
+                        '<(PRODUCT_DIR)/xmutil.wasm',
+                    ],
+                    'action': [
+                        'bash',
+                        '<(cwd)/build_wasm_action.sh',
+                        '<(PRODUCT_DIR)',
+                        '<@(_sources)',
+                    ],
+                }],
+            }],
+        }],
+    ],
     'variables': {
+        'conditions': [
+            # Linux links the system tinyxml2 and macOS has a prebuilt static
+            # lib, but nothing provisions a tinyxml2.lib for Windows, so there
+            # the amalgamated source next to the header is compiled in.
+            ['OS=="win"', {
+                'platform_sources': [
+                    './third_party/include/tinyxml2.cpp',
+                ],
+            }, {
+                'platform_sources': [],
+            }],
+        ],
         'common_sources': [
             './src/XMUtil.h',
             './src/XMUtil.cpp',
@@ -150,6 +244,24 @@
 
             './src/Xmile/XMILEGenerator.h',
             './src/Xmile/XMILEGenerator.cpp',
+            './src/Xmile/XmileReader.h',
+            './src/Xmile/XmileReader.cpp',
+            './src/Xmile/XmileView.h',
+            './src/Xmile/XmileView.cpp',
+            './src/Xmile/XmileFunctions.h',
+            './src/Xmile/XmileFunctions.cpp',
+            './src/Xmile/XmileEqLex.h',
+            './src/Xmile/XmileEqLex.cpp',
+            './src/Xmile/XmileEqYacc.tab.cpp',
+            './src/Xmile/XmileEqYacc.tab.hpp',
+            './src/Xmile/XmileEqYacc.y',
+            './src/Xmile/XmileParseFunctions.h',
+            './src/Xmile/XmileParseFunctions.cpp',
+
+            './src/Mdl/MDLFormat.h',
+            './src/Mdl/MDLFormat.cpp',
+            './src/Mdl/MDLGenerator.h',
+            './src/Mdl/MDLGenerator.cpp',
 
             './src/Vensim/VensimLex.h',
             './src/Vensim/VensimLex.cpp',

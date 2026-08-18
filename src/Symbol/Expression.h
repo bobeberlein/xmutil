@@ -18,7 +18,9 @@ class Model;
 class FlowList;
 class ExpressionTable;
 
-// probably don't need these after all
+// Runtime tag returned by Expression::GetType(), used to dispatch over the
+// concrete expression node kinds (the mdl writer's walker relies on it,
+// EXPTYPE_Logical in particular).
 enum EXPTYPE {
   EXPTYPE_None,
   EXPTYPE_Variable,
@@ -30,7 +32,8 @@ enum EXPTYPE {
   EXPTYPE_FunctionMemory,
   EXPTYPE_Lookup,
   EXPTYPE_Table,
-  EXPTYPE_Operator
+  EXPTYPE_Operator,
+  EXPTYPE_Logical
 };
 
 class Expression : public SymbolTableBase {
@@ -60,7 +63,7 @@ public:
     return true;
   }
   virtual void RemoveFunctionArgs(void) {
-  }                                                      // only 1 subclass does anything
+  }  // only 1 subclass does anything
   virtual void OutputComputable(ContextInfo *info) = 0;  // again don't skip - todo modify this to make dumping
                                                          // equations easy - possibly returning std::string
   virtual bool IsActiveInit() {
@@ -73,6 +76,15 @@ public:
   virtual void GetVarsUsed(std::vector<Variable *> &vars) = 0;  // list of variables used
   virtual void MarkType(XMILE_Type type) = 0;                   // only called with flow after test returns true
   virtual Expression *GetArg(int pos) {
+    return NULL;
+  }
+  // Deep-copy this node into sns, duplicating owned children (subscript lists,
+  // child expressions, argument lists) and sharing referenced Symbols (the
+  // model Variable, the Function). Returns NULL for node kinds the XMILE reader
+  // never produces as a scalar sub-expression (tables, symbol lists); the sole
+  // caller -- optional-argument padding, which duplicates a delay's input for
+  // the synthesized initial value -- never clones those and checks for NULL.
+  virtual Expression *Clone(SymbolNameSpace *sns) {
     return NULL;
   }
 };
@@ -122,6 +134,12 @@ public:
   virtual void MarkType(XMILE_Type type) {
     pVariable->SetVariableType(type);
   }  // only called with flow after test returns true
+  virtual Expression *Clone(SymbolNameSpace *sns) override {
+    // The model Variable is shared (not owned); the subscript list is owned, so
+    // it is deep-copied via SymbolList::Clone (which self-registers in sns).
+    return new ExpressionVariable(sns, pVariable, pSubList ? pSubList->Clone() : nullptr);
+  }
+
 private:
   Variable *pVariable;   // pointer back to the model variable - not allocated by this object
   SymbolList *pSubList;  // subscripts - allocated by this object
@@ -185,6 +203,9 @@ public:
   virtual EXPTYPE GetType(void) {
     return EXPTYPE_Number;
   }
+  double GetValue() const {
+    return value;
+  }
   void FlipSign(void) {
     value = -value;
   }
@@ -193,15 +214,16 @@ public:
   }
   virtual void CheckPlaceholderVars(Model *m, bool isfirst) {
   }
-  virtual void OutputComputable(ContextInfo *info) {
-    *info << value;
-  }
+  virtual void OutputComputable(ContextInfo *info);
   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
     return false;
   }
   virtual void GetVarsUsed(std::vector<Variable *> &vars) {
   }  // list of variables used
   virtual void MarkType(XMILE_Type type) {
+  }
+  virtual Expression *Clone(SymbolNameSpace *sns) override {
+    return new ExpressionNumber(sns, value);
   }
 
 private:
@@ -217,6 +239,9 @@ public:
   }
   virtual EXPTYPE GetType(void) {
     return EXPTYPE_Literal;
+  }
+  const std::string &GetValue() const {
+    return value;
   }
   virtual double Eval(ContextInfo *info) {
     return -1;
@@ -313,6 +338,7 @@ public:
   virtual void GetVarsUsed(std::vector<Variable *> &vars) override;  // list of variables used
   virtual void MarkType(XMILE_Type type) override {
   }
+  virtual Expression *Clone(SymbolNameSpace *sns) override;
 
 private:
   Function *pFunction;  // not allocated here
@@ -347,6 +373,7 @@ public:
   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq);
   virtual void MarkType(XMILE_Type type) {
   }
+  virtual Expression *Clone(SymbolNameSpace *sns) override;
 
 private:
   Equation *pPlacholderEquation;  // used in computation (null if function defines LHS)
@@ -358,11 +385,13 @@ public:
     pExpressionVariable = var;
     pExpression = e;
     pExpressionTable = NULL;
+    bExtrapolate = false;
   }
   ExpressionLookup(SymbolNameSpace *sns, Expression *e, ExpressionTable *tbl) : Expression(sns) {
     pExpressionVariable = NULL;
     pExpression = e;
     pExpressionTable = tbl;
+    bExtrapolate = false;
   }
   ~ExpressionLookup(void) {
     if (HasGoodAlloc()) {
@@ -376,6 +405,21 @@ public:
   virtual ExpressionTable *GetTable(void) {
     return pExpressionTable;
   }
+  Expression *GetInput() {
+    return pExpression;
+  }  // the input/argument expr
+  ExpressionVariable *GetLookupVariable() {
+    return pExpressionVariable;
+  }  // NULL for WITH LOOKUP
+  // A TABXL(table, x) call marks the referenced graphical function as
+  // extrapolating (Vensim/MDL has no definition-level flag; the call site is the
+  // only carrier). Set by the parser for a TABXL call; applied post-parse by
+  // CheckTableUses, which is order-independent so a forward reference to a
+  // later-declared <gf> is still marked.
+  void SetExtrapolate() {
+    bExtrapolate = true;
+  }
+  virtual void CheckTableUses(Variable *lhs) override;
   void CheckPlaceholderVars(Model *m, bool isfirst) {
     pExpression->CheckPlaceholderVars(m, false);
   }
@@ -397,11 +441,13 @@ public:
   }  // list of variables used
   virtual void MarkType(XMILE_Type type) {
   }
+  virtual Expression *Clone(SymbolNameSpace *sns) override;
 
 private:
   ExpressionVariable *pExpressionVariable;  // null for with_lookup
   Expression *pExpression;
   ExpressionTable *pExpressionTable;
+  bool bExtrapolate;  // set for a TABXL(table, x) call: mark table's GF extrapolating
 };
 
 class ExpressionTable : public Expression {
@@ -564,6 +610,9 @@ protected:
         pE2->OutputComputable(info);                                                                \
       *info << after;                                                                               \
     }                                                                                               \
+    virtual Expression *Clone(SymbolNameSpace *sns) override {                                      \
+      return new name(sns, pE1 ? pE1->Clone(sns) : nullptr, pE2 ? pE2->Clone(sns) : nullptr);       \
+    }                                                                                               \
   };
 #define EO2SubClass(name, evaleq, compsym) EO2SubClassRaw(name, evaleq, "", compsym, "");
 
@@ -572,10 +621,48 @@ EO2SubClass(ExpressionMultiply, pE1->Eval(info) * pE2->Eval(info), "*")
         EO2SubClass(ExpressionAdd, pE1->Eval(info) + pE2->Eval(info), "+")
             EO2SubClass(ExpressionSubtract, pE1->Eval(info) - pE2->Eval(info), "-")
                 EO2SubClass(ExpressionPower, exp(log(pE1->Eval(info)) * pE2->Eval(info)), "^")
-                    EO2SubClassRaw(ExpressionParen, pE1->Eval(info), "(", "", ")")
-                        EO2SubClassRaw(ExpressionUnaryMinus, (-pE1->Eval(info)), "-", "", "")
+                    EO2SubClassRaw(ExpressionUnaryMinus, (-pE1->Eval(info)), "-", "", "");
 
-                            class ExpressionLogical : public Expression {
+// Parenthesized grouping, from a literal '(' expr ')' in the source. Spelled
+// out instead of generated by EO2SubClassRaw only because its
+// OutputComputable is not the macro's unconditional before/middle/after
+// emission -- see Expression.cpp for why a paren whose child already renders
+// as one enclosing group must not be emitted a second time. Given the
+// single-operand invariant the constructor asserts, that suppression is the
+// ONLY way its output differs from what EO2SubClassRaw(ExpressionParen,
+// pE1->Eval(info), "(", "", ")") would emit: with pE2 null the macro's
+// before + pE1 + middle + pE2 + after is exactly "(" + pE1 + ")", and the
+// empty-child case is exactly "()". Every other member matches the macro's,
+// in particular the GetBefore() == "(" tag that MDLGenerator's walker uses to
+// recognize and unwrap this node.
+class ExpressionParen : public ExpressionOperator2 {
+public:
+  ExpressionParen(SymbolNameSpace *sns, Expression *e1, Expression *e2) : ExpressionOperator2(sns, e1, e2) {
+    // Grouping has one operand. The second slot exists only because the base
+    // class carries two -- Clone, GetArg(1) and ~ExpressionOperator2 all reach
+    // it -- and every construction site (VensimParse, XmileParseFunctions,
+    // DynamoParse) passes NULL; OutputComputable renders pE1 alone, so a
+    // second operand would be silently dropped from the output.
+    assert(!e2);
+  }
+  ~ExpressionParen(void) {
+  }
+  virtual double Eval(ContextInfo *info) {
+    return pE1->Eval(info);
+  }
+  virtual const char *GetOperator() {
+    return "";
+  }
+  virtual const char *GetBefore() {
+    return "(";
+  }
+  virtual void OutputComputable(ContextInfo *info);
+  virtual Expression *Clone(SymbolNameSpace *sns) override {
+    return new ExpressionParen(sns, pE1 ? pE1->Clone(sns) : nullptr, pE2 ? pE2->Clone(sns) : nullptr);
+  }
+};
+
+class ExpressionLogical : public Expression {
 public:
   ExpressionLogical(SymbolNameSpace *sns, Expression *exp1, Expression *exp2, int oper) : Expression(sns) {
     pE1 = exp1;
@@ -588,6 +675,18 @@ public:
       delete pE2;
     }
   }
+  virtual EXPTYPE GetType(void) {
+    return EXPTYPE_Logical;
+  }
+  Expression *GetLeft() {
+    return pE1;
+  }  // NULL for unary :NOT:
+  Expression *GetRight() {
+    return pE2;
+  }  // operand for :NOT: lives here
+  int LogicalOperator() {
+    return mOper;
+  }  // ASCII char or VPTT_* token
   virtual double Eval(ContextInfo *info) {
     return 0;
   }
@@ -624,6 +723,9 @@ public:
       pE1->MarkType(type);
     if (pE2)
       pE2->MarkType(type);
+  }
+  virtual Expression *Clone(SymbolNameSpace *sns) override {
+    return new ExpressionLogical(sns, pE1 ? pE1->Clone(sns) : nullptr, pE2 ? pE2->Clone(sns) : nullptr, mOper);
   }
 
 private:
