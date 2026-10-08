@@ -535,21 +535,15 @@ bool Model::OutputComputable(bool wantshort) {
 
 bool Model::MarkVariableTypes(SymbolNameSpace *ns) {
   try {
-    SymbolNameSpace::HashTable *ht;
-    if (ns)
-      ht = ns->GetHashTable();
-    else {
-      ht = mSymbolNameSpace.GetHashTable();
+    if (!ns)
       ns = &mSymbolNameSpace;
-    }
-    std::vector<Variable *> vars;
-    for (const SymbolNameSpace::iterator &it : *ht) {
-      Symbol *sym = SNSitToSymbol(it);
-
-      if (sym->isType() == Symtype_Variable)
-        vars.push_back(static_cast<Variable *>(sym));
-    }
-    //
+    // Name order, not bucket order: MarkStockFlows lets the first stock to list
+    // a flow claim it, and a second stock sharing that flow gets a synthesized
+    // net flow instead. Walking the hash table made that choice depend on the
+    // standard library's hashing and the namespace's insertion history, so a
+    // re-parse of our own output (or the same model on another platform) could
+    // pick a different owner.
+    std::vector<Variable *> vars = GetVariables(ns);
     for (Variable *var : vars) {
       var->PurgeAFOEq();
       var->MarkTypes(ns);  // may change number of entries so can't be in above loop

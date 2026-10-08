@@ -327,7 +327,7 @@ int VensimLex::NextToken()  // also sets token type
             }
             c = GetNextChar(false);
           } while (c != '\r' && c != '\n' && c != '*' && c != '}');
-          while (sToken.back() == ' ')
+          while (!sToken.empty() && sToken.back() == ' ')
             sToken.pop_back();
           while (c && c != '}')
             c = GetNextChar(false);
@@ -386,7 +386,7 @@ int VensimLex::NextToken()  // also sets token type
         }
       }
       // strip any terminal spaces
-      while (sToken.back() == ' ' || sToken.back() == '_')
+      while (!sToken.empty() && (sToken.back() == ' ' || sToken.back() == '_'))
         sToken.pop_back();
       return VPTT_symbol;
     }

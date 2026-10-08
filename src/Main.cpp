@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "ConsoleAsserts.h"
 #include "Model.h"
 #include "OutputPath.h"
 #include "Unicode.h"
@@ -195,6 +196,7 @@ void CheckMemoryTrack(int clear);
 #endif
 
 int main(int argc, char *argv[]) {
+  RouteCrtReportsToConsole();
   if (!OpenUnicode()) {
     return -1;
   }

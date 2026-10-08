@@ -51,9 +51,11 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
   `third_party/win/lib/dlls` next to the binaries.
 - tinyxml2 has no prebuilt Windows lib, so `third_party/include/tinyxml2.cpp`
   is compiled into each target (`xmutil_platform_sources` in `CMakeLists.txt`).
-- Fixtures checked out with CRLF make `MdlXmileByteIdentity_teacup` fail: the
-  writer copies input line endings into `<doc>` text, so the golden no longer
-  matches byte for byte. With LF fixtures the output is byte-identical.
+- `.gitattributes` forces LF checkouts (`* text=auto eol=lf`) whatever
+  `core.autocrlf` says: the writer copies input line endings into `<doc>` text,
+  so CRLF fixtures broke `MdlXmileByteIdentity_teacup`. `test/fixtures/**` is
+  `-text` instead -- several vendored models are CRLF/mixed on purpose and must
+  stay byte-identical to their sources.
 
 ## CLI
 - `XMUtil <model>` converts to XMILE (writes `<base>.xmile`). An XMILE->XMILE

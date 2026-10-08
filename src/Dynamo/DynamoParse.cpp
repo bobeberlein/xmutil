@@ -216,7 +216,7 @@ static std::string compress_whitespace(const std::string &s) {
     else
       break;  // start skipping at any special character
   }
-  while (rval.back() == '_')
+  while (!rval.empty() && rval.back() == '_')
     rval.pop_back();
   return rval;
 }

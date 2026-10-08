@@ -270,7 +270,7 @@ static std::string compress_whitespace(const std::string &s) {
     } else if ((*tv >= 'A' && *tv <= 'Z') || (*tv >= 'a' && *tv <= 'z'))
       rval.push_back(*tv);  // otherwise ignore
   }
-  while (rval.back() == '_')
+  while (!rval.empty() && rval.back() == '_')
     rval.pop_back();
   return rval;
 }

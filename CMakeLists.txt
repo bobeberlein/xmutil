@@ -24,6 +24,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(xmutil_common_sources
   src/XMUtil.h
   src/XMUtil.cpp
+  src/ConsoleAsserts.h
   src/Log.h
   src/Log.cpp
   src/Model.h
@@ -339,7 +340,9 @@ if(XMUTIL_BUILD_TESTS)
   enable_testing()
   add_test(NAME xmutil_test COMMAND xmutil_test)
 
-  find_program(BASH_EXECUTABLE bash)
+  # Git for Windows' bash is usually not on PATH outside Git Bash itself, and
+  # HINTS outrank PATH, so it also wins over System32\bash.exe (the WSL launcher).
+  find_program(BASH_EXECUTABLE bash HINTS "$ENV{ProgramFiles}/Git/bin")
   if(BASH_EXECUTABLE AND NOT XMUTIL_WITH_UI)
     add_test(NAME cli_roundtrip
       COMMAND ${BASH_EXECUTABLE} test/cli_roundtrip.sh $<TARGET_FILE:XMUtil>

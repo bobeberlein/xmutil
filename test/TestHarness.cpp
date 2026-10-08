@@ -1,5 +1,6 @@
 #include "TestHarness.h"
 
+#include "../src/ConsoleAsserts.h"
 #include "../src/Unicode.h"
 
 int g_test_failures = 0;
@@ -16,6 +17,9 @@ int RegisterTest(const char *name, std::function<void()> fn) {
 }
 
 int main() {
+  RouteCrtReportsToConsole();
+  // Unbuffered so a crash mid-test still shows which test was running.
+  setvbuf(stdout, nullptr, _IONBF, 0);
   // The ICU-backed utf8ToLower requires the global case map opened by
   // OpenUnicode; Main.cpp does this for the CLI, the harness must do it here.
   if (!OpenUnicode()) {

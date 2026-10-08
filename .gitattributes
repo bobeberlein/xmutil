@@ -1,4 +1,12 @@
+# LF in the repository and in every checkout, on every platform. Without this a
+# Windows checkout with core.autocrlf=true gets CRLF files, which the MDL->XMILE
+# writer copies into <doc> text (breaking byte-identity goldens) and which make
+# every touched file show as fully rewritten. Binary files are auto-detected.
+* text=auto eol=lf
+
 # Vendored real-world model corpus driven by the corpus tests. Mark it so
 # GitHub collapses these files in diffs and leaves them out of the language
-# statistics; the models are third-party inputs, not code we author.
-test/fixtures/** linguist-generated=true linguist-vendored=true
+# statistics; the models are third-party inputs, not code we author. -text keeps
+# them byte-identical to their sources: several are CRLF or mixed on purpose
+# (real Vensim/Stella exports), and git must not convert them either way.
+test/fixtures/** linguist-generated=true linguist-vendored=true -text
