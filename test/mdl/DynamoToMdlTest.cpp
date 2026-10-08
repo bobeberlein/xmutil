@@ -10,7 +10,7 @@
 // Vensim re-parse adds).
 //
 // The .dyn fixture is read from disk via XMUTIL_SRC_ROOT (the repo root injected
-// by XMUtil.gyp) so the fixture file genuinely exists and is exercised, rather
+// by CMakeLists.txt) so the fixture file genuinely exists and is exercised, rather
 // than being inlined. Model.h is included so each Model* the round-trip helper
 // hands back is a COMPLETE type at its delete site (avoids -Wdelete-incomplete).
 

@@ -34,7 +34,7 @@ std::string ReadFile(const std::string &path) {
   return ss.str();
 }
 
-// XMUTIL_SRC_ROOT is the repo root, injected via -D in XMUtil.gyp so the test
+// XMUTIL_SRC_ROOT is the repo root, injected via -D in CMakeLists.txt so the test
 // binary can locate fixtures regardless of its CWD. The leading slash here
 // joins it as a path; the format mirrors CorpusRoundTripTest's convention.
 const char *kTeacupMdlPath = "/test/fixtures/simlin/teacup.mdl";

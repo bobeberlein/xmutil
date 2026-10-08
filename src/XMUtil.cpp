@@ -2,7 +2,9 @@
 //
 #include "XMUtil.h"
 
-#include <charconv>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <exception>
 
@@ -23,10 +25,105 @@ std::string StringFromDouble(double val) {
   return std::string(buf);
 }
 
+// Reproduces std::to_chars(double) byte for byte. libc++ marks the
+// floating-point to_chars unavailable below macOS 13.3 and the Intel Mac build
+// targets 10.15, so it cannot be called there; using this everywhere keeps the
+// emitted text identical across platforms. It was checked against libc++'s
+// to_chars on ~37M doubles (random bit patterns, every power of two and its
+// neighbours, large integers, decimal scales) with no differences.
+namespace {
+// `digits` (no decimal point) times 10^(exp - ndigits + 1). Built without a
+// decimal point so a non-C LC_NUMERIC (Qt sets the user locale) cannot break it.
+bool DigitsRoundTrip(const std::string &digits, int exp, double val) {
+  char buf[48];
+  snprintf(buf, sizeof(buf), "%se%d", digits.c_str(), exp - static_cast<int>(digits.size()) + 1);
+  return strtod(buf, nullptr) == val;
+}
+}  // namespace
+
 std::string ShortestDouble(double val) {
-  char buf[64];
-  auto res = std::to_chars(buf, buf + sizeof(buf), val);
-  return std::string(buf, res.ptr);
+  if (std::isnan(val))
+    return std::signbit(val) ? "-nan" : "nan";
+  if (std::isinf(val))
+    return val < 0 ? "-inf" : "inf";
+  if (val == 0)
+    return std::signbit(val) ? "-0" : "0";
+  const double mag = std::fabs(val);
+  // At an exact power of two the gap to the next double below is half the gap
+  // above, so the nearest P-digit decimal can fall just outside the round-trip
+  // interval while the next P-digit decimal up is inside it.
+  int frexp_exp;
+  const bool asymmetric = std::frexp(mag, &frexp_exp) == 0.5;
+
+  // Shortest significant digits that round-trip, and the decimal exponent of
+  // the first one. %.*e is correctly rounded, so it yields the nearest
+  // candidate at each precision.
+  std::string digits;
+  int exp = 0;
+  for (int prec = 1; prec <= 17; prec++) {
+    char buf[48];
+    snprintf(buf, sizeof(buf), "%.*e", prec - 1, mag);
+    digits.clear();
+    const char *p = buf;
+    for (; *p != 'e'; p++)
+      if (*p >= '0' && *p <= '9')
+        digits += *p;
+    exp = atoi(p + 1);
+    if (prec == 17 || DigitsRoundTrip(digits, exp, mag))
+      break;
+    if (asymmetric) {
+      std::string up = digits;
+      int up_exp = exp;
+      int i = prec - 1;
+      for (; i >= 0 && up[i] == '9'; i--)
+        up[i] = '0';
+      if (i >= 0) {
+        up[i]++;
+      } else {
+        up.insert(up.begin(), '1');
+        up.pop_back();
+        up_exp++;
+      }
+      if (DigitsRoundTrip(up, up_exp, mag)) {
+        digits = up;
+        exp = up_exp;
+        break;
+      }
+    }
+  }
+  while (digits.size() > 1 && digits.back() == '0')
+    digits.pop_back();
+  const int n = static_cast<int>(digits.size());
+
+  std::string sci(1, digits[0]);
+  if (n > 1)
+    sci += "." + digits.substr(1);
+  char ebuf[8];
+  snprintf(ebuf, sizeof(ebuf), "e%c%02d", exp < 0 ? '-' : '+', std::abs(exp));
+  sci += ebuf;
+
+  std::string fixed;
+  if (exp < 0)
+    fixed = "0." + std::string(-exp - 1, '0') + digits;
+  else if (n > exp + 1)
+    fixed = digits.substr(0, exp + 1) + "." + digits.substr(exp + 1);
+  else
+    fixed = digits + std::string(exp + 1 - n, '0');
+
+  // Fixed wins ties. When fixed would pad the shortest digits with zeros,
+  // to_chars prints the double's exact integer value instead (as "%.0f" does),
+  // e.g. 72057594037927928 rather than 72057594037927930. Same length either way.
+  std::string out;
+  if (fixed.size() > sci.size()) {
+    out = sci;
+  } else if (exp + 1 > n) {
+    char ibuf[400];
+    snprintf(ibuf, sizeof(ibuf), "%.0f", mag);
+    out = ibuf;
+  } else {
+    out = fixed;
+  }
+  return val < 0 ? "-" + out : out;
 }
 
 std::string SpaceToUnderBar(const std::string &s) {

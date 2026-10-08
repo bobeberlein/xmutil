@@ -8,7 +8,7 @@
 //
 // Fixtures are checked in under test/fixtures/ (see test/fixtures/README.md for
 // provenance); the absolute path is built from XMUTIL_SRC_ROOT (the repo root,
-// injected by XMUtil.gyp from gyp's <(cwd)) joined with the fixture's
+// injected by CMakeLists.txt from CMAKE_CURRENT_SOURCE_DIR) joined with the fixture's
 // repo-relative path. A model that is missing on disk fails the test, so a
 // renamed or moved fixture is caught rather than silently skipped.
 //

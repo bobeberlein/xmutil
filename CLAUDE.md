@@ -1,6 +1,6 @@
 # xmutil
 
-Last verified: 2026-07-06
+Last verified: 2026-10-08
 
 C++ tool that converts system-dynamics models between formats: Vensim `.mdl`,
 Dynamo `.dyn`, and XMILE (`.xmile` / `.stmx`) in; XMILE or Vensim `.mdl` out.
@@ -11,16 +11,30 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
   upstream): local builds need the dev packages (`tinyxml2-devel` +
   `libicu-devel` on Fedora, `tinyxml2-dev` + `icu-dev` on Alpine), or run the
   build and tests in a container that has them.
-- Build: gyp + ninja only. There is no CMake in the main repo.
+- Build: CMake (3.21+ for `CMakePresets.json`) + Ninja. `CMakeLists.txt` at
+  the repo root defines `XMUtil`, `xmutil_test`, and (under emcmake)
+  `XMUtil_wasm`. macOS builds link the static ICU/tinyxml2 in
+  `third_party/mac/lib` (override with `-DXMUTIL_MAC_LIB_DIR=...`).
+- macOS deployment target is 10.15, matching the ICU build (an Intel build
+  for 10.15+ is required; arm64 is clamped to 11.0). Do not use libc++
+  features newer than that: floating-point `std::to_chars` is 13.3+
+  (ShortestDouble in XMUtil.cpp reimplements it;
+  `test/ShortestDoubleTest.cpp` pins it).
+  The `mac-intel` preset builds x86_64 into `out/mac-intel`.
 - Parsers: bison/flex grammars under `src/Vensim/` and `src/Dynamo/`
   (generated `*.tab.*` are committed; the `.y` sources are the source of truth
   for operator precedence).
 
 ## Commands
-- Configure (regenerate the ninja build): `./configure.sh`
-- Build the CLI: `ninja -C out/Debug XMUtil`
-- Build the tests: `ninja -C out/Debug xmutil_test`
-- Run the tests: `out/Debug/xmutil_test` (exit code 0 == all passed)
+- Configure: `cmake --preset debug` (or `release`; build dirs are
+  `out/Debug` / `out/Release`). Re-run after adding source files.
+- Build everything: `cmake --build --preset debug`
+- Build the CLI only: `cmake --build --preset debug --target XMUtil`
+- Run the tests: `out/Debug/xmutil_test` (exit code 0 == all passed), or
+  `ctest --preset debug`, which also runs both CLI round-trip scripts
+- Qt UI: add `-DXMUTIL_WITH_UI=ON -DCMAKE_PREFIX_PATH=<qt install>` at configure
+- WASM: `emcmake cmake --preset wasm && cmake --build --preset wasm`
+  (outputs `out/wasm/xmutil.{js,wasm}`)
 - CLI smoke round-trip (mdl): `bash test/cli_roundtrip.sh` (run from repo root)
 - CLI smoke round-trip (xmile): `bash test/cli_xmile_roundtrip.sh`
 - Format: `./format.sh` (clang-format in place; run before committing).
@@ -29,19 +43,14 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
 - Binary is at `out/Debug/XMUtil`; `out/Release/` mirrors it.
 
 ### Windows / Visual Studio
-- Generate the solution (from Git Bash, needs Python 2.7 on PATH):
-  `./configure.sh --use-msvs` -> `XMUtil.sln` with the CLI and test projects
-  (`*.sln`/`*.vcxproj` are gitignored; the wasm target is excluded on Windows
-  because its action shells out to emcc).
-- `build/environment.sh` locates the newest VS with the C++ toolset via
-  `vswhere` and hands gyp `GYP_MSVS_OVERRIDE_PATH`, since VS 2017+ no longer
-  writes the registry keys gyp probes. Override `GYP_MSVS_VERSION` to pin a
-  different one.
-- Build: `MSBuild.exe XMUtil.sln -p:Configuration=Debug -p:Platform=x64`, or
-  open the solution. Output lands in `Debug/` (`Release/` mirrors it) next to
-  the ICU DLLs a post-build copy step puts there.
+- Generate the solution: `cmake --preset msvs` -> `out/msvs/XMUtil.sln`
+  (VS 2022, x64). Visual Studio can also open the repo folder directly and
+  pick up `CMakePresets.json`.
+- Build: `cmake --build out/msvs --config Debug`. Output lands in
+  `out/msvs/Debug/`; a post-build step copies every DLL in
+  `third_party/win/lib/dlls` next to the binaries.
 - tinyxml2 has no prebuilt Windows lib, so `third_party/include/tinyxml2.cpp`
-  is compiled into each target (`platform_sources` in `XMUtil.gyp`).
+  is compiled into each target (`xmutil_platform_sources` in `CMakeLists.txt`).
 - Fixtures checked out with CRLF make `MdlXmileByteIdentity_teacup` fail: the
   writer copies input line endings into `<doc>` text, so the golden no longer
   matches byte for byte. With LF fixtures the output is byte-identical.
@@ -86,16 +95,16 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
 
 ## Testing
 The project had zero tests before the mdl-writer work. Tests now live under
-`test/` and build into the `xmutil_test` gyp target (defined in `XMUtil.gyp`),
+`test/` and build into the `xmutil_test` CMake target (defined in `CMakeLists.txt`),
 which links the same engine sources as `XMUtil` but swaps `Main.cpp` for a
 minimal self-registering harness (`test/TestHarness.{h,cpp}`: `TEST(name)`,
 `CHECK`, `CHECK_EQ_STR`). New test `.cpp` files must be added to the
-`xmutil_test` `sources` list in `XMUtil.gyp`, then re-run `./configure.sh`.
+`xmutil_test` source list in `CMakeLists.txt`, then re-run `cmake --preset debug`.
 The suite is organized by direction: `test/mdl/` covers the .mdl writer and
 shares `ModelComparator` / `RoundTrip` helpers; `test/xmile/` covers the
 XMILE reader (round-trips XMILE -> Model -> XMILE/MDL, with the helpers in
 `test/xmile/RoundTrip.{h,cpp}`). Fixtures the tests load from disk resolve
-via the `XMUTIL_SRC_ROOT` define (set from `<(cwd)` by `./configure.sh`).
+via the `XMUTIL_SRC_ROOT` define (set to `CMAKE_CURRENT_SOURCE_DIR`).
 
 Real model fixtures live under `test/fixtures/` (byte-identical vendored
 copies; provenance in `test/fixtures/README.md`). Two corpus tests drive them:

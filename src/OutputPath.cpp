@@ -4,9 +4,9 @@
 
 #include "XMUtil.h"
 
-// libc++ marks all of <filesystem> unavailable below macOS 10.15, and
-// build/common.gypi sets MACOSX_DEPLOYMENT_TARGET to 10.9, so this file cannot
-// reach for std::filesystem::equivalent there. (Commit 8e7c300 "build for Mac
+// libc++ marks all of <filesystem> unavailable below macOS 10.15, and the
+// macOS build historically targeted 10.9, so this file could not reach for
+// std::filesystem::equivalent there. (Commit 8e7c300 "build for Mac
 // OS 10.14" hand-rolled the same avoidance in Main.cpp for this reason.) The
 // POSIX stat() device+inode pair answers the same question, and macOS is the
 // platform where the case-insensitive-filesystem hazard actually bites, so keep

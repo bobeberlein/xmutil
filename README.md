@@ -15,19 +15,39 @@ cd third_party
 ./all_mac.sh
 ~~~
 
-## Generate Xcode Project
+## Build with CMake
 
-Open Terminal
+XMUtil builds with CMake (3.21+ for the presets) and Ninja. From the repository root:
 
 ~~~
-cd ..
-./configure.sh --use-xcode --with-ui
-open XMUtil.xcodeproj
+cmake --preset debug          # configure into out/Debug (use "release" for out/Release)
+cmake --build --preset debug  # builds XMUtil and xmutil_test
+ctest --preset debug          # runs the unit tests and the CLI round-trip scripts
 ~~~
 
-## Build the project
+The CLI lands at `out/Debug/XMUtil`. macOS builds run on macOS 10.15 or later (11.0 on Apple silicon).
 
-Run the Xcode project. It will produce a naked executable `xmutil` (no app bundle). To find where it is located, look in Xcode > Preferences > Locations. Click the arrow to the right of the pathname under Derived Data. This will show the folder in the Finder.
+### Intel Mac build (macOS 10.15+)
+
+~~~
+cmake --preset mac-intel
+cmake --build --preset mac-intel   # out/mac-intel/XMUtil
+~~~
+
+This links whatever is in `third_party/mac/lib`, which must then hold x86_64 libraries built with `-mmacosx-version-min=10.15` or lower (the default `OSX_VERSION` in `third_party/build/icu_mac.bash`). To cross-build on Apple silicon without replacing the arm64 libraries, keep the x86_64 ones in a separate directory and add `-DXMUTIL_MAC_LIB_DIR=/path/to/x86_64/lib` to the configure step. The tests run under Rosetta (`arch -x86_64 out/mac-intel/xmutil_test`).
+
+To build the Qt UI, enable `XMUTIL_WITH_UI` and point CMake at the Qt install:
+
+~~~
+cmake --preset debug -DXMUTIL_WITH_UI=ON -DCMAKE_PREFIX_PATH=$HOME/Qt5.15.4/5.15.4/clang_arm64
+~~~
+
+## Generate Xcode Project (optional)
+
+~~~
+cmake --preset xcode
+open out/xcode/XMUtil.xcodeproj
+~~~
 
 To run the `xmutil` command line app:
 ~~~
@@ -93,25 +113,14 @@ third_party/build/tinyxml_win.bash
 
 ## Build XMUtil
 
-Once you have the /third_party directory setup you are ready to generate the Visual Studio project and build
-
-To generate the Visual Studio project run
-
-Run:
+Once you have the /third_party directory set up, generate the Visual Studio solution with CMake (CMake ships with Visual Studio's C++ workload):
 
 ~~~
-environment.bat
+cmake --preset msvs
+cmake --build out/msvs --config Debug
 ~~~
 
-In the msys terminal run
-
-~~~
-./configure.bash --use-msvs --with-ui
-~~~
-
-Open the `XMUtil.vcxproj` project in Visual Studio. The project settings will be upgraded if necessary.
-
-Choose Build Solution from the Build menu. The build result is `XMUtil.exe` in the Debug directory.
+Or open `out/msvs/XMUtil.sln` in Visual Studio, or open the repository folder directly (Visual Studio reads `CMakePresets.json`). The build result is `XMUtil.exe` in `out/msvs/Debug`. A post-build step copies the ICU DLLs from `third_party/win/lib/dlls` next to it. Add `-DXMUTIL_WITH_UI=ON -DCMAKE_PREFIX_PATH=C:/Qt/...` to the configure step to build the UI.
 
 ## Convert a Vensim model to XMILE
 
@@ -126,16 +135,17 @@ XMUtil can be compiled to WebAssembly for use in web browsers.
 
 ## Prerequisites
 
-- Emscripten SDK installed at `~/tools/emsdk`
+- Emscripten SDK (activate it with `source <emsdk>/emsdk_env.sh`)
+- The tinyxml2 source checkout at `third_party/build/tinyxml2` (created by `third_party/all_mac.sh`)
 
 ## Building for WebAssembly
 
 ```bash
-./configure.sh --use-wasm
-make XMUtil_wasm BUILDTYPE=Debug|Release
+emcmake cmake --preset wasm
+cmake --build --preset wasm
 ```
 
-The build outputs will be created in `out/BUILDTYPE/`:
+The build outputs will be created in `out/wasm/`:
 - `xmutil.js` - JavaScript loader
 - `xmutil.wasm` - WebAssembly binary
 
@@ -162,7 +172,7 @@ convertMdlToXmile(mdlContent, isCompact=false, isLongName=1, isAsSectors=false)
 <html>
 <head>
     <title>XMUtil WASM Example</title>
-    <script src="out/Debug/xmutil.js"></script>
+    <script src="out/wasm/xmutil.js"></script>
 </head>
 <body>
     <script>

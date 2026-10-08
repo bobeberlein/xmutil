@@ -6,10 +6,10 @@ RUN apk add --no-cache --virtual .build-deps \
 	binutils \
 	build-base \
 	ca-certificates \
+	cmake \
 	ninja \
 	gcc \
 	git \
-	python2 \
 	libc-dev \
 	libgcc \
 	libstdc++ \
@@ -20,8 +20,8 @@ WORKDIR /src
 
 COPY . .
 
-RUN ./configure.sh \
- && ninja -C out/Release
+RUN cmake --preset release -DXMUTIL_BUILD_TESTS=OFF \
+ && cmake --build --preset release --target XMUtil
 
 FROM alpine:3
 

@@ -93,7 +93,7 @@ XMUTIL_EXPORT char *convert_xmile_to_mdl(const char *source, uint32_t len, const
 // utility functions
 std::string StringFromDouble(double val);
 // The shortest decimal string that parses back to exactly `val`
-// (std::to_chars). StringFromDouble's "%g" (~6 significant digits) is fine for
+// (std::to_chars output). StringFromDouble's "%g" (~6 significant digits) is fine for
 // sketch coordinates but lossy for values like lookup-table samples, where a
 // re-parse must recover the identical double. Shared by the XMILE writer's
 // lookup samples, FormatMDLNumber's non-integer tail, and

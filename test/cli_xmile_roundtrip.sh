@@ -21,7 +21,7 @@ SRC="test/fixtures/simlin/logistic-growth.xmile"
 
 if [ ! -x "$BIN" ]; then
   echo "error: XMUtil binary not found or not executable at '$BIN'" >&2
-  echo "       build it first (ninja -C out/Debug XMUtil) or pass its path as \$1" >&2
+  echo "       build it first (cmake --build --preset debug) or pass its path as \$1" >&2
   exit 1
 fi
 if [ ! -f "$SRC" ]; then
