@@ -1,0 +1,90 @@
+{UTF-8}
+a  = A FUNCTION OF( )
+	~	
+	~		|
+
+a long name goes here  = A FUNCTION OF( )
+	~	
+	~		|
+
+a really really really rreally really really long name goes here  = A FUNCTION OF( )
+	~	
+	~		|
+
+"each crossing arrow gets its own shadow, placed next to its own target, as you described. If one source feeds several targets in a view, you get several shadows of it. Sharing one shadow per source per view would mean longer arrows for all but one ta"\
+		  = A FUNCTION OF( )
+	~	
+	~		|
+
+"each crossing arrow gets its own shadow, placed next to its own target, as you described. If one source feeds several targets in a view, you get several shadows of it. Sharing one shadow per source per view would mean longer arrows for all but one targ"\
+		  = A FUNCTION OF( )
+	~	
+	~		|
+
+medium  = A FUNCTION OF( )
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
+10,1,a,237,81,6,11,8,3,0,0,0,0,0,0
+10,2,medium,144,171,26,11,8,3,0,0,0,0,0,0
+10,3,a long name goes here,234,284,55,19,8,3,0,0,0,0,0,0
+10,4,a really really really rreally really really long name goes here,512,85,87,28,8,3,0,0,0,0,0,0
+10,5,"each crossing arrow gets its own shadow, placed next to its own target, as you described. If one source feeds several targets in a view, you get several shadows of it. Sharing one shadow per source per view would mean longer arrows for all but one targ",526,250,178,47,8,3,0,0,0,0,0,0
+10,6,"each crossing arrow gets its own shadow, placed next to its own target, as you described. If one source feeds several targets in a view, you get several shadows of it. Sharing one shadow per source per view would mean longer arrows for all but one ta",259,378,40,20,3,3,0,0,0,0,0,0
+///---\\\
+:L<%^E!@
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+5:FINAL TIME
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+24:0
+25:0
+26:0

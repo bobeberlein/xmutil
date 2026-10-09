@@ -1,5 +1,6 @@
 #ifndef _XMUTIL_XMILE_XMILEVIEW_H
 #define _XMUTIL_XMILE_XMILEVIEW_H
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -31,7 +32,24 @@ class XmileReader;
 // position, which is what the MDL writer recognizes as a cloud.
 class XmileView {
 public:
+  // A sector: a <group> drawn in the view with a size. Each becomes its own
+  // Vensim view, named after the group, whose coordinates are relative to the
+  // group's top-left corner.
+  struct Sector {
+    std::string name;
+    double x, y, width, height;
+    bool Contains(double px, double py) const {
+      return px >= x && px <= x + width && py >= y && py <= y + height;
+    }
+  };
+
   XmileView(XmileReader *reader, Model *model, VensimView *view);
+
+  // Restrict this pass to the elements of one sector (index into sectors), or
+  // with index -1 to the elements in none of them. An element belongs to the
+  // first sector containing its center. Without a call, every element is taken
+  // at its own coordinates.
+  void SetSectorRegion(const std::vector<Sector> &sectors, int index);
 
   // ProcessView orchestrates the three passes. Returns true on success; any
   // diagnostics (bad <pts> shape, unresolved connector endpoint, multi-view
@@ -82,6 +100,36 @@ private:
   int ResolveEndpoint(tinyxml2::XMLElement *endpoint);
   // The valve's UID when uid is a flow's (attached) variable record, else uid.
   int ValveFor(int uid);
+
+  // True when an element centered at (cx, cy) in document coordinates belongs
+  // to the region this pass builds.
+  bool InRegion(double cx, double cy) const;
+
+  // Sector partitioning (SetSectorRegion). _offX/_offY are subtracted from every
+  // coordinate read, so the view gets the sector's own coordinates.
+  std::vector<Sector> _sectors;
+  int _sectorIndex = -1;
+  double _offX = 0;
+  double _offY = 0;
+  // Folded names of elements that belong to another region. A connector from
+  // one into this region crosses sectors, which a Vensim arrow cannot do, so it
+  // is redrawn from a shadow of its source (AllocateCrossingSource); one going
+  // the other way is that region's to draw.
+  std::set<std::string> _otherRegionNames;
+  // Where each element of another region is: its variable and its center in
+  // document coordinates, by folded name and by alias uid.
+  struct RemoteElement {
+    Variable *var;
+    double x, y;
+  };
+  std::unordered_map<std::string, RemoteElement> _remoteByName;
+  std::unordered_map<int, RemoteElement> _remoteByAliasUid;
+  // The source of a connector that ends in this region but starts in another,
+  // or nullptr when it does not.
+  const RemoteElement *RemoteSource(tinyxml2::XMLElement *fromEl) const;
+  // Place a shadow of `source` next to the element at toUid, on the side facing
+  // where the source is drawn, and return its UID.
+  int AllocateCrossingSource(const RemoteElement &source, int toUid);
 
   // Reserve the next sequential UID slot in _view->Elements() (growing the
   // vector when needed). Allocates bottom-up (slot 1, 2, 3, ...) skipping

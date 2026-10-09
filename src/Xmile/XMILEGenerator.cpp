@@ -974,33 +974,27 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement *element, tinyxml2
     }
     return;
   }
-  int x, y;
-  // start at a reasonable distance from 0 - the x,y values are generally around hte center
-  // of the var
-  x = 100;
-  y = 100;
-  // all the views against a single xmile view - or break up into modules - need vector of models as input to do that
+  // All the views go into one XMILE view. Each keeps its own coordinates
+  // (shifted only if something would sit at a negative position, which XMILE
+  // does not allow). With several views, each becomes a sector -- a <group>
+  // named after the view -- and the views are stacked down the page. A sector's
+  // top-left corner IS its view's origin, so the reader recovers the view's own
+  // coordinates by subtracting it (XmileView's sector regions).
+  const int kSectorPad = 20;  // room right of and below the last element
+  const int kSectorGap = 40;  // between stacked sectors
   tinyxml2::XMLElement *xview = doc->NewElement("view");
   if (_model->LetterPolarity())
     xview->SetAttribute("isee:use_lettered_polarity", "true");
   element->InsertEndChild(xview);
   int uid_off = 0;
+  int sectorY = 0;
   for (View *gview : views) {
     VensimView *view = static_cast<VensimView *>(gview);
-    // first update geometry. A single view keeps its own coordinates so they
-    // survive a trip back to .mdl (shifted only if something would sit at a
-    // negative position, which XMILE does not allow). Several views share this
-    // one XMILE view, so they are stacked one after another along the y axis.
-    if (views.size() == 1)
-      uid_off = view->KeepViewInPlace(uid_off);
-    else
-      uid_off = view->SetViewStart(x, y + 20, _xratio, _yratio, uid_off);
-    int width = view->GetViewMaxX(100);
-    int height = view->GetViewMaxY(y + 80) - y;
-    // add a surrounding sector to contain this view - call it the view name
-    // 				<group locked="false" x="184" y="154" width="300" height="184" name="Sector 1"/>
-
+    uid_off = view->KeepViewInPlace(uid_off);
     if (views.size() > 1) {
+      int right, bottom;
+      view->GetViewExtent(right, bottom);
+      view->Translate(0, sectorY);
       std::string name = view->Title();
       tinyxml2::XMLElement *xsectorvar = doc->NewElement("group");
       xvars->InsertEndChild(xsectorvar);
@@ -1008,14 +1002,12 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement *element, tinyxml2
       tinyxml2::XMLElement *xsector = doc->NewElement("group");
       xview->InsertEndChild(xsector);
       xsector->SetAttribute("name", name.c_str());
-      xsector->SetAttribute("x", StringFromDouble(x - 40).c_str());
-      xsector->SetAttribute("y", StringFromDouble(y).c_str());
-      xsector->SetAttribute("width", StringFromDouble(width + 60).c_str());
-      xsector->SetAttribute("height", StringFromDouble(height + 40).c_str());
+      xsector->SetAttribute("x", 0);
+      xsector->SetAttribute("y", sectorY);
+      xsector->SetAttribute("width", right + kSectorPad);
+      xsector->SetAttribute("height", bottom + kSectorPad);
+      sectorY += bottom + kSectorPad + kSectorGap;
     }
-
-    y += height + 80;
-
     this->generateView(view, xview, errs, NULL);
   }
 }
@@ -1064,17 +1056,10 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
           assert(vele->GetVariable()->VariableType() != XMILE_Type_ARRAY);
           tinyxml2::XMLElement *xghost = doc->NewElement("alias");
           element->InsertEndChild(xghost);
+          // Positioned by its center: an alias takes the size of what it
+          // stands for, and a Vensim ghost is only its name anyway.
           xghost->SetAttribute("x", vele->X());
           xghost->SetAttribute("y", vele->Y());
-          if (vele->GetVariable() && vele->GetVariable()->VariableType() == XMILE_Type_STOCK) {
-            xghost->SetAttribute("x", vele->X() - 22);
-            xghost->SetAttribute("y", vele->Y() - 17);
-            xghost->SetAttribute("width", 45);
-            xghost->SetAttribute("height", 35);
-          } else {
-            xghost->SetAttribute("x", vele->X());
-            xghost->SetAttribute("y", vele->Y());
-          }
           xghost->SetAttribute("uid", uid);
           tinyxml2::XMLElement *xof = doc->NewElement("of");
           xghost->InsertEndChild(xof);

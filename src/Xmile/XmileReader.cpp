@@ -937,18 +937,61 @@ bool XmileReader::ProcessViews(tinyxml2::XMLElement *views, std::vector<std::str
         continue;
       }
       if (viewCount == 0) {
-        VensimView *view = new VensimView();
-        // XMILE <view> has no required title attribute; fall back to Vensim's
-        // own name for a model's first view so the MDL sketch header has a
-        // non-empty title (the writer emits it as the *Title line).
-        if (const char *vn = child->Attribute("name"))
-          view->SetTitle(vn);
-        else
-          view->SetTitle("View 1");
-        _model->AddView(view);
-        XmileView xv(this, _model, view);
-        if (!xv.ProcessView(child, errs))
-          return false;
+        // Sectors -- <group> elements drawn with a size -- each become a Vensim
+        // view named after the sector, holding the elements whose centers lie
+        // in it, at coordinates relative to the sector's corner. That is how
+        // the XMILE writer lays out a multi-view model (generateSectorViews),
+        // so the views come back as they were.
+        std::vector<XmileView::Sector> sectors;
+        for (tinyxml2::XMLElement *g = child->FirstChildElement("group"); g; g = g->NextSiblingElement("group")) {
+          const char *name = g->Attribute("name");
+          double w = g->DoubleAttribute("width", 0.0);
+          double h = g->DoubleAttribute("height", 0.0);
+          if (!name || w <= 0 || h <= 0)
+            continue;
+          sectors.push_back({NormalizeName(name), g->DoubleAttribute("x", 0.0), g->DoubleAttribute("y", 0.0), w, h});
+        }
+        if (sectors.empty()) {
+          VensimView *view = new VensimView();
+          // XMILE <view> has no required title attribute; fall back to Vensim's
+          // own name for a model's first view so the MDL sketch header has a
+          // non-empty title (the writer emits it as the *Title line).
+          if (const char *vn = child->Attribute("name"))
+            view->SetTitle(vn);
+          else
+            view->SetTitle("View 1");
+          _model->AddView(view);
+          XmileView xv(this, _model, view);
+          if (!xv.ProcessView(child, errs))
+            return false;
+        } else {
+          for (size_t i = 0; i < sectors.size(); i++) {
+            VensimView *view = new VensimView();
+            view->SetTitle(sectors[i].name);
+            _model->AddView(view);
+            XmileView xv(this, _model, view);
+            xv.SetSectorRegion(sectors, static_cast<int>(i));
+            if (!xv.ProcessView(child, errs))
+              return false;
+          }
+          // Whatever lies in no sector gets a view of its own, named the way
+          // Vensim numbers views -- but only if there is anything to put in it.
+          VensimView *rest = new VensimView();
+          rest->SetTitle("View " + std::to_string(sectors.size() + 1));
+          XmileView xv(this, _model, rest);
+          xv.SetSectorRegion(sectors, -1);
+          if (!xv.ProcessView(child, errs)) {
+            delete rest;
+            return false;
+          }
+          bool any = false;
+          for (VensimViewElement *e : rest->Elements())
+            any = any || e != nullptr;
+          if (any)
+            _model->AddView(rest);
+          else
+            delete rest;
+        }
       } else {
         errs.push_back(std::string("multi-view XMILE: skipping view #") + std::to_string(viewCount + 1) +
                        " (v1 supports only the first view)");

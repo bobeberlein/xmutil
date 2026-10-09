@@ -1,9 +1,75 @@
 #include "VensimView.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "../Symbol/Variable.h"
 #include "VensimParse.h"
+
+namespace {
+
+// Advance widths of Times-Roman in 1/1000 em (the Adobe AFM metrics, which
+// Times New Roman matches closely), for printable ASCII from ' ' to '~'.
+const short kTimesWidths[95] = {
+    250, 333, 408, 500, 500, 833, 778, 180, 333, 333, 500, 564, 250, 333, 250, 278,  // ' ' .. '/'
+    500, 500, 500, 500, 500, 500, 500, 500, 500, 500,                                // '0' .. '9'
+    278, 278, 564, 564, 564, 444, 921,                                               // ':' .. '@'
+    722, 667, 667, 722, 611, 556, 722, 722, 333, 389, 722, 611, 889,                 // 'A' .. 'M'
+    722, 722, 556, 722, 667, 556, 611, 722, 722, 944, 722, 722, 611,                 // 'N' .. 'Z'
+    333, 278, 333, 469, 500, 333,                                                    // '[' .. '`'
+    444, 500, 444, 500, 444, 333, 500, 500, 278, 278, 500, 278, 778,                 // 'a' .. 'm'
+    500, 500, 500, 500, 333, 389, 278, 500, 500, 722, 500, 500, 444,                 // 'n' .. 'z'
+    480, 200, 480, 541,                                                              // '{' .. '~'
+};
+
+// Pixel width of text in Vensim's default font, Times New Roman 12pt -- 16px
+// at the 96 ppi of the default font line. Anything outside printable ASCII is
+// counted as one average-width character per code point.
+double DefaultFontWidth(const std::string &text) {
+  double units = 0;
+  for (unsigned char c : text) {
+    if (c >= 32 && c <= 126)
+      units += kTimesWidths[c - 32];
+    else if ((c & 0xC0) != 0x80)
+      units += 500;
+  }
+  return units * 16.0 / 1000.0;
+}
+
+}  // namespace
+
+void VensimDefaultNameSize(const std::string &rawName, bool ghost, int &halfWidth, int &halfHeight) {
+  // Fitted to names Vensim laid out itself (test_models/NameSizing.mdl and the
+  // other test_models sketches), which this reproduces to within 2px:
+  //  - text is measured in the default font;
+  //  - it wraps at spaces to a width of 120px, or sqrt(81 * text width) for
+  //    long text (Vensim keeps long names from becoming one wide line);
+  //  - the box is as wide as the widest line, at least 12px;
+  //  - one line is 22px high, and each further line adds 56/3px.
+  const std::string name = ghost ? "<" + rawName + ">" : rawName;
+  const double total = DefaultFontWidth(name);
+  const double wrapWidth = std::max(120.0, std::sqrt(81.0 * total));
+  const double space = DefaultFontWidth(" ");
+  int lines = 1;
+  double line = 0, widest = 0;
+  size_t start = 0;
+  while (start <= name.size()) {
+    size_t end = name.find(' ', start);
+    if (end == std::string::npos)
+      end = name.size();
+    double word = DefaultFontWidth(name.substr(start, end - start));
+    if (line > 0 && line + space + word > wrapWidth) {
+      lines++;
+      line = word;
+    } else {
+      line = line > 0 ? line + space + word : word;
+    }
+    widest = std::max(widest, line);
+    start = end + 1;
+  }
+  halfWidth = std::max(6, static_cast<int>(std::lround(widest / 2)));
+  halfHeight = std::max(11, static_cast<int>(std::lround((56.0 * lines + 2) / 6)));
+}
 
 VensimVariableElement::VensimVariableElement(VensimView *view, char *curpos, char *buf, VensimParse *parser) {
   std::string name;
@@ -330,17 +396,30 @@ int VensimView::KeepViewInPlace(int uid_start) {
     min_x = std::min(min_x, ele->X() - ele->Width());
     min_y = std::min(min_y, ele->Y() - ele->Height());
   }
-  if (min_x < 0 || min_y < 0) {
-    int off_x = -min_x;
-    int off_y = -min_y;
-    for (VensimViewElement *ele : vElements) {
-      if (ele && !ele->ScalePoints(1.0, 1.0, off_x, off_y)) {
-        ele->SetX(ele->X() + off_x);
-        ele->SetY(ele->Y() + off_y);
-      }
+  if (min_x < 0 || min_y < 0)
+    Translate(-min_x, -min_y);
+  return _uid_offset + vElements.size();
+}
+
+void VensimView::Translate(int dx, int dy) {
+  if (dx == 0 && dy == 0)
+    return;
+  for (VensimViewElement *ele : vElements) {
+    if (ele && !ele->ScalePoints(1.0, 1.0, dx, dy)) {
+      ele->SetX(ele->X() + dx);
+      ele->SetY(ele->Y() + dy);
     }
   }
-  return _uid_offset + vElements.size();
+}
+
+void VensimView::GetViewExtent(int &right, int &bottom) {
+  right = bottom = 0;
+  for (VensimViewElement *ele : vElements) {
+    if (!ele || ele->Type() == VensimViewElement::ElementTypeCONNECTOR)
+      continue;
+    right = std::max(right, ele->X() + ele->Width());
+    bottom = std::max(bottom, ele->Y() + ele->Height());
+  }
 }
 
 int VensimView::GetViewMaxX(int defval) {

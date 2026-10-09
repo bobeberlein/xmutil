@@ -371,15 +371,23 @@ void MDLGenerator::EmitVariableRecord(std::string &out, int uid, VensimVariableE
   // The fields after bits are hid, hasf, tpos, bw, nav1, nav2. Shape 3 is the
   // box Vensim draws a stock in; every other variable is drawn as its name
   // alone (8).
+  //
+  // A ghost (a shadow of a variable defined elsewhere) is written the way
+  // Vensim writes one: its name alone, in grey (hasf 3 says box and text
+  // colors follow).
   const std::string name = mdl::FormatMDLIdent(e->GetVariable()->GetName());
-  int shape = e->GetVariable()->VariableType() == XMILE_Type_STOCK ? 3 : 8;
+  const bool ghost = e->Ghost(nullptr, false);
+  int shape = e->GetVariable()->VariableType() == XMILE_Type_STOCK && !ghost ? 3 : 8;
   if (e->Attached())
     shape |= (1 << 5);
-  int bits = e->Ghost(nullptr, false) ? 2 : 3;
+  int bits = ghost ? 2 : 3;
   std::string line = "10," + std::to_string(uid) + "," + name + ",";
   line += std::to_string(e->X()) + "," + std::to_string(e->Y()) + "," + std::to_string(e->Width()) + "," +
           std::to_string(e->Height()) + ",";
-  line += std::to_string(shape) + "," + std::to_string(bits) + ",0,0," + std::to_string(e->TextPos()) + ",0,0,0";
+  line += std::to_string(shape) + "," + std::to_string(bits) + ",0," + (ghost ? "3" : "0") + "," +
+          std::to_string(e->TextPos()) + ",0,0,0";
+  if (ghost)
+    line += ",128-128-128,0-0-0,|0||128-128-128";
   WarnIfLineTooLong(line, "sketch variable record", e->GetVariable()->GetName());
   out += line + "\n";
 }

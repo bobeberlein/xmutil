@@ -104,18 +104,11 @@ const int kValveHalfWidth = 6;
 const int kValveHalfHeight = 8;
 
 // A Vensim name is drawn as text, and the record carries the text's extent.
-// XMILE has no such size, so estimate it the way Vensim's default font
-// (Times New Roman 12, which MDLGenerator's font line names) lays out one line:
-// roughly 6 px per character and 22 px of height. Vensim re-measures on load;
-// the estimate only has to be plausible.
-static void EstimateNameSize(const std::string &name, int &halfWidth, int &halfHeight) {
-  int chars = 0;
-  for (unsigned char c : name) {
-    if ((c & 0xC0) != 0x80)  // count UTF-8 code points, not bytes
-      chars++;
-  }
-  halfWidth = 3 * chars + 1;
-  halfHeight = 11;
+// XMILE has no such size, so a name gets the size Vensim itself gives a new
+// one in its default font (the Times New Roman 12 MDLGenerator's font line
+// names). A ghost is drawn as "<name>".
+static void EstimateNameSize(const std::string &name, int &halfWidth, int &halfHeight, bool ghost = false) {
+  VensimDefaultNameSize(name, ghost, halfWidth, halfHeight);
 }
 
 // An element with an explicit width and height is positioned by its top-left
@@ -149,6 +142,29 @@ XmileView::XmileView(XmileReader *reader, Model *model, VensimView *view)
       // allocate the first usable slot at 1 so the MDL writer's slot-order
       // iteration produces the same on-wire UIDs that this reader recorded.
       _nextUid(1) {
+}
+
+void XmileView::SetSectorRegion(const std::vector<Sector> &sectors, int index) {
+  _sectors = sectors;
+  _sectorIndex = index;
+  _offX = _offY = 0;
+  if (index >= 0 && static_cast<size_t>(index) < sectors.size()) {
+    _offX = sectors[index].x;
+    _offY = sectors[index].y;
+  }
+}
+
+bool XmileView::InRegion(double cx, double cy) const {
+  if (_sectors.empty())
+    return true;
+  int owner = -1;
+  for (size_t i = 0; i < _sectors.size(); i++) {
+    if (_sectors[i].Contains(cx, cy)) {
+      owner = static_cast<int>(i);
+      break;
+    }
+  }
+  return owner == _sectorIndex;
 }
 
 bool XmileView::ProcessView(tinyxml2::XMLElement *viewEl, std::vector<std::string> &errs) {
@@ -188,6 +204,15 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       return false;
     }
     d.hasSize = ReadCenterAndSize(child, d.x, d.y, d.halfWidth, d.halfHeight);
+    if (!InRegion(d.x, d.y)) {
+      // Drawn in another sector, so it belongs to another Vensim view.
+      const std::string key = XmileReader::FoldNameKey(d.norm);
+      _otherRegionNames.insert(key);
+      _remoteByName[key] = {d.var, static_cast<double>(d.x), static_cast<double>(d.y)};
+      return false;
+    }
+    d.x -= static_cast<int>(std::lround(_offX));
+    d.y -= static_cast<int>(std::lround(_offY));
     return true;
   };
   // Record an allocated element under both lookup channels: the folded-name
@@ -289,8 +314,8 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
         continue;
       std::vector<std::pair<int, int>> endpoints;
       for (tinyxml2::XMLElement *pt = pts->FirstChildElement("pt"); pt; pt = pt->NextSiblingElement("pt")) {
-        endpoints.emplace_back(static_cast<int>(std::lround(pt->DoubleAttribute("x", 0.0))),
-                               static_cast<int>(std::lround(pt->DoubleAttribute("y", 0.0))));
+        endpoints.emplace_back(static_cast<int>(std::lround(pt->DoubleAttribute("x", 0.0) - _offX)),
+                               static_cast<int>(std::lround(pt->DoubleAttribute("y", 0.0) - _offY)));
       }
       if (endpoints.size() != 2) {
         errs.push_back(std::string("<flow name=\"") + d.norm + "\">: <pts> does not have exactly 2 <pt> children");
@@ -367,6 +392,14 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       }
       int x, y, hw = 0, hh = 0;
       ReadCenterAndSize(child, x, y, hw, hh);
+      if (!InRegion(x, y)) {
+        // Another sector's; a connector out of it names it by uid.
+        if (const char *xmileUid = child->Attribute("uid"))
+          _remoteByAliasUid[std::atoi(xmileUid)] = {v, static_cast<double>(x), static_cast<double>(y)};
+        continue;
+      }
+      x -= static_cast<int>(std::lround(_offX));
+      y -= static_cast<int>(std::lround(_offY));
       int uid = AllocateGhost(v, x, y);
       if (uid < 0)
         continue;
@@ -395,7 +428,12 @@ int XmileView::AllocateVariableElement(Variable *var, int x, int y) {
   if (!var)
     return -1;
   int uid = ReserveNextSlot();
-  _view->Elements()[uid] = new VensimVariableElement(_view, var, x, y);
+  VensimVariableElement *ve = new VensimVariableElement(_view, var, x, y);
+  // This is the variable's own placement, so it is never a ghost -- even when
+  // an alias of it, or another sector's view, was processed first (the ctor
+  // derives ghostliness from the variable already having a view).
+  ve->SetGhost(false);
+  _view->Elements()[uid] = ve;
   return uid;
 }
 
@@ -417,6 +455,7 @@ int XmileView::AllocateValveAndVariable(Variable *flowVar, int x, int y) {
   // programmatic ctor cannot infer it (there is no shape word), so set it
   // explicitly here so the round trip preserves the bit.
   ve->SetAttached(true);
+  ve->SetGhost(false);  // the flow's own placement; see AllocateVariableElement
   _view->Elements()[varUid] = ve;
   return varUid;
 }
@@ -431,12 +470,26 @@ int XmileView::AllocateGhost(Variable *var, int x, int y) {
   if (!var)
     return -1;
   int uid = ReserveNextSlot();
+  // The ctor also makes this view the variable's home. A ghost is not where
+  // the variable lives -- left in place, that claim made the variable's real
+  // placement, read later or in another sector's view, come out as a ghost too
+  // -- so the previous home is put back. A variable drawn only as ghosts gets
+  // one promoted later (CheckGhostOwners).
+  View *home = var->GetView();
   VensimVariableElement *ve = new VensimVariableElement(_view, var, x, y);
+  var->SetView(home);
   // The base ctor sets _ghost = (var->GetView() != NULL). For aliases declared
   // before any non-ghost reference to the same variable, that derivation is
   // wrong: the alias must always be a ghost regardless of declaration order.
   // Override explicitly.
   ve->SetGhost(true);
+  // Vensim draws a ghost as its name alone, in angle brackets, with no name
+  // placement of its own.
+  int hw, hh;
+  EstimateNameSize(var->GetName(), hw, hh, /*ghost=*/true);
+  ve->SetWidth(hw);
+  ve->SetHeight(hh);
+  ve->SetTextPos(-1);
   _view->Elements()[uid] = ve;
   return uid;
 }
@@ -526,12 +579,33 @@ void XmileView::ResolveConnectors(tinyxml2::XMLElement *viewEl, std::vector<std:
     }
     int fromUid = ResolveEndpoint(fromEl);
     int toUid = ResolveEndpoint(toEl);
+    // A connector that ends in this sector but starts in another: a Vensim
+    // arrow cannot cross views, so draw it from a shadow of the source placed
+    // beside the target. The original arc belongs to the original geometry, so
+    // the new arrow is straight.
+    bool crossing = false;
+    if (fromUid < 0 && toUid >= 0) {
+      if (const RemoteElement *source = RemoteSource(fromEl)) {
+        toUid = ValveFor(toUid);
+        fromUid = AllocateCrossingSource(*source, toUid);
+        crossing = fromUid >= 0;
+      }
+    }
     if (fromUid < 0 || toUid < 0) {
       // An endpoint that names a control variable has no sketch element and is
       // dropped without diagnostic (see IsControlVariableKey). Any other
       // unresolved endpoint is a genuine dangling reference worth surfacing.
-      bool fromDroppable = fromUid < 0 && (EndpointIsControlVariable(fromEl) || EndpointIsAliasReference(fromEl));
-      bool toDroppable = toUid < 0 && (EndpointIsControlVariable(toEl) || EndpointIsAliasReference(toEl));
+      // An endpoint drawn in another sector is not dangling either: Vensim
+      // cannot draw an arrow between views, so the connector is not this
+      // view's to keep (and every alias of this sector has been recorded, so
+      // an alias reference that misses names one elsewhere).
+      auto inOtherRegion = [this](tinyxml2::XMLElement *endpoint) {
+        return _otherRegionNames.count(EndpointFoldedKey(endpoint)) != 0;
+      };
+      bool fromDroppable = fromUid < 0 && (EndpointIsControlVariable(fromEl) || EndpointIsAliasReference(fromEl) ||
+                                           inOtherRegion(fromEl));
+      bool toDroppable =
+          toUid < 0 && (EndpointIsControlVariable(toEl) || EndpointIsAliasReference(toEl) || inOtherRegion(toEl));
       bool fromOk = fromUid >= 0 || fromDroppable;
       bool toOk = toUid >= 0 || toDroppable;
       if (!fromOk || !toOk)
@@ -555,7 +629,7 @@ void XmileView::ResolveConnectors(tinyxml2::XMLElement *viewEl, std::vector<std:
     double ey = els[toUid]->Y();
     double px = (sx + ex) / 2;
     double py = (sy + ey) / 2;
-    const bool hasAngle = child->Attribute("angle") != nullptr;
+    const bool hasAngle = !crossing && child->Attribute("angle") != nullptr;
     const double angle = child->DoubleAttribute("angle", 0.0);
     if (hasAngle)
       PointFromAngle(sx, sy, ex, ey, angle, px, py);
@@ -564,6 +638,50 @@ void XmileView::ResolveConnectors(tinyxml2::XMLElement *viewEl, std::vector<std:
     if (hasAngle && uid >= 0)
       static_cast<VensimConnectorElement *>(els[uid])->SetAngle(angle);
   }
+}
+
+const XmileView::RemoteElement *XmileView::RemoteSource(tinyxml2::XMLElement *fromEl) const {
+  // Control variables are never drawn, so they get no shadow either.
+  if (EndpointIsControlVariable(fromEl))
+    return nullptr;
+  if (tinyxml2::XMLElement *alias = fromEl->FirstChildElement("alias")) {
+    const char *uidStr = alias->Attribute("uid");
+    if (!uidStr)
+      return nullptr;
+    auto it = _remoteByAliasUid.find(std::atoi(uidStr));
+    return it == _remoteByAliasUid.end() ? nullptr : &it->second;
+  }
+  auto it = _remoteByName.find(EndpointFoldedKey(fromEl));
+  return it == _remoteByName.end() ? nullptr : &it->second;
+}
+
+int XmileView::AllocateCrossingSource(const RemoteElement &source, int toUid) {
+  VensimViewElements &els = _view->Elements();
+  if (toUid < 0 || static_cast<size_t>(toUid) >= els.size() || !els[toUid])
+    return -1;
+  VensimViewElement *target = els[toUid];
+  // The direction from the target toward where the source is drawn, in this
+  // view's coordinates (the source sits outside the view, possibly far off).
+  double dx = source.x - _offX - target->X();
+  double dy = source.y - _offY - target->Y();
+  double len = std::hypot(dx, dy);
+  if (len < 1e-9) {
+    dx = -1;  // coincident: put the shadow to the left
+    dy = 0;
+    len = 1;
+  }
+  dx /= len;
+  dy /= len;
+  // Far enough along that direction that the shadow's name clears the
+  // target's box, with a gap for the arrow: each box's half-extent measured
+  // along the direction, plus the arrow's own length.
+  const double kArrowLength = 40;
+  int hw, hh;
+  EstimateNameSize(source.var->GetName(), hw, hh, /*ghost=*/true);
+  double reach = std::fabs(dx) * (target->Width() + hw) + std::fabs(dy) * (target->Height() + hh) + kArrowLength;
+  int x = static_cast<int>(std::lround(target->X() + dx * reach));
+  int y = static_cast<int>(std::lround(target->Y() + dy * reach));
+  return AllocateGhost(source.var, x, y);
 }
 
 int XmileView::ValveFor(int uid) {
@@ -644,7 +762,10 @@ void XmileView::ProcessViewGroups(tinyxml2::XMLElement *viewEl, std::vector<std:
     // separately so a mixed group (rare but legal) still attaches both kinds
     // of members.
     ModelGroup *group = nullptr;
-    if (child->FirstChildElement("var")) {
+    // With sectors the view is read once per sector, but a <var> membership is
+    // by name and so the same in every pass: claim it in the first pass only.
+    const bool firstPass = _sectors.empty() || _sectorIndex == 0;
+    if (child->FirstChildElement("var") && firstPass) {
       group = _reader->ProcessGroup(child, errs);
     } else {
       const char *name = child->Attribute("name");

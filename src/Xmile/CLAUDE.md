@@ -344,12 +344,30 @@ direction.
 - **Sketch geometry is mapped through standard XMILE 1.2 only, so `.mdl ->
   XMILE -> .mdl` gives back the same drawing, not the same bytes.** No vendor
   attributes are written: real round trips go through XMILE consumers that
-  would drop them. Single-view models only so far; a multi-view model still
-  stacks its views into one XMILE view (`SetViewStart`). The mapping, writer
-  (`generateView`) and reader (`XmileView`) side by side:
+  would drop them. The mapping, writer (`generateView`) and reader
+  (`XmileView`) side by side:
   - Coordinates are not translated (`VensimView::KeepViewInPlace`), except as
     far as needed to keep every box at non-negative coordinates, which XMILE
     requires and Vensim does not.
+  - Several views (`--sectors`, `generateSectorViews`) go into one XMILE view,
+    each as a sector: a `<group>` named after the view whose top-left corner IS
+    the view's origin, stacked down the page. The reader turns every `<group>`
+    with a size back into a Vensim view of that name (`XmileReader::
+    ProcessViews`, one `XmileView` pass per sector via `SetSectorRegion`): an
+    element belongs to the first sector containing its center and gets the
+    sector's corner subtracted, so each view gets its own coordinates back.
+    Elements in no sector get one more view, `View N`. A Vensim arrow cannot
+    cross views, so a connector between sectors is redrawn in the view it
+    ends in, from a new shadow of its source placed next to the target on the
+    side facing where the source is drawn (`AllocateCrossingSource`); the
+    redrawn arrow is straight and keeps its polarity. A pipe end in another
+    sector becomes a cloud. This applies to any XMILE with sized view
+    groups, Stella sectors included. The modules path (multi-view without
+    `--sectors`) is not covered yet.
+  - A ghost is an `<alias>` positioned by its center. Reading one must not
+    make its view the variable's home (`AllocateGhost` restores it), or the
+    variable's real placement, read later or in another sector, comes out as a
+    ghost too. The `.mdl` writer draws a ghost as Vensim does: grey name only.
   - A stock keeps its size: `width`/`height` = 2x the Vensim half-extents, and
     per the spec `x`,`y` is then the TOP-LEFT corner (Stella agrees; see the
     `Developers` stock in `simlin/reliability.xmile`). A stock with no size
@@ -358,8 +376,13 @@ direction.
   - A flow is positioned by its valve; `label_side` records which side of the
     valve its name record sits on. The reader rebuilds the name record beside
     the valve (valve half-extent + text half-extent away). A name's text
-    extent is not in XMILE, so it is estimated (`EstimateNameSize`, matching
-    the Times New Roman 12 font line `MDLGenerator` writes).
+    extent is not in XMILE, so every name (aux, flow name, ghost) gets the
+    size Vensim gives a new one: `VensimDefaultNameSize` (`src/Vensim/
+    VensimView.cpp`) measures it in the Times New Roman 12 of the font line
+    `MDLGenerator` writes, wraps at 120px (wider for long names), and sizes
+    the box to the widest line; a ghost is measured as `<name>`. Fitted to
+    names Vensim laid out itself (`test_models/NameSizing.mdl`), within 2px.
+    Stocks are not name-sized: XMILE carries their size.
   - A pipe is straight along the valve's row or column (XMILE requires right
     angles) and ends at a cloud's center or at the stock edge facing the
     valve. Reader and writer apply the same rule, so pipes and clouds are a
@@ -375,7 +398,8 @@ direction.
     re-emits that rather than recomputing it from the rounded point, so
     XMILE -> XMILE does not drift.
   Regression test: `test/xmile/SketchMdlXmileRoundTripTest.cpp`
-  (`test_models/SimplePopulation.mdl`).
+  (`test_models/SimplePopulation.mdl`, and `test_models/PopulationResources.mdl`
+  for sectors).
 - View name maps key through `XmileReader::FoldNameKey` (ASCII lower,
   `_`/space runs folded), mirroring the namespace's `ToLowerSpace` fold, so
   connector endpoints resolve in the sketch whenever they resolve in the

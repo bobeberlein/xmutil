@@ -18,6 +18,11 @@ inline const char *TextPosToLabelSide(int tpos) {
     return nullptr;
   return kSides[tpos];
 }
+// The size Vensim gives a name it lays out itself (a new variable, a flow's
+// name, a shadow variable), as sketch half-extents. A ghost is drawn as
+// "<name>". See VensimView.cpp for how the rule was fitted.
+void VensimDefaultNameSize(const std::string &name, bool ghost, int &halfWidth, int &halfHeight);
+
 // def is returned when side is null or not a recognized label_side.
 inline int LabelSideToTextPos(const char *side, int def) {
   if (!side)
@@ -260,6 +265,11 @@ public:
   // every element's box at non-negative coordinates (XMILE does not allow
   // negative positions; Vensim does). Returns last uid val + 1, as SetViewStart.
   int KeepViewInPlace(int uid);
+  // Move every element (connector points included) by (dx, dy).
+  void Translate(int dx, int dy);
+  // The right and bottom edges of the boxes of all non-connector elements, or
+  // (0, 0) for a view with none.
+  void GetViewExtent(int &right, int &bottom);
   int GetViewMaxX(int defval);
   int GetViewMaxY(int defval);
   int UIDOffset() {
