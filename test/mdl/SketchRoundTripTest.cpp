@@ -1341,11 +1341,12 @@ TEST(SketchView_untagged_element_does_not_shift_the_flow_pairing) {
   const std::string typedGeometry = flowGeometry(typed);
   const std::string untypedGeometry = flowGeometry(untyped);
   // Non-vacuity: the control really did reconstruct a pipe from the sketch, and
-  // it anchors on the cloud and the stock rather than on the fabricated
-  // fallback the writer uses when it matches no pipe connector.
+  // it anchors on the cloud (its center, 200) and the stock (the edge facing
+  // the valve, 500 - 40) rather than on the fabricated fallback the writer uses
+  // when it matches no pipe connector.
   CHECK(typedGeometry.find("<pts>") != std::string::npos);
   CHECK(typedGeometry.find("x=\"200\"") != std::string::npos);
-  CHECK(typedGeometry.find("x=\"500\"") != std::string::npos);
+  CHECK(typedGeometry.find("x=\"460\"") != std::string::npos);
   CHECK_EQ_STR(untypedGeometry, typedGeometry);
 }
 

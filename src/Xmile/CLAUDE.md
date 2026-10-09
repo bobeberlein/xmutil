@@ -341,6 +341,41 @@ direction.
   reader's `StocksForFlow` map because `Variable::Inflows()` is not populated
   until the post-parse pipeline); geometry picks which of the at-most-two
   candidate stocks each endpoint touches, and anything else is a cloud.
+- **Sketch geometry is mapped through standard XMILE 1.2 only, so `.mdl ->
+  XMILE -> .mdl` gives back the same drawing, not the same bytes.** No vendor
+  attributes are written: real round trips go through XMILE consumers that
+  would drop them. Single-view models only so far; a multi-view model still
+  stacks its views into one XMILE view (`SetViewStart`). The mapping, writer
+  (`generateView`) and reader (`XmileView`) side by side:
+  - Coordinates are not translated (`VensimView::KeepViewInPlace`), except as
+    far as needed to keep every box at non-negative coordinates, which XMILE
+    requires and Vensim does not.
+  - A stock keeps its size: `width`/`height` = 2x the Vensim half-extents, and
+    per the spec `x`,`y` is then the TOP-LEFT corner (Stella agrees; see the
+    `Developers` stock in `simlin/reliability.xmile`). A stock with no size
+    comes back at Stella's default 45x35 (half 22x17). Its record's tpos maps
+    to `label_side` (`TextPosToLabelSide`).
+  - A flow is positioned by its valve; `label_side` records which side of the
+    valve its name record sits on. The reader rebuilds the name record beside
+    the valve (valve half-extent + text half-extent away). A name's text
+    extent is not in XMILE, so it is estimated (`EstimateNameSize`, matching
+    the Times New Roman 12 font line `MDLGenerator` writes).
+  - A pipe is straight along the valve's row or column (XMILE requires right
+    angles) and ends at a cloud's center or at the stock edge facing the
+    valve. Reader and writer apply the same rule, so pipes and clouds are a
+    fixpoint; pipe segments carry shape 100 (upstream) and 4 (downstream).
+  - A connector's `angle` is the takeoff angle of the Vensim arc, computed
+    against the element the Vensim arrow actually touches (a flow's valve OR
+    its name -- Vensim allows both). The reader always ends an arrow at a
+    flow's valve, and rebuilds the arc point as the arc's midpoint
+    (`PointFromAngle`, the inverse of `AngleFromPoints`): Vensim stores
+    wherever the handle was dragged, which XMILE cannot express, so the arc
+    comes back the same but the stored point may move. The connector keeps the
+    angle it was read with (`VensimConnectorElement::Angle`), and the writer
+    re-emits that rather than recomputing it from the rounded point, so
+    XMILE -> XMILE does not drift.
+  Regression test: `test/xmile/SketchMdlXmileRoundTripTest.cpp`
+  (`test_models/SimplePopulation.mdl`).
 - View name maps key through `XmileReader::FoldNameKey` (ASCII lower,
   `_`/space runs folded), mirroring the namespace's `ToLowerSpace` fold, so
   connector endpoints resolve in the sketch whenever they resolve in the

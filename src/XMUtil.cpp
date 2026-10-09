@@ -174,6 +174,50 @@ bool StringMatch(const std::string &f, const std::string &s) {
   return true;
 }
 
+void PointFromAngle(double startx, double starty, double endx, double endy, double angle, double &pointx,
+                    double &pointy) {
+  const double kPi = 3.14159265358979;
+  double chordx = endx - startx;
+  double chordy = endy - starty;
+  pointx = (startx + endx) / 2;
+  pointy = (starty + endy) / 2;
+  double chord2 = chordx * chordx + chordy * chordy;
+  if (chord2 < 1e-12)
+    return;
+  // Takeoff direction in screen coordinates: the angle counts counter-clockwise
+  // with y pointing down, hence the negated sine.
+  double tx = cos(angle * kPi / 180);
+  double ty = -sin(angle * kPi / 180);
+  // The arc lies entirely on the side of the chord the takeoff direction points
+  // to; a takeoff along the chord (cross == 0) is a straight connector.
+  double cross = chordx * ty - chordy * tx;
+  if (std::fabs(cross) < 1e-9 * sqrt(chord2))
+    return;
+  // The center sits on the normal to the takeoff direction at the start, at the
+  // distance that makes it equidistant from both ends.
+  double nx = -ty;
+  double ny = tx;
+  double ndotc = nx * chordx + ny * chordy;
+  double r = chord2 / (2 * ndotc);  // signed: negative flips the normal
+  double centerx = startx + nx * r;
+  double centery = starty + ny * r;
+  double radius = std::fabs(r);
+  // The arc midpoint is on the chord's perpendicular bisector, on the takeoff
+  // side of the chord.
+  double px = -chordy / sqrt(chord2);
+  double py = chordx / sqrt(chord2);
+  if (px * tx + py * ty < 0) {
+    px = -px;
+    py = -py;
+  }
+  // The bisector meets the circle at center +/- p * radius. The chord midpoint
+  // lies strictly inside the circle on that same line, so the + intersection is
+  // always beyond it, i.e. on the takeoff side -- whether the arc is minor or
+  // major.
+  pointx = centerx + px * radius;
+  pointy = centery + py * radius;
+}
+
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy) {
   double thetax;
   if (endx > startx)

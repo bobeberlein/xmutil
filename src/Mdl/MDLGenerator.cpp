@@ -367,15 +367,19 @@ void MDLGenerator::EmitVariableRecord(std::string &out, int uid, VensimVariableE
   //
   // The caller has already established that this element survives
   // (SuppressedSketchSlots), which includes it having a resolved Variable.
+  //
+  // The fields after bits are hid, hasf, tpos, bw, nav1, nav2. Shape 3 is the
+  // box Vensim draws a stock in; every other variable is drawn as its name
+  // alone (8).
   const std::string name = mdl::FormatMDLIdent(e->GetVariable()->GetName());
-  int shape = 3;
+  int shape = e->GetVariable()->VariableType() == XMILE_Type_STOCK ? 3 : 8;
   if (e->Attached())
     shape |= (1 << 5);
   int bits = e->Ghost(nullptr, false) ? 2 : 3;
   std::string line = "10," + std::to_string(uid) + "," + name + ",";
   line += std::to_string(e->X()) + "," + std::to_string(e->Y()) + "," + std::to_string(e->Width()) + "," +
           std::to_string(e->Height()) + ",";
-  line += std::to_string(shape) + "," + std::to_string(bits) + ",0,0,0,0,0,0";
+  line += std::to_string(shape) + "," + std::to_string(bits) + ",0,0," + std::to_string(e->TextPos()) + ",0,0,0";
   WarnIfLineTooLong(line, "sketch variable record", e->GetVariable()->GetName());
   out += line + "\n";
 }
@@ -401,17 +405,28 @@ void MDLGenerator::WarnIfLineTooLong(const std::string &line, const char *kind, 
 }
 
 void MDLGenerator::EmitValveRecord(std::string &out, int uid, VensimValveElement *e) {
-  // 11,uid,name,x,y,w,h,shape (VensimView.cpp:84-98). The name token is read and
-  // discarded; only shape bit5 (attached) is meaningful. 34 = 32|2 sets bit5.
+  // 11,uid,name,x,y,w,h,shape,bits,hid,hasf,tpos,bw,nav1,nav2 (the variable
+  // record's layout). The name token is read and discarded; shape bit5 is
+  // "attached" (34 = 32|2), and tpos is the side of the valve the flow's name
+  // is drawn on.
   int shape = e->Attached() ? 34 : 2;
   out += "11," + std::to_string(uid) + ",0," + std::to_string(e->X()) + "," + std::to_string(e->Y()) + "," +
-         std::to_string(e->Width()) + "," + std::to_string(e->Height()) + "," + std::to_string(shape) + "\n";
+         std::to_string(e->Width()) + "," + std::to_string(e->Height()) + "," + std::to_string(shape) + ",3,0,0," +
+         std::to_string(e->TextPos()) + ",0,0,0\n";
 }
 
 void MDLGenerator::EmitCommentRecord(std::string &out, int uid, VensimCommentElement *e) {
   // 12,uid,name,x,y,w,h,shape,bits (VensimView.cpp:64-82). The reader consumes
   // the following line as scratch text iff bits bit2 is set, so bits is emitted
   // as 0 (bit2 clear) and no trailing text line follows.
+  //
+  // A cloud is written the way Vensim writes one: icon 48, shape 0, and the
+  // remaining fields (bits, hid, hasf, tpos, bw, nav1, nav2) at its defaults.
+  if (e->IsCloud()) {
+    out += "12," + std::to_string(uid) + ",48," + std::to_string(e->X()) + "," + std::to_string(e->Y()) + "," +
+           std::to_string(e->Width()) + "," + std::to_string(e->Height()) + ",0,3,0,0,-1,0,0,0\n";
+    return;
+  }
   out += "12," + std::to_string(uid) + ",0," + std::to_string(e->X()) + "," + std::to_string(e->Y()) + "," +
          std::to_string(e->Width()) + "," + std::to_string(e->Height()) + ",8,0\n";
 }
@@ -431,9 +446,18 @@ void MDLGenerator::EmitConnectorRecord(std::string &out, int uid, VensimConnecto
     pol = 43;
   else if (p == '-')
     pol = 45;
-  out += "1," + std::to_string(uid) + "," + std::to_string(e->From()) + "," + std::to_string(e->To()) + ",1,0," +
-         std::to_string(pol) + ",0,0,64,0,-1--1--1,,1|(" + std::to_string(e->X()) + "," + std::to_string(e->Y()) +
-         ")|\n";
+  //
+  // The field order is 1,uid,from,to,shape,hid,pol,thick,hasf,dtype,res,color,
+  // font,np|plist. A flow's pipe segment is drawn thick (22) and carries no
+  // polarity; an information arrow is thin with dtype 64, as Vensim writes them.
+  const std::string head =
+      "1," + std::to_string(uid) + "," + std::to_string(e->From()) + "," + std::to_string(e->To()) + ",";
+  const std::string pointList = ",-1--1--1,,1|(" + std::to_string(e->X()) + "," + std::to_string(e->Y()) + ")|\n";
+  if (e->IsPipe()) {
+    out += head + std::to_string(e->Shape()) + ",0,0,22,0,0,0" + pointList;
+    return;
+  }
+  out += head + std::to_string(e->Shape()) + ",0," + std::to_string(pol) + ",0,0,64,0" + pointList;
 }
 
 std::vector<bool> MDLGenerator::SuppressedSketchSlots(const std::vector<VensimViewElement *> &elems) const {
@@ -524,8 +548,13 @@ void MDLGenerator::GenerateSketch(std::string &out) {
   // block. The opener marker is the 9-char sequence backslash-backslash-
   // backslash-dash-dash-dash-slash-slash-slash; the terminator is its mirror
   // image. (In the C++ string literals below each backslash is doubled.)
+  // The opener, version and font lines are the ones Vensim itself writes for a
+  // new model; the reader checks only the opener's first nine characters. XMILE
+  // has nowhere to carry a view's font, so every view gets Vensim's default
+  // (which is also what XmileView's name-size estimate assumes).
+  const char *kOpener = "\\\\\\---/// Sketch information - do not modify anything except names";
   const char *kVersion = "V300  Do not put anything below this section - it will be ignored";
-  const char *kFontLine = "$192-192-192,0,Helvetica|10|B|0-0-0|0-0-0|-1--1--1|-1--1--1|96,96,100,0";
+  const char *kFontLine = "$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0";
 
   // xmutil only ever creates VensimView (VensimParse.cpp:293); Dynamo creates
   // none. Anything else would not carry Vensim records, so it is filtered out.
@@ -564,7 +593,7 @@ void MDLGenerator::GenerateSketch(std::string &out) {
       title = "View 1";
     const std::string titleLine = "*" + title;
     WarnIfLineTooLong(titleLine, "sketch frame title", title);
-    out += "\\\\\\---///\n";
+    out += std::string(kOpener) + "\n";
     out += std::string(kVersion) + "\n";
     out += titleLine + "\n";
     out += std::string(kFontLine) + "\n";

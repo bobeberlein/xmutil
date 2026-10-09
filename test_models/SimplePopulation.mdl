@@ -1,0 +1,103 @@
+{UTF-8}
+average lifetime=
+	60
+	~	Months
+	~		|
+
+birth rate=
+	0.1
+	~	1/Month
+	~		|
+
+births=
+	Population * birth rate
+	~	Rabbit/Month
+	~		|
+
+deaths=
+	Population / average lifetime
+	~	Rabbit/Month
+	~		|
+
+Population= INTEG (
+	births-deaths,
+		100)
+	~	Rabbit
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
+10,1,Population,288,178,40,20,3,3,0,0,0,0,0,0
+12,2,48,127,171,10,8,0,3,0,0,-1,0,0,0
+1,4,6,1,4,0,0,22,0,0,0,-1--1--1,,1|(222,170)|
+1,5,6,2,100,0,0,22,0,0,0,-1--1--1,,1|(161,170)|
+11,6,0,191,170,6,8,34,3,0,0,1,0,0,0
+10,7,births,191,189,19,11,40,3,0,0,-1,0,0,0
+10,11,birth rate,200,299,29,11,8,3,0,0,0,0,0,0
+1,12,11,7,1,0,0,0,0,64,0,-1--1--1,,1|(163,251)|
+12,13,48,535,178,10,8,0,3,0,0,-1,0,0,0
+1,15,17,13,4,0,0,22,0,0,0,-1--1--1,,1|(478,178)|
+1,16,17,1,100,0,0,22,0,0,0,-1--1--1,,1|(374,178)|
+11,17,0,426,178,6,8,34,3,0,0,1,0,0,0
+10,18,deaths,426,197,22,11,40,3,0,0,-1,0,0,0
+10,19,average lifetime,509,74,49,11,8,3,0,0,0,0,0,0
+1,20,19,17,1,0,0,0,0,64,0,-1--1--1,,1|(434,108)|
+1,21,1,17,1,0,0,0,0,64,0,-1--1--1,,1|(338,124)|
+1,22,1,7,1,0,0,0,0,64,0,-1--1--1,,1|(237,207)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:Population
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+24:0
+25:100
+26:100

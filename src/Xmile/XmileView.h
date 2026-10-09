@@ -80,6 +80,8 @@ private:
   // file uid of an <alias> declared elsewhere in this view). Returns the
   // sequential UID of the referenced element, or -1 if no resolution succeeds.
   int ResolveEndpoint(tinyxml2::XMLElement *endpoint);
+  // The valve's UID when uid is a flow's (attached) variable record, else uid.
+  int ValveFor(int uid);
 
   // Reserve the next sequential UID slot in _view->Elements() (growing the
   // vector when needed). Allocates bottom-up (slot 1, 2, 3, ...) skipping

@@ -987,8 +987,14 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement *element, tinyxml2
   int uid_off = 0;
   for (View *gview : views) {
     VensimView *view = static_cast<VensimView *>(gview);
-    // first update geometry - we put views one after another along the y axix - could lay out in pages or something
-    uid_off = view->SetViewStart(x, y + 20, _xratio, _yratio, uid_off);
+    // first update geometry. A single view keeps its own coordinates so they
+    // survive a trip back to .mdl (shifted only if something would sit at a
+    // negative position, which XMILE does not allow). Several views share this
+    // one XMILE view, so they are stacked one after another along the y axis.
+    if (views.size() == 1)
+      uid_off = view->KeepViewInPlace(uid_off);
+    else
+      uid_off = view->SetViewStart(x, y + 20, _xratio, _yratio, uid_off);
     int width = view->GetViewMaxX(100);
     int height = view->GetViewMaxY(y + 80) - y;
     // add a surrounding sector to contain this view - call it the view name
@@ -1104,31 +1110,36 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
           VensimViewElement *valve = at(local_uid - 1);
           if (type == XMILE_Type_FLOW && vele->Attached() && valve &&
               valve->Type() == VensimViewElement::ElementTypeVALVE) {
+            // An XMILE flow is positioned by its valve. The name is a separate
+            // record in Vensim; label_side says which side of the valve it is
+            // on, so the reader can put it back.
             xvar->SetAttribute("x", valve->X());
             xvar->SetAttribute("y", valve->Y());
-          } else {
-            // pretty big things - Vensim's default size is 80x40 - width and height are half vals so a fair bit bigger
-            // 90x50 then bring size across
-            if (type == XMILE_Type_STOCK && !vele->CrossLevel() && !vele->Ghost(NULL, false) &&
-                (vele->Width() > 45 || vele->Height() > 25)) {
-              int x = vele->X();
-              int y = vele->Y();
-              int width = 2 * vele->Width();
-              int height = 2 * vele->Height();
-              if (width < 60)
-                width = 60;
-              if (height < 40)
-                height = 40;
-              x -= width / 2;
-              y -= height / 2;
-              xvar->SetAttribute("x", x);
-              xvar->SetAttribute("y", y);
-              xvar->SetAttribute("width", width);
-              xvar->SetAttribute("height", height);
-            } else {
-              xvar->SetAttribute("x", vele->X());
-              xvar->SetAttribute("y", vele->Y());
+            int dx = vele->X() - valve->X();
+            int dy = vele->Y() - valve->Y();
+            if (dx != 0 || dy != 0) {
+              const char *side;
+              if (std::abs(dy) >= std::abs(dx))
+                side = dy > 0 ? "bottom" : "top";
+              else
+                side = dx > 0 ? "right" : "left";
+              xvar->SetAttribute("label_side", side);
             }
+          } else if (type == XMILE_Type_STOCK && !vele->CrossLevel() && !vele->Ghost(NULL, false) &&
+                     vele->Width() > 0 && vele->Height() > 0) {
+            // Vensim sizes are half-extents about the center; an XMILE element
+            // with an explicit size is positioned by its top-left corner.
+            xvar->SetAttribute("x", vele->X() - vele->Width());
+            xvar->SetAttribute("y", vele->Y() - vele->Height());
+            xvar->SetAttribute("width", 2 * vele->Width());
+            xvar->SetAttribute("height", 2 * vele->Height());
+          } else {
+            xvar->SetAttribute("x", vele->X());
+            xvar->SetAttribute("y", vele->Y());
+          }
+          if (type == XMILE_Type_STOCK) {
+            if (const char *side = TextPosToLabelSide(vele->TextPos()))
+              xvar->SetAttribute("label_side", side);
           }
           if (type == XMILE_Type_FLOW) {
             // need points - these are the location of the from and to - no matter what they are
@@ -1142,6 +1153,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
             int ypt[2];
             int xanchor[2];
             int yanchor[2];
+            VensimViewElement *anchorEle[2] = {NULL, NULL};
             for (size_t i = 0; i < n; i++) {
               // Type() is checked on the base pointer BEFORE the downcast: the
               // slot may hold any element kind (or nothing), and casting first
@@ -1167,6 +1179,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
               if (!isgood)
                 continue;
               xpt[count] = cele->X();
+              anchorEle[count] = endpoint;
               xanchor[count] = endpoint->X();
               ypt[count] = cele->Y();
               yanchor[count] = endpoint->Y();
@@ -1210,23 +1223,31 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
               // their actual cloud coordinates from xanchor.
               if (toind < 0)
                 toind = 1;
-              // Each pipe endpoint sits at the center of the element it connects
-              // to (the stock or the cloud), on BOTH axes. The connector's own
-              // point (cele->X/Y) is a routing waypoint -- for a straight pipe it
-              // is the midpoint between the valve and the endpoint, not the
-              // endpoint itself -- so using it for either axis pulls the pipe end
-              // halfway toward the valve and the diagram creeps on every round
-              // trip. Anchoring both coordinates at the element center makes the
-              // emitted <pts> depend only on the (stable) element positions, so
-              // the geometry is a fixpoint. (The earlier code kept the connector
-              // coordinate on one axis and only worked for near-horizontal pipes,
-              // where the routing y happens to fall close to the endpoint y; a
-              // vertical pipe was misdetected via the exact xpt[0]==xpt[1] test
-              // and drifted.)
-              xpt[0] = xanchor[0];
-              xpt[1] = xanchor[1];
-              ypt[0] = yanchor[0];
-              ypt[1] = yanchor[1];
+              // XMILE requires a flow's points to form right angles, so the
+              // straight pipe runs along the valve's row (or column) and each
+              // end stops where it meets what it connects to: a cloud at its
+              // center, a stock at the edge facing the valve -- which is where
+              // Stella puts it too. The pipe connector's own point (cele->X/Y) is
+              // only a routing handle and is not used, so the result depends on
+              // element positions alone and is a fixpoint across round trips.
+              int vx = valve ? valve->X() : vele->X();
+              int vy = valve ? valve->Y() : vele->Y();
+              bool horizontal = std::abs(xanchor[1] - xanchor[0]) >= std::abs(yanchor[1] - yanchor[0]);
+              for (int i = 0; i < 2; i++) {
+                VensimViewElement *a = anchorEle[i];
+                bool isStock = a && a->Type() == VensimViewElement::ElementTypeVARIABLE;
+                if (horizontal) {
+                  ypt[i] = vy;
+                  xpt[i] = xanchor[i];
+                  if (isStock)
+                    xpt[i] += xanchor[i] > vx ? -a->Width() : a->Width();
+                } else {
+                  xpt[i] = vx;
+                  ypt[i] = yanchor[i];
+                  if (isStock)
+                    ypt[i] += yanchor[i] > vy ? -a->Height() : a->Height();
+                }
+              }
             }
             tinyxml2::XMLElement *xpts = doc->NewElement("pts");
             xvar->InsertEndChild(xpts);
@@ -1246,6 +1267,11 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
           VensimViewElement *fromEle = at(cele->From());
           VensimViewElement *toEle = at(cele->To());
           if (fromEle && toEle) {
+            // A Vensim arrow at a flow can end on the valve or on the name; the
+            // arc was drawn to whichever one the record names, so that element's
+            // position is what the angle is computed against.
+            VensimViewElement *fromGeom = fromEle;
+            VensimViewElement *toGeom = toEle;
             // if from is a valve we switch it to the next element in the list which should be a var.
             // "should be" is the whole hazard: the slot one past an attached
             // valve is the flow-pipe convention (see src/Xmile/CLAUDE.md), not
@@ -1275,14 +1301,13 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
                 tinyxml2::XMLElement *xconnector = doc->NewElement("connector");
                 element->InsertEndChild(xconnector);
                 xconnector->SetAttribute("uid", uid);
-                // try to figure out the angle based on the 3 points -
-#ifndef NDEBUG
-                double thetax = 999;
-                if (to->GetVariable()->GetName() == "US crude death rate")
-                  thetax = AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y());
-#endif
-                xconnector->SetAttribute("angle",
-                                         AngleFromPoints(from->X(), from->Y(), cele->X(), cele->Y(), to->X(), to->Y()));
+                // the takeoff angle of the arc through the 3 points -- unless
+                // the connector came from XMILE, whose own angle is exact where
+                // the rebuilt point is rounded
+                xconnector->SetAttribute("angle", cele->HasAngle()
+                                                      ? cele->Angle()
+                                                      : AngleFromPoints(fromGeom->X(), fromGeom->Y(), cele->X(),
+                                                                        cele->Y(), toGeom->X(), toGeom->Y()));
                 if (cele->Polarity()) {
                   char cbuf[2];
                   cbuf[0] = cele->Polarity();

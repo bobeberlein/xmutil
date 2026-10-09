@@ -938,13 +938,13 @@ bool XmileReader::ProcessViews(tinyxml2::XMLElement *views, std::vector<std::str
       }
       if (viewCount == 0) {
         VensimView *view = new VensimView();
-        // XMILE <view> has no required title attribute; fall back to "main"
-        // so the MDL sketch header has a non-empty title (the writer emits
-        // the title verbatim into the \\\---/// header line).
+        // XMILE <view> has no required title attribute; fall back to Vensim's
+        // own name for a model's first view so the MDL sketch header has a
+        // non-empty title (the writer emits it as the *Title line).
         if (const char *vn = child->Attribute("name"))
           view->SetTitle(vn);
         else
-          view->SetTitle("main");
+          view->SetTitle("View 1");
         _model->AddView(view);
         XmileView xv(this, _model, view);
         if (!xv.ProcessView(child, errs))
@@ -1179,7 +1179,7 @@ bool XmileReader::ProcessAppliesToAllEquation(tinyxml2::XMLElement *varEl, Varia
   // and then fail to parse, silently dropping a standalone-GF variable. The
   // canonical "no eqn" state is either a null GetText() or a body whose only
   // characters are whitespace.
-  // 
+  //
   // Human - but we treat 0+0 as "" - basically this is an XMUTIL convention that helps in round tripping
   if (strcmp(eqnText, "0+0") == 0)
     eqnText = "";

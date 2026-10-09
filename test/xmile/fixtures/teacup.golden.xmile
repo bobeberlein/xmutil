@@ -67,15 +67,15 @@
         </variables>
         <views>
             <view>
-                <stock name="Teacup_Temperature" x="100" y="181"/>
-                <flow name="Heat_Loss_to_Room" x="201" y="181">
+                <stock name="Teacup_Temperature" x="267" y="215" width="80" height="40" label_side="center"/>
+                <flow name="Heat_Loss_to_Room" x="408" y="235" label_side="bottom">
                     <pts>
-                        <pt x="100" y="181"/>
-                        <pt x="272" y="181"/>
+                        <pt x="347" y="235"/>
+                        <pt x="479" y="235"/>
                     </pts>
                 </flow>
-                <aux name="Room_Temperature" x="262" y="250"/>
-                <aux name="Characteristic_Time" x="201" y="120"/>
+                <aux name="Room_Temperature" x="469" y="304"/>
+                <aux name="Characteristic_Time" x="408" y="174"/>
                 <connector uid="9" angle="270">
                     <from>Characteristic_Time</from>
                     <to>Heat_Loss_to_Room</to>

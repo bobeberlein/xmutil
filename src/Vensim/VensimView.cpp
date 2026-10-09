@@ -1,5 +1,7 @@
 #include "VensimView.h"
 
+#include <algorithm>
+
 #include "../Symbol/Variable.h"
 #include "VensimParse.h"
 
@@ -24,6 +26,15 @@ VensimVariableElement::VensimVariableElement(VensimView *view, char *curpos, cha
   else
     _ghost = true;
   _cross_level = false;
+  // hid, hasf, then tpos. Older or hand-written records may stop short; keep
+  // the default rather than reading a missing field as 0.
+  int ignore;
+  if (*curpos)
+    curpos = parser->GetInt(curpos, ignore);
+  if (*curpos)
+    curpos = parser->GetInt(curpos, ignore);
+  if (*curpos)
+    curpos = parser->GetInt(curpos, _textPos);
 
 #ifndef NDEBUG
   if (name == "P100")
@@ -78,6 +89,9 @@ VensimCommentElement::VensimCommentElement(char *curpos, char *buf, VensimParse 
   curpos = parser->GetInt(curpos, shape);
   curpos = parser->GetInt(curpos, bits);
 
+  // The name field of a comment is an icon index; 48 is the cloud.
+  _cloud = name == "48";
+
   if (bits & (1 << 2))  // scratch name - it is the next line
   {
     parser->Lexer().ReadLine(buf, BUFLEN);
@@ -99,6 +113,12 @@ VensimValveElement::VensimValveElement(char *curpos, char *buf, VensimParse *par
     _attached = true;
   else
     _attached = false;
+  // bits, hid, hasf, then tpos (see VensimVariableElement).
+  int ignore;
+  for (int i = 0; i < 3 && *curpos; i++)
+    curpos = parser->GetInt(curpos, ignore);
+  if (*curpos)
+    curpos = parser->GetInt(curpos, _textPos);
 }
 
 bool VensimVariableElement::Ghost(std::set<Variable *, SymbolNameLess> *adds, bool update) {
@@ -122,7 +142,7 @@ VensimConnectorElement::VensimConnectorElement(char *curpos, char *buf, VensimPa
   curpos = parser->GetInt(curpos, _from);
   curpos = parser->GetInt(curpos, _to);
   std::string ignore;
-  curpos = parser->GetString(curpos, ignore);
+  curpos = parser->GetInt(curpos, _shape);
   curpos = parser->GetString(curpos, ignore);
   int polarity_ascii;
   curpos = parser->GetInt(curpos, polarity_ascii);
@@ -161,6 +181,9 @@ VensimConnectorElement::VensimConnectorElement(int from, int to, int x, int y, c
 VensimValveElement::VensimValveElement(int x, int y) {
   _x = x;
   _y = y;
+  // Vensim's own valve size (half-width, half-height).
+  _width = 6;
+  _height = 8;
   // The MDL sketch records a "shape bits" word whose bit-5 means "attached to
   // a flow variable". XMILE-synthesized valves are always paired with a
   // following VensimVariableElement, so they are attached.
@@ -170,6 +193,11 @@ VensimValveElement::VensimValveElement(int x, int y) {
 VensimCommentElement::VensimCommentElement(int x, int y) {
   _x = x;
   _y = y;
+  // The only comment the XMILE reader synthesizes is a cloud, at Vensim's own
+  // cloud size.
+  _width = 10;
+  _height = 8;
+  _cloud = true;
 }
 
 bool VensimConnectorElement::ScalePoints(double xs, double ys, int xo, int yo) {
@@ -283,6 +311,32 @@ int VensimView::SetViewStart(int startx, int starty, double xratio, double yrati
         ele->SetY(std::round(ele->Y() * yratio + off_y));
         ele->SetWidth(std::round(ele->Width() * xratio));
         ele->SetHeight(std::round(ele->Height() * yratio));
+      }
+    }
+  }
+  return _uid_offset + vElements.size();
+}
+
+int VensimView::KeepViewInPlace(int uid_start) {
+  _uid_offset = uid_start;
+  // Bound by each element's box (center minus half size), not just its center:
+  // the XMILE writer emits a sized stock by its top-left corner. Connectors are
+  // edges, not boxes, and are translated along with everything else below.
+  int min_x = 0;
+  int min_y = 0;
+  for (VensimViewElement *ele : vElements) {
+    if (!ele || ele->Type() == VensimViewElement::ElementTypeCONNECTOR)
+      continue;
+    min_x = std::min(min_x, ele->X() - ele->Width());
+    min_y = std::min(min_y, ele->Y() - ele->Height());
+  }
+  if (min_x < 0 || min_y < 0) {
+    int off_x = -min_x;
+    int off_y = -min_y;
+    for (VensimViewElement *ele : vElements) {
+      if (ele && !ele->ScalePoints(1.0, 1.0, off_x, off_y)) {
+        ele->SetX(ele->X() + off_x);
+        ele->SetY(ele->Y() + off_y);
       }
     }
   }

@@ -88,7 +88,15 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   only the `.mdl` path has. `UnitEquiv::MdlPayload` runs each field through
   `mdl::SanitizeFreeText(..., SingleLine, ",")`.
 - Sketch is re-serialized from `VensimView` geometry; an element's array index
-  is its on-wire UID (connectors reference those indices). A model with no view
+  is its on-wire UID (connectors reference those indices). Records are written
+  in the full layout Vensim itself writes (opener with its "Sketch information"
+  text, the default Times New Roman 12 font line, all 15 fields of a
+  variable/valve record, cloud records as icon 48, pipe segments with their
+  4/100 shape and thickness 22). The writer only serializes: defaults for what
+  an XMILE source cannot carry (valve and cloud sizes, name placement and text
+  extents) are filled in by `XmileView` when the view is read, so the in-memory
+  view and its re-parse compare equal (see `src/Xmile/CLAUDE.md`, sketch
+  geometry). A model with no view
   still emits one empty frame so the terminator and trailing `:L` settings
   section re-parse. The frame header is POSITIONAL (opener / version / `*Title` /
   font line / records), so the modeler-authored view title goes through

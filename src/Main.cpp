@@ -59,16 +59,28 @@ static bool extensionMatchesInsensitive(const char *path, const char *ext) {
   return dot && StringMatch(dot + 1, ext);
 }
 
-void cliUsage() {
+// Prints the usage text and exits with `status`: EXIT_SUCCESS when it was asked
+// for (--help), EXIT_FAILURE when it follows a command-line error.
+[[noreturn]] void cliUsage(int status) {
   log("Usage: %s [OPTION...] PATH\n"
-      "Convert Vensim .mdl, Dynamo .dyn, or XMILE .xmile/.stmx files to XMILE or .mdl.\n\n"
+      "Convert Vensim .mdl, Dynamo .dyn, or XMILE .xmile/.stmx files to XMILE or .mdl.\n"
+      "The input format is chosen by extension (case-insensitive); anything other than\n"
+      ".dyn, .xmile or .stmx is read as Vensim. Output is written next to the input as\n"
+      "<base>.xmile or <base>.mdl, with .regen inserted when that would overwrite the input.\n\n"
       "Options:\n"
-      "  --help:\tshow this message\n"
-      "  --stdio:\tread from stdin, write to stdout (assumes Vensim input)\n"
-      "  --to-mdl:\twrite Vensim MDL instead of XMILE\n",
+      "  --help           show this message\n"
+      "  --stdio          read from stdin, write to stdout (XMILE input is detected from\n"
+      "                   the content; anything else is read as Vensim)\n"
+      "  --to-mdl         write Vensim .mdl instead of XMILE\n"
+      "  --longnames      rename variables to their documentation text when it is short\n"
+      "                   enough (Vensim/Dynamo input; the default for Dynamo)\n"
+      "  --shortnames     keep the variable names as written (the default for Vensim)\n"
+      "  --sectors        write a multi-view Vensim/Dynamo model as sectors of one XMILE\n"
+      "                   model instead of one module per view (XMILE input always is)\n"
+      "  --want-complete  accepted for compatibility; has no effect\n",
       argv0);
 
-  exit(EXIT_FAILURE);
+  exit(status);
 }
 
 int cliMain(int argc, char *argv[], Model *m) {
@@ -83,7 +95,7 @@ int cliMain(int argc, char *argv[], Model *m) {
   for (argv0 = argv[0], argv++, argc--; argc > 0; argv++, argc--) {
     char const *arg = argv[0];
     if (strcmp("--help", arg) == 0) {
-      cliUsage();
+      cliUsage(EXIT_SUCCESS);
     } else if (strcmp("--stdio", arg) == 0) {
       useStdio = true;
     } else if (strcmp("--want-complete", arg) == 0) {
@@ -98,13 +110,13 @@ int cliMain(int argc, char *argv[], Model *m) {
       toMdl = true;
     } else if (arg[0] == '-') {
       log("unknown arg '%s'\n", arg);
-      cliUsage();
+      cliUsage(EXIT_FAILURE);
     } else {
       if (!path) {
         path = arg;
       } else {
         log("specify a single path to a model\n");
-        cliUsage();
+        cliUsage(EXIT_FAILURE);
       }
     }
   }
@@ -113,7 +125,7 @@ int cliMain(int argc, char *argv[], Model *m) {
     path = "STDIN";
   } else if (!useStdio && path == nullptr) {
     log("ERROR: specify a path to a model or use --stdio\n");
-    cliUsage();
+    cliUsage(EXIT_FAILURE);
   }
 
   std::ifstream fileInput;

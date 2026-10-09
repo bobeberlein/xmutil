@@ -103,4 +103,10 @@ std::string SpaceToUnderBar(const std::string &s);
 std::string QuotedSpaceToUnderBar(const std::string &s);
 bool StringMatch(const std::string &f, const std::string &s);  // asciii only;
 double AngleFromPoints(double startx, double starty, double pointx, double pointy, double endx, double endy);
+// Inverse of AngleFromPoints: the point midway along the arc that leaves
+// (startx,starty) at takeoff `angle` (XMILE convention: degrees, 0 at 3 o'clock,
+// counter-clockwise, screen y down) and ends at (endx,endy). Returns the chord
+// midpoint when the angle describes a straight line.
+void PointFromAngle(double startx, double starty, double endx, double endy, double angle, double &pointx,
+                    double &pointy);
 #endif
