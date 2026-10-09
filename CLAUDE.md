@@ -112,7 +112,7 @@ Real model fixtures live under `test/fixtures/` (byte-identical vendored
 copies; provenance in `test/fixtures/README.md`). Two corpus tests drive them:
 `test/xmile/XmileCorpusTest.cpp` round-trips an allow-list of `.xmile`/`.stmx`
 models in both directions and has a coverage walk that fails if any fixture on
-disk is in none of its allow/deferred/rejected tables; `test/mdl/
+disk is in none of its allow/deferred/module-document tables; `test/mdl/
 CorpusRoundTripTest.cpp` round-trips an allow-list of Vensim `.mdl` models and
 stress-tests the large `C-LEARN v77` export (read from upstream's own
 `test_models/` directory, deliberately not vendored under `test/fixtures/`).

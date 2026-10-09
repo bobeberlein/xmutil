@@ -11,6 +11,7 @@
 // view by view and record by record, against the original Vensim file.
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <map>
 #include <set>
@@ -18,9 +19,13 @@
 #include <string>
 #include <vector>
 
+#include "../../src/Model.h"
+#include "../../src/Symbol/SymbolNameSpace.h"
+#include "../../src/Symbol/Variable.h"
 #include "../../src/Vensim/VensimView.h"
 #include "../../src/XMUtil.h"
 #include "../TestHarness.h"
+#include "../mdl/RoundTrip.h"
 
 namespace {
 
@@ -218,8 +223,10 @@ struct ViewCounts {
   size_t variables = 0, ghosts = 0, valves = 0, clouds = 0, pipes = 0, arrows = 0;
 };
 
-// Hold the regenerated view b to the original view a.
-ViewCounts CompareView(const Sketch &a, const Sketch &b) {
+// Hold the regenerated view b to the original view a. compareNameSizes is off
+// when b's names are not a's (module-qualified ones are longer, so sized
+// differently).
+ViewCounts CompareView(const Sketch &a, const Sketch &b, bool compareNameSizes = true) {
   ViewCounts counts;
 
   // The frame header comes back verbatim: opener, version, title, font line.
@@ -246,9 +253,14 @@ ViewCounts CompareView(const Sketch &a, const Sketch &b) {
     const Record &rb = *it->second;
     if ((ra.bits & 1) == 0)
       counts.ghosts++;
-    if (ra.x != rb.x || ra.y != rb.y)
-      printf("  %s moved: (%d,%d) -> (%d,%d)\n", kv.first.c_str(), ra.x, ra.y, rb.x, rb.y);
-    CHECK(ra.x == rb.x && ra.y == rb.y);
+    // A flow's name sits beside its valve at a distance that depends on the
+    // name's own size, so it can only be compared when the names are the same.
+    const bool placedBySize = (ra.shape & 32) != 0 && !compareNameSizes;
+    if (!placedBySize) {
+      if (ra.x != rb.x || ra.y != rb.y)
+        printf("  %s moved: (%d,%d) -> (%d,%d)\n", kv.first.c_str(), ra.x, ra.y, rb.x, rb.y);
+      CHECK(ra.x == rb.x && ra.y == rb.y);
+    }
     if (ra.shape != rb.shape || ra.bits != rb.bits || ra.tpos != rb.tpos)
       printf("  %s: shape/bits/tpos %d/%d/%d -> %d/%d/%d\n", kv.first.c_str(), ra.shape, ra.bits, ra.tpos, rb.shape,
              rb.bits, rb.tpos);
@@ -257,6 +269,8 @@ ViewCounts CompareView(const Sketch &a, const Sketch &b) {
     CHECK(ra.tpos == rb.tpos);
     if (ra.shape == 3) {
       CHECK(ra.w == rb.w && ra.h == rb.h);
+    } else if (!compareNameSizes) {
+      CHECK(rb.w > 0 && rb.h > 0);
     } else {
       // A name comes back at the size Vensim gives a new one, which matches a
       // name Vensim sized itself to within a few pixels (and exactly in
@@ -370,6 +384,23 @@ ViewCounts CompareView(const Sketch &a, const Sketch &b) {
   // Nothing is left over: the regenerated view has exactly these records.
   CHECK(b.byUid.size() == va.size() + counts.valves + cloudsA.size() + pa.size() + aa.size());
   return counts;
+}
+
+// The variable records' names without their module qualification
+// ("Population View.births" -> "births", ".x" -> "x"), so a view read from
+// modules can be compared with the view it came from.
+Sketch StripModulePrefixes(Sketch s) {
+  for (auto &kv : s.byUid) {
+    std::string &name = kv.second.name;
+    if (kv.second.type != 10)
+      continue;
+    if (name.size() >= 2 && name.front() == '"' && name.back() == '"')
+      name = name.substr(1, name.size() - 2);
+    size_t dot = name.find('.');
+    if (dot != std::string::npos)
+      name = name.substr(dot + 1);
+  }
+  return s;
 }
 
 }  // namespace
@@ -590,4 +621,151 @@ TEST(SketchMdlXmile_population_resources_sectors_round_trip) {
   // After the first trip the .mdl sketch is a fixpoint.
   const std::string again = XmileToMdl(MdlToXmile(back, true));
   CHECK(SketchLines(again) == SketchLines(back));
+}
+
+namespace {
+
+// The names of the variables a variable's equations refer to, from a .mdl.
+std::set<std::string> InputsOf(Model *m, const std::string &name) {
+  std::set<std::string> out;
+  Symbol *sym = m->GetNameSpace()->Find(name);
+  if (!sym || sym->isType() != Symtype_Variable)
+    return out;
+  // A quoted .mdl name keeps its quotes in the parsed model.
+  for (Variable *in : static_cast<Variable *>(sym)->GetInputVars()) {
+    std::string n = in->GetName();
+    if (n.size() >= 2 && n.front() == '"' && n.back() == '"')
+      n = n.substr(1, n.size() - 2);
+    out.insert(n);
+  }
+  return out;
+}
+
+bool Defines(Model *m, const std::string &name) {
+  Symbol *sym = m->GetNameSpace()->Find(name);
+  return sym && sym->isType() == Symtype_Variable && !static_cast<Variable *>(sym)->GetAllEquations().empty();
+}
+
+}  // namespace
+
+// A model with two views, written without --sectors: each view becomes an XMILE
+// module, and an input a module takes from the other is a <connect>ed shadow.
+// On the way back every variable is entered under its module-qualified name
+// (the .mdl namespace is flat), each module becomes a view named after it, and a
+// connected input is a ghost of the variable it comes from -- which the
+// equations of its module refer to directly.
+TEST(SketchMdlXmile_population_resources_modules_to_mdl) {
+  const std::string original = ReadFile(std::string(XMUTIL_SRC_ROOT) + kPopulationResourcesPath);
+  CHECK(!original.empty());
+  if (original.empty())
+    return;
+  const std::string xmile = MdlToXmile(original, false);
+  CHECK(xmile.find("<module name=\"Population View\">") != std::string::npos);
+  CHECK(xmile.find("<connect to=\"Population_View.food_adequacy\" from=\"Resource_View.food_adequacy\"/>") !=
+        std::string::npos);
+  const std::string back = XmileToMdl(xmile);
+  CHECK(!back.empty());
+  if (back.empty())
+    return;
+
+  // The equations: every variable is module-qualified, and a connected input
+  // is not defined twice but referred to where it is defined.
+  Model *m = roundtrip::ParseVensim(back);
+  CHECK(m != nullptr);
+  if (m) {
+    CHECK(Defines(m, "Population View.Population"));
+    CHECK(Defines(m, "Resource View.food adequacy"));
+    CHECK(!Defines(m, "Population View.food adequacy"));
+    CHECK(!Defines(m, "Resource View.Population"));
+    CHECK(InputsOf(m, "Population View.effect food deaths").count("Resource View.food adequacy") == 1);
+    CHECK(InputsOf(m, "Resource View.inidcated consumption").count("Population View.Population") == 1);
+    delete m;
+  }
+
+  // The sketch: one view per module, named after it, holding what the module's
+  // view held at the original coordinates.
+  std::vector<Sketch> a = ParseSketches(original);
+  std::vector<Sketch> b = ParseSketches(back);
+  CHECK(a.size() == 2);
+  CHECK(a.size() == b.size());
+  if (a.size() != b.size())
+    return;
+  ViewCounts total;
+  for (size_t i = 0; i < a.size(); i++) {
+    ViewCounts c = CompareView(a[i], StripModulePrefixes(b[i]), /*compareNameSizes=*/false);
+    total.variables += c.variables;
+    total.ghosts += c.ghosts;
+    total.arrows += c.arrows;
+  }
+  CHECK(total.variables == 14);
+  CHECK(total.ghosts == 2);
+  CHECK(total.arrows == 13);
+  // The ghosts are of the qualified variables they stand for.
+  CHECK(back.find("10,14,\"Resource View.food adequacy\",329,374,") != std::string::npos);
+  CHECK(back.find("\"Population View.Population\",187,274,") != std::string::npos);
+}
+
+// A base-model variable fed into a module: base-model names get a leading '.',
+// the module's input resolves to it, and the module's view shows a ghost of it.
+// Writing the flattened model back to XMILE is refused rather than done wrong.
+TEST(SketchMdlXmile_base_model_variable_feeds_a_module) {
+  const char *kXmile = R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>10</stop><dt>1</dt></sim_specs>
+  <model>
+    <variables>
+      <aux name="rate"><eqn>0.5</eqn></aux>
+      <module name="growth"><connect to="growth.rate" from=".rate"/></module>
+    </variables>
+  </model>
+  <model name="growth">
+    <variables>
+      <aux name="rate" access="input"><eqn>{unused when connected}</eqn></aux>
+      <stock name="level"><eqn>1</eqn><inflow>gain</inflow></stock>
+      <flow name="gain"><eqn>level * rate</eqn></flow>
+    </variables>
+    <views><view>
+      <stock name="level" x="160" y="80" width="80" height="40"/>
+      <flow name="gain" x="100" y="100"><pts><pt x="40" y="100"/><pt x="160" y="100"/></pts></flow>
+      <aux name="rate" x="100" y="200"/>
+      <connector uid="1" angle="90"><from>rate</from><to>gain</to></connector>
+    </view></views>
+  </model>
+</xmile>
+)";
+  const std::string mdl = XmileToMdl(kXmile);
+  CHECK(!mdl.empty());
+  if (mdl.empty())
+    return;
+  Model *m = roundtrip::ParseVensim(mdl);
+  CHECK(m != nullptr);
+  if (m) {
+    CHECK(Defines(m, ".rate"));
+    CHECK(Defines(m, "growth.level"));
+    CHECK(Defines(m, "growth.gain"));
+    CHECK(!Defines(m, "growth.rate"));
+    std::set<std::string> in = InputsOf(m, "growth.gain");
+    CHECK(in.count(".rate") == 1 && in.count("growth.level") == 1);
+    delete m;
+  }
+  std::vector<Sketch> views = ParseSketches(mdl);
+  CHECK(views.size() == 1);
+  if (views.size() == 1) {
+    CHECK_EQ_STR(views[0].header[2], "*growth");
+    // The module's view draws the input as `.rate` and its arrow from it. (The
+    // base model has no view of its own here, so this drawing is the only one
+    // and CheckGhostOwners makes it .rate's home rather than a ghost.)
+    int rateUid = -1;
+    for (const auto &kv : views[0].byUid)
+      if (kv.second.type == 10 && kv.second.name == "\".rate\"")
+        rateUid = kv.first;
+    CHECK(rateUid > 0);
+    bool arrow = false;
+    for (const auto &kv : views[0].byUid)
+      arrow = arrow || (kv.second.type == 1 && kv.second.shape == 1 && kv.second.from == rateUid);
+    CHECK(arrow);
+  }
+  char *xmile = convert_xmile_to_xmile(kXmile, static_cast<uint32_t>(std::strlen(kXmile)), "m.xmile", -1, false);
+  CHECK(xmile == nullptr);
+  free(xmile);
 }

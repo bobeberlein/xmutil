@@ -101,6 +101,24 @@ private:
   // The valve's UID when uid is a flow's (attached) variable record, else uid.
   int ValveFor(int uid);
 
+  // The lookup key of the variable a connector endpoint names: the folded name
+  // it resolves to in the reader's current scope (module-qualified, or the
+  // variable a module input stands for), or empty for an alias reference.
+  std::string EndpointKey(tinyxml2::XMLElement *endpoint) const;
+
+public:
+  // Skip pass 3: <group> elements are not read at all. A module's view is read
+  // this way -- with modules, sectors are not views and groups are dropped.
+  void SetIgnoreGroups(bool ignore) {
+    _ignoreGroups = ignore;
+  }
+
+private:
+  bool _ignoreGroups = false;
+  // Folded names of the <module> icons drawn in this view. A module has no
+  // Vensim counterpart, so a connector to or from one is dropped quietly.
+  std::set<std::string> _moduleIcons;
+
   // True when an element centered at (cx, cy) in document coordinates belongs
   // to the region this pass builds.
   bool InRegion(double cx, double cy) const;

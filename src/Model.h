@@ -157,6 +157,14 @@ public:
   bool FromXmile() const {
     return bFromXmile;
   }
+  // Set by the XMILE reader when it flattened a document's modules into one
+  // namespace under module-qualified names ("Module.name", ".name"). That is
+  // the shape a .mdl needs; written back as XMILE, where a '.' in a name means
+  // module qualification, it would no longer mean what it says, so PrintXMILE
+  // refuses it.
+  void SetFromXmileModules(bool set) {
+    bFromXmileModules = set;
+  }
   void SetUnwanted(const char *var, const char *nametouse);
   std::vector<Variable *> GetVariables(SymbolNameSpace *ns = NULL);
   void AddView(View *view) {
@@ -278,6 +286,7 @@ private:
   // XMILE-sourced model as sectors regardless is what keeps XMILE -> XMILE a
   // normalization this tool can read back rather than a one-way transformation.
   bool bFromXmile;
+  bool bFromXmileModules = false;  // see SetFromXmileModules
 };
 
 #endif

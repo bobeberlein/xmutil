@@ -233,6 +233,7 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
   // built on the reader's Model, which keeps the error path symmetric with the
   // empty-input and malformed-XML returns above.
   int modelCount = 0;
+  std::vector<tinyxml2::XMLElement *> modelEls;
   std::vector<tinyxml2::XMLElement *> simSpecsEls;
   for (tinyxml2::XMLElement *child = root->FirstChildElement(); child; child = child->NextSiblingElement()) {
     const char *name = child->Name();
@@ -245,14 +246,23 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
       errs.push_back(filename + ": <macro> elements are not supported");
       return false;
     }
-    if (tag == "model")
+    if (tag == "model") {
       ++modelCount;
-    else if (tag == "sim_specs")
+      modelEls.push_back(child);
+    } else if (tag == "sim_specs") {
       simSpecsEls.push_back(child);
+    }
   }
+  // Several <model> elements are a base model and its modules. They are read
+  // in module mode (see ScopedName): flattened into one namespace under
+  // module-qualified names, with each module's <connect> inputs read as shadows
+  // of the variables they come from -- so the connects are gathered for the
+  // whole document before any model is read.
   if (modelCount > 1) {
-    errs.push_back(filename + ": multiple <model> elements are not supported");
-    return false;
+    _moduleMode = true;
+    _model->SetFromXmileModules(true);
+    for (tinyxml2::XMLElement *model : modelEls)
+      CollectConnects(model, errs);
   }
   // <sim_specs> is dispatched ahead of the main loop rather than in document
   // order. XMILE fixes no order among the envelope's children, and <variables>
@@ -1144,7 +1154,13 @@ Variable *XmileReader::DeclareVariable(tinyxml2::XMLElement *el, std::vector<std
     errs.push_back(std::string("<") + el->Name() + " name=\"" + name + "\">: name collides with a non-variable symbol");
     return nullptr;
   }
-  EnsureCanonicalName(v, normName);
+  // The declared spelling, under the name the variable is entered as (module-
+  // qualified in module mode). An alias names some other variable entirely,
+  // whose own declaration owns its spelling.
+  bool isAlias = false;
+  const std::string scoped = ScopedName(normName, &isAlias);
+  if (!isAlias)
+    EnsureCanonicalName(v, scoped);
   return v;
 }
 
@@ -1670,11 +1686,12 @@ bool XmileReader::ProcessStock(tinyxml2::XMLElement *stock, std::vector<std::str
 
   // Record the structural stock<->flow association for the view pass: a
   // flow's pipe endpoint may only anchor on a stock that lists it here (see
-  // StocksForFlow).
+  // StocksForFlow). Keyed by the names the variables are entered under, which
+  // in module mode tell a "births" in one module from a "births" in another.
   for (const std::string &f : inflowNames)
-    _flowToStocks[FoldNameKey(f)].push_back(FoldNameKey(normName));
+    _flowToStocks[FoldNameKey(ScopedName(f))].push_back(FoldNameKey(v->GetName()));
   for (const std::string &f : outflowNames)
-    _flowToStocks[FoldNameKey(f)].push_back(FoldNameKey(normName));
+    _flowToStocks[FoldNameKey(ScopedName(f))].push_back(FoldNameKey(v->GetName()));
 
   if (stock->FirstChildElement("element")) {
     // Per-element subscripted stock.
@@ -1794,20 +1811,41 @@ void XmileReader::ScanForShadowedKeywords(tinyxml2::XMLElement *model) {
 }
 
 bool XmileReader::ProcessModel(tinyxml2::XMLElement *model, std::vector<std::string> &errs) {
-  // Multi-<model> rejection is handled by ProcessFile's envelope pre-pass;
-  // here we only walk the <variables> children of the one <model> we're
-  // given.
+  // In module mode every name this model resolves is scoped to it (see
+  // ScopedName); the scope ends with the model, on every return path.
+  struct ScopeGuard {
+    XmileReader *reader;
+    ~ScopeGuard() {
+      reader->_inModelScope = false;
+      reader->_scopePrefix.clear();
+    }
+  } scopeGuard{this};
+  if (_moduleMode) {
+    _scopePrefix = ModelScopePrefix(model);
+    _inModelScope = true;
+  }
   ScanForShadowedKeywords(model);
   tinyxml2::XMLElement *variables = model->FirstChildElement("variables");
-  if (!variables)
-    return true;
-  for (tinyxml2::XMLElement *child = variables->FirstChildElement(); child; child = child->NextSiblingElement()) {
+  for (tinyxml2::XMLElement *child = variables ? variables->FirstChildElement() : nullptr; child;
+       child = child->NextSiblingElement()) {
     const char *name = child->Name();
     if (!name)
       continue;
     if (IsForeignNamespace(name))
       continue;
     std::string tag(name);
+    if (_moduleMode) {
+      // A <module> contributes only its <connect>s, gathered up front.
+      if (tag == "module")
+        continue;
+      // An input a <connect> feeds is a shadow of the variable it comes from,
+      // which is defined in its own module; it defines nothing here.
+      bool isAlias = false;
+      if (const char *declName = child->Attribute("name"))
+        ScopedName(NormalizeName(declName), &isAlias);
+      if (isAlias)
+        continue;
+    }
     if (tag == "module") {
       // <module> elements signal a submodel, which is not supported. The
       // error message names the offending
@@ -1859,14 +1897,26 @@ bool XmileReader::ProcessModel(tinyxml2::XMLElement *model, std::vector<std::str
   // the dim Variable's defining equation. MarkTypes (post-parse) flips both
   // sides to XMILE_Type_ARRAY / XMILE_Type_ARRAY_ELM.
   if (tinyxml2::XMLElement *dims = model->FirstChildElement("dimensions")) {
-    if (!ProcessDimensions(dims, errs))
+    // Dimensions are shared by every module, so they are declared unscoped.
+    const bool wasScoped = _inModelScope;
+    _inModelScope = false;
+    const bool dimsOk = ProcessDimensions(dims, errs);
+    _inModelScope = wasScoped;
+    if (!dimsOk)
       return false;
   }
   // <views> contains layout geometry and (in some writer paths) the only
-  // surviving record of group membership; ProcessViews reads both.
+  // surviving record of group membership; ProcessViews reads both. A module's
+  // view becomes a Vensim view named after the module; groups and sectors are
+  // not carried over.
   if (tinyxml2::XMLElement *views = model->FirstChildElement("views")) {
-    if (!ProcessViews(views, errs))
+    if (_moduleMode) {
+      const char *modelName = model->Attribute("name");
+      if (!ProcessModuleView(views, modelName ? NormalizeName(modelName) : std::string("Main"), errs))
+        return false;
+    } else if (!ProcessViews(views, errs)) {
       return false;
+    }
   }
   return true;
 }
@@ -2052,10 +2102,45 @@ void XmileReader::SettleControl(int idx, double fallback) {
 }
 
 Variable *XmileReader::FindVariable(const std::string &name) {
-  Symbol *sym = pSymbolNameSpace->Find(name);
+  Symbol *sym = pSymbolNameSpace->Find(ScopedName(name));
   if (sym && sym->isType() == Symtype_Variable)
     return static_cast<Variable *>(sym);
   return nullptr;
+}
+
+Variable *XmileReader::FindScopedVariable(const std::string &name) {
+  return FindVariable(name);
+}
+
+std::string XmileReader::ScopedName(const std::string &name, bool *isAlias) const {
+  if (isAlias)
+    *isAlias = false;
+  if (!_moduleMode || !_inModelScope)
+    return name;
+  const std::string qualified = _scopePrefix + name;
+  auto it = _aliases.find(FoldNameKey(qualified));
+  if (it != _aliases.end()) {
+    // An input may be fed from another module's input; follow the chain to the
+    // variable that is actually defined. The bound keeps a connect cycle (which
+    // defines nothing) from spinning.
+    std::string target = it->second;
+    for (size_t hops = 0; hops < _aliases.size(); hops++) {
+      auto next = _aliases.find(FoldNameKey(target));
+      if (next == _aliases.end())
+        break;
+      target = next->second;
+    }
+    if (isAlias)
+      *isAlias = true;
+    return target;
+  }
+  // A global, or a non-variable symbol (a builtin function): the bare name, so
+  // the lookup behaves exactly as it does outside module mode.
+  if (Symbol *sym = pSymbolNameSpace->Find(name)) {
+    if (sym->isType() != Symtype_Variable || _globalVars.count(static_cast<Variable *>(sym)))
+      return name;
+  }
+  return qualified;
 }
 
 Expression *XmileReader::ParseEquation(const std::string &text, std::vector<std::string> &errs) {
@@ -2095,21 +2180,103 @@ Expression *XmileReader::ParseEquation(const std::string &text, std::vector<std:
   return result;
 }
 
-Variable *XmileReader::InsertVariable(const std::string &name) {
+Variable *XmileReader::InsertVariable(const std::string &bareName) {
+  const std::string name = ScopedName(bareName);
   Symbol *sym = pSymbolNameSpace->Find(name);
+  Variable *v = nullptr;
   if (sym) {
     // A non-Variable entry under this name is a type collision (e.g. a
     // Function registered under "INTEG"); surfacing it as a soft failure
     // (nullptr) lets the equation parser tag the error rather than crashing.
     // Non-Variable symbols return nullptr; the caller may surface a typed
     // error if needed.
-    if (sym->isType() == Symtype_Variable)
-      return static_cast<Variable *>(sym);
-    return nullptr;
+    if (sym->isType() != Symtype_Variable)
+      return nullptr;
+    v = static_cast<Variable *>(sym);
+  } else {
+    // The Variable ctor registers itself in pSymbolNameSpace; the next Find for
+    // the same name will hit.
+    v = new Variable(pSymbolNameSpace, name);
   }
-  // The Variable ctor registers itself in pSymbolNameSpace; the next Find for
-  // the same name will hit.
-  return new Variable(pSymbolNameSpace, name);
+  // Anything resolved outside every model (control variables, dimensions) is
+  // shared by all modules; see ScopedName.
+  if (!_inModelScope)
+    _globalVars.insert(v);
+  return v;
+}
+
+std::string XmileReader::ModelScopePrefix(tinyxml2::XMLElement *model) {
+  const char *name = model->Attribute("name");
+  return name ? NormalizeName(name) + "." : std::string(".");
+}
+
+void XmileReader::CollectConnects(tinyxml2::XMLElement *model, std::vector<std::string> &errs) {
+  tinyxml2::XMLElement *variables = model->FirstChildElement("variables");
+  if (!variables)
+    return;
+  const std::string parentPrefix = ModelScopePrefix(model);
+  for (tinyxml2::XMLElement *module = variables->FirstChildElement("module"); module;
+       module = module->NextSiblingElement("module")) {
+    const char *moduleName = module->Attribute("name");
+    if (!moduleName)
+      continue;
+    const std::string modulePrefix = NormalizeName(moduleName) + ".";
+    // A connect end is "Module.name" or ".name" (the base model), or a bare
+    // name: the module's own input on the `to` end, a variable of the model
+    // holding the <module> on the `from` end.
+    //
+    // A reference spells names in XMILE's canonical form, underscores for
+    // spaces. The variable may be entered under this spelling before its own
+    // declaration renames it, and in the meantime it is what a shadow is sized
+    // by, so it is turned back into the display form here.
+    auto qualify = [](const char *ref, const std::string &defaultPrefix) {
+      std::string r = NormalizeName(ref);
+      std::replace(r.begin(), r.end(), '_', ' ');
+      size_t dot = r.find('.');
+      if (dot == std::string::npos)
+        return defaultPrefix + r;
+      std::string mod = r.substr(0, dot);
+      return (mod.empty() ? std::string(".") : NormalizeName(mod.c_str()) + ".") + NormalizeName(r.c_str() + dot + 1);
+    };
+    for (tinyxml2::XMLElement *connect = module->FirstChildElement("connect"); connect;
+         connect = connect->NextSiblingElement("connect")) {
+      const char *to = connect->Attribute("to");
+      const char *from = connect->Attribute("from");
+      if (!to || !from) {
+        errs.push_back(std::string("<module name=\"") + moduleName + "\">: <connect> without both to and from");
+        continue;
+      }
+      _aliases[FoldNameKey(qualify(to, modulePrefix))] = qualify(from, parentPrefix);
+    }
+  }
+}
+
+bool XmileReader::ProcessModuleView(tinyxml2::XMLElement *views, const std::string &title,
+                                    std::vector<std::string> &errs) {
+  for (tinyxml2::XMLElement *child = views->FirstChildElement("view"); child;
+       child = child->NextSiblingElement("view")) {
+    if (!ViewHasGeometry(child))
+      continue;
+    VensimView *view = new VensimView();
+    view->SetTitle(title);
+    XmileView xv(this, _model, view);
+    xv.SetIgnoreGroups(true);
+    if (!xv.ProcessView(child, errs)) {
+      delete view;
+      return false;
+    }
+    // The base model often draws nothing but its modules, which have no Vensim
+    // counterpart; a view left empty is not worth a sketch.
+    bool any = false;
+    for (VensimViewElement *e : view->Elements())
+      any = any || e != nullptr;
+    if (any)
+      _model->AddView(view);
+    else
+      delete view;
+    return true;  // one view per module
+  }
+  return true;
 }
 
 void XmileReader::EnsureCanonicalName(Variable *v, const std::string &declaredName) {

@@ -40,8 +40,10 @@ direction.
 - **Guarantees** (reader): emitted XMILE re-parses into a structurally
   equivalent Model (tests in `test/xmile/`); XMILE->MDL also round-trips
   structurally on the corpus. Unsupported envelope shapes get a descriptive
-  `errs` message and the parse fails: `<macro>`, `<module>`, multiple
-  `<model>` siblings. Vendor-namespaced elements (any tag with `:` --
+  `errs` message and the parse fails: `<macro>`, and a `<module>` in a
+  single-`<model>` document (its submodel is not there). Several `<model>`
+  siblings are read as modules, for `.mdl` output only (see Key Decisions,
+  modules). Vendor-namespaced elements (any tag with `:` --
   `isee:`, `simlin:`, ...) and the documented Stella UI widgets
   (`animation_object`, `button`, `gauge`, `graph`, `knob`, `loop_indicator`,
   `numeric_display`, `numeric_input`, `slider`, `spatial_map`) drop
@@ -80,6 +82,31 @@ direction.
   Expression tree, function registry, and view geometry.
 
 ## Key Decisions
+- **XMILE modules are read by flattening them, for `.mdl` output only.** A
+  document with several `<model>` elements is read in module mode
+  (`XmileReader::ScopedName`): the `.mdl` namespace is flat, so every variable is
+  entered under its module-qualified name, `Module.name`, or `.name` in the base
+  (unnamed) model. All resolution goes through `InsertVariable`, which resolves a
+  bare name in the current model's scope: first through the `<connect>`s (an
+  input a connect feeds is the variable it comes from -- `to="A.x"
+  from="B.x"` makes `A`'s `x` resolve to `B.x`, followed through chains), then to
+  a global (anything created outside every model: control variables,
+  dimensions and their elements; keywords like `time` never reach
+  `InsertVariable`), else to the qualified name. Connects are gathered for the
+  whole document first (`CollectConnects`), since a module may be read before
+  the one it is connected to. A connected input's own declaration (`access=
+  "input"`) defines nothing and is skipped. Each model's first sketch `<view>`
+  becomes a Vensim view named after the module (`ProcessModuleView`; the base
+  model's is "Main", and kept only if it draws a variable); a connected input
+  drawn there is a ghost of its source; groups and sectors are dropped, as are
+  connectors to `<module>` icons. Writing the flattened model back to XMILE is
+  refused (`Model::SetFromXmileModules` -> `PrintXMILE` error): a `.` in an
+  XMILE name means module qualification, so the names would no longer mean
+  what they say. The corpus module documents are asserted both ways in
+  `XmileCorpus_module_documents_convert_to_mdl_only`; the view round trip
+  (`.mdl` -> XMILE modules -> `.mdl`, names qualified on the way back) in
+  `test/xmile/SketchMdlXmileRoundTripTest.cpp`. Not a fixpoint: a second trip
+  qualifies the already-qualified names again.
 - **Module decomposition is offered to Vensim/Dynamo input only; XMILE input is
   always emitted as sectors.** `XMILEGenerator` has two shapes.
   `generateModelAsModules` / `generateModelAsGroups` write a base `<model>` plus
@@ -362,8 +389,9 @@ direction.
     side facing where the source is drawn (`AllocateCrossingSource`); the
     redrawn arrow is straight and keeps its polarity. A pipe end in another
     sector becomes a cloud. This applies to any XMILE with sized view
-    groups, Stella sectors included. The modules path (multi-view without
-    `--sectors`) is not covered yet.
+    groups, Stella sectors included -- but not to a module document, where
+    each module is a view and groups are dropped (see Key Decisions, modules).
+    The module writer keeps each view's own coordinates too.
   - A ghost is an `<alias>` positioned by its center. Reading one must not
     make its view the variable's home (`AllocateGhost` restores it), or the
     variable's real placement, read later or in another sector, comes out as a

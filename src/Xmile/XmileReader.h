@@ -2,6 +2,7 @@
 #define _XMUTIL_XMILE_XMILEREADER_H
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -53,6 +54,27 @@ public:
   // parser action code is patterned on.
   Variable *FindVariable(const std::string &name);
   Variable *InsertVariable(const std::string &name);
+
+  // Module scoping. A document with more than one <model> is read in module
+  // mode: the .mdl namespace is flat, so every variable is entered under its
+  // module-qualified name -- "Module.name", or ".name" for one in the base
+  // (unnamed) model -- which keeps names from different modules apart. While a
+  // model is being read, a bare name resolves:
+  //   1. through the module's <connect> aliases, to the variable it stands for
+  //      (an input fed from another module is a shadow of that variable);
+  //   2. to a global -- a variable that exists outside every model (control
+  //      variables, dimensions and their elements);
+  //   3. otherwise to the qualified name.
+  // Outside module mode every name resolves to itself.
+  //
+  // ScopedName returns the name a bare name resolves to; isAlias (optional)
+  // reports whether step 1 applied.
+  std::string ScopedName(const std::string &name, bool *isAlias = nullptr) const;
+  // Look a bare name up in the current scope without creating anything.
+  Variable *FindScopedVariable(const std::string &name);
+  bool ModuleMode() const {
+    return _moduleMode;
+  }
 
   // Stamp the canonical display name on a Variable at its declaration site.
   // The namespace folds `_` and space (ToLowerSpace) for hash lookup, so a
@@ -483,6 +505,28 @@ private:
   // See DeclaresPi. Set by ScanForShadowedKeywords before the first equation
   // of the <model> is parsed.
   bool _declaresPi;
+
+  // Module scoping (see ScopedName). _scopePrefix is "Module." or "." while a
+  // model is read in module mode, and _inModelScope says whether one is; names
+  // resolved outside every model are recorded in _globalVars. _aliases maps the
+  // folded qualified name of a module input to the qualified name of the
+  // variable its <connect> says it comes from.
+  bool _moduleMode = false;
+  bool _inModelScope = false;
+  std::string _scopePrefix;
+  std::unordered_set<Variable *> _globalVars;
+  std::unordered_map<std::string, std::string> _aliases;
+
+  // Read every <module>'s <connect> children in a model into _aliases. Runs for
+  // the whole document before any model is read: a module may be read before
+  // the one it is connected to.
+  void CollectConnects(tinyxml2::XMLElement *model, std::vector<std::string> &errs);
+  // The scope prefix for a <model> element: "Name." or "." for the base model.
+  static std::string ModelScopePrefix(tinyxml2::XMLElement *model);
+  // Read one module's (or the base model's) first sketch <view> into a Vensim
+  // view titled after the module. Sectors are not views here, so groups are
+  // ignored.
+  bool ProcessModuleView(tinyxml2::XMLElement *views, const std::string &title, std::vector<std::string> &errs);
 };
 
 // Process-global pointer to the active reader. The equation parser uses it to

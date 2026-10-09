@@ -172,8 +172,17 @@ bool XmileView::ProcessView(tinyxml2::XMLElement *viewEl, std::vector<std::strin
     return false;
   AllocateElements(viewEl, errs);
   ResolveConnectors(viewEl, errs);
-  ProcessViewGroups(viewEl, errs);
+  if (!_ignoreGroups)
+    ProcessViewGroups(viewEl, errs);
   return true;
+}
+
+std::string XmileView::EndpointKey(tinyxml2::XMLElement *endpoint) const {
+  const char *text = endpoint->GetText();
+  if (!text)
+    return std::string();
+  return XmileReader::FoldNameKey(
+      _reader->ScopedName(XmileReader::NormalizeName(StripSurroundingQuotes(text).c_str())));
 }
 
 void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::string> &errs) {
@@ -186,6 +195,9 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
     int x, y;  // center
     bool hasSize = false;
     int halfWidth = 0, halfHeight = 0;
+    // A module input fed by a <connect>: var is the variable it comes from,
+    // so this element is a shadow of it.
+    bool isAlias = false;
   };
   auto readDecl = [this, &errs](tinyxml2::XMLElement *child, Decl &d) {
     const char *name = child->Attribute("name");
@@ -203,10 +215,11 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
                      "\">: name collides with a non-variable symbol; the sketch element is dropped");
       return false;
     }
+    _reader->ScopedName(d.norm, &d.isAlias);
     d.hasSize = ReadCenterAndSize(child, d.x, d.y, d.halfWidth, d.halfHeight);
     if (!InRegion(d.x, d.y)) {
       // Drawn in another sector, so it belongs to another Vensim view.
-      const std::string key = XmileReader::FoldNameKey(d.norm);
+      const std::string key = XmileReader::FoldNameKey(d.var->GetName());
       _otherRegionNames.insert(key);
       _remoteByName[key] = {d.var, static_cast<double>(d.x), static_cast<double>(d.y)};
       return false;
@@ -216,12 +229,19 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
     return true;
   };
   // Record an allocated element under both lookup channels: the folded-name
-  // map (connector endpoints by name) and, when the producer stamped a
-  // per-file uid attribute, the XMILE-uid map (alias/group references).
-  auto recordUid = [this](tinyxml2::XMLElement *child, const std::string &norm, int uid) {
-    _nameToUid[XmileReader::FoldNameKey(norm)] = uid;
+  // map (connector endpoints by name, keyed by the name the variable is entered
+  // under -- see EndpointKey) and, when the producer stamped a per-file uid
+  // attribute, the XMILE-uid map (alias/group references).
+  auto recordUid = [this](tinyxml2::XMLElement *child, Variable *var, int uid) {
+    _nameToUid[XmileReader::FoldNameKey(var->GetName())] = uid;
     if (const char *xmileUid = child->Attribute("uid"))
       _xmileUidToOurUid[std::atoi(xmileUid)] = uid;
+  };
+  // A module input is drawn as a shadow of the variable it comes from.
+  auto allocateAliasShadow = [&](tinyxml2::XMLElement *child, const Decl &d) {
+    int uid = AllocateGhost(d.var, d.x, d.y);
+    if (uid >= 0)
+      recordUid(child, d.var, uid);
   };
 
   for (tinyxml2::XMLElement *child = viewEl->FirstChildElement(); child; child = child->NextSiblingElement()) {
@@ -231,6 +251,11 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
     if (!tagC)
       continue;
     std::string tag(tagC);
+    if (tag == "module") {
+      if (const char *name = child->Attribute("name"))
+        _moduleIcons.insert(XmileReader::FoldNameKey(XmileReader::NormalizeName(name)));
+      continue;
+    }
     if (tag == "stock" || tag == "aux") {
       Decl d;
       if (!readDecl(child, d))
@@ -242,6 +267,10 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       // the reader's view matches what the writers round-trip to.
       if (IsControlVariableKey(XmileReader::FoldNameKey(d.norm)))
         continue;
+      if (d.isAlias) {
+        allocateAliasShadow(child, d);
+        continue;
+      }
       int uid = AllocateVariableElement(d.var, d.x, d.y);
       if (uid < 0)
         continue;
@@ -260,11 +289,17 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
         ve->SetHeight(hh);
         ve->SetTextPos(0);
       }
-      recordUid(child, d.norm, uid);
+      recordUid(child, d.var, uid);
     } else if (tag == "flow") {
       Decl d;
       if (!readDecl(child, d))
         continue;
+      if (d.isAlias) {
+        // A shadow has no valve or pipes of its own; the flow is drawn where it
+        // is defined.
+        allocateAliasShadow(child, d);
+        continue;
+      }
       int varUid = AllocateValveAndVariable(d.var, d.x, d.y);
       if (varUid < 0) {
         errs.push_back(std::string("<flow name=\"") + d.norm + "\">: could not allocate adjacent valve/variable slots");
@@ -304,7 +339,7 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
         label->SetHeight(hh);
         label->SetTextPos(-1);  // placement is the valve's tpos
       }
-      recordUid(child, d.norm, varUid);
+      recordUid(child, d.var, varUid);
       // Pipe endpoints: <pts><pt x= y=/><pt x= y=/></pts>. Resolve each
       // endpoint to either an existing stock/aux UID (positional match) or a
       // freshly synthesized cloud (VensimCommentElement). Then drop two
@@ -327,7 +362,7 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       // detects the cloud case. Without the structural filter, any
       // geometrically nearby element -- including an unrelated aux -- could
       // capture the endpoint.
-      const std::vector<std::string> *anchorStocks = _reader->StocksForFlow(XmileReader::FoldNameKey(d.norm));
+      const std::vector<std::string> *anchorStocks = _reader->StocksForFlow(XmileReader::FoldNameKey(d.var->GetName()));
       // The pipe is straight through the valve (XMILE requires right angles),
       // so each end is snapped onto the valve's row or column before it is
       // matched -- which is also where a cloud at that end is placed. This is
@@ -599,8 +634,10 @@ void XmileView::ResolveConnectors(tinyxml2::XMLElement *viewEl, std::vector<std:
       // cannot draw an arrow between views, so the connector is not this
       // view's to keep (and every alias of this sector has been recorded, so
       // an alias reference that misses names one elsewhere).
+      // A module icon has no Vensim counterpart either.
       auto inOtherRegion = [this](tinyxml2::XMLElement *endpoint) {
-        return _otherRegionNames.count(EndpointFoldedKey(endpoint)) != 0;
+        return _otherRegionNames.count(EndpointKey(endpoint)) != 0 ||
+               _moduleIcons.count(EndpointFoldedKey(endpoint)) != 0;
       };
       bool fromDroppable = fromUid < 0 && (EndpointIsControlVariable(fromEl) || EndpointIsAliasReference(fromEl) ||
                                            inOtherRegion(fromEl));
@@ -651,7 +688,7 @@ const XmileView::RemoteElement *XmileView::RemoteSource(tinyxml2::XMLElement *fr
     auto it = _remoteByAliasUid.find(std::atoi(uidStr));
     return it == _remoteByAliasUid.end() ? nullptr : &it->second;
   }
-  auto it = _remoteByName.find(EndpointFoldedKey(fromEl));
+  auto it = _remoteByName.find(EndpointKey(fromEl));
   return it == _remoteByName.end() ? nullptr : &it->second;
 }
 
@@ -718,7 +755,7 @@ int XmileView::ResolveEndpoint(tinyxml2::XMLElement *endpoint) {
   // while xmutil's writer emits display names verbatim. The map key folds
   // case and '_'<->' ' (XmileReader::FoldNameKey), so both spellings -- and any case
   // variation a producer introduces -- resolve to the same element.
-  std::string key = EndpointFoldedKey(endpoint);
+  std::string key = EndpointKey(endpoint);
   if (key.empty())
     return -1;
   auto it = _nameToUid.find(key);

@@ -834,6 +834,12 @@ std::string Model::PrintXMILE(bool isCompact, std::vector<std::string> &errs, do
     errs.insert(errs.end(), vUnresolvedWildcards.begin(), vUnresolvedWildcards.end());
     return "";
   }
+  if (bFromXmileModules) {
+    errs.push_back(
+        "an XMILE model with modules can be converted to .mdl only; writing it back to XMILE is not "
+        "supported");
+    return "";
+  }
   XMILEGenerator generator(this, xscale, yscale, bFromDyanmo);
   // See bFromXmile (Model.h): the module decomposition emits sibling <model>
   // elements, which this project's own XMILE reader rejects, so an XMILE-sourced

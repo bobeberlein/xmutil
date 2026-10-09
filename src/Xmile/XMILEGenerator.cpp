@@ -769,7 +769,10 @@ void XMILEGenerator::generateModelAsModules(tinyxml2::XMLElement *element, std::
     if (_model->LetterPolarity())
       xview->SetAttribute("isee:use_lettered_polarity", "true");
     xviews->InsertEndChild(xview);
-    uid_off = view->SetViewStart(100, 100, _xratio, _yratio, uid_off);
+    // Each module has a view of its own, so it keeps the Vensim view's
+    // coordinates (shifted only away from negative ones) and a trip back to
+    // .mdl puts every element where it was.
+    uid_off = view->KeepViewInPlace(uid_off);
     this->generateView(view, xview, errs, &needed);
   }
   std::set<Variable *, SymbolNameLess> remnant;

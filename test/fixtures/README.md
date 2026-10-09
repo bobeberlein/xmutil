@@ -25,7 +25,7 @@ C++ tests, and directly in the shell scripts).
   (`delays/model.xmile`, `lookup_minimal/lookup_minimal.xmile`) plus the wave-2
   Stella `.stmx` models exercising the `.stmx` dialect (`alias1`,
   `arms_race_3party`, `builtin_init`, `circular-dep-1`, `decoupled_stocks`,
-  `logistic_growth_ltm`, and the deferred/rejected `ai-information`, `arrays1`,
+  `logistic_growth_ltm`, and the deferred/module-document `ai-information`, `arrays1`,
   `land_model`, `previous`, `step_into_smth1`, `subscript_index_name_values`).
   License: see `simlin-test/LICENSE`.
 
@@ -41,8 +41,9 @@ The XMILE corpus is exercised by `test/xmile/XmileCorpusTest.cpp`: every copied
 `.xmile`/`.stmx` model is either on the round-trip allow-list (asserted to
 convert cleanly XMILE->XMILE and XMILE->MDL), in the documented deferred table
 (a handful of sketch-geometry / Stella-dialect / external-data / builtin-semantic
-gaps, each with a specific reason), or in the rejection table (module-submodel
-documents the reader rejects by design). Arrayed models round-trip as of wave 2.
+gaps, each with a specific reason), or in the module-document table (module-
+submodel documents, which convert to MDL with their modules flattened and are
+refused XMILE->XMILE). Arrayed models round-trip as of wave 2.
 
 Suite-specific golden outputs (expected emission results) live next to their
 tests under `test/mdl/fixtures/` and `test/xmile/fixtures/`, not here.

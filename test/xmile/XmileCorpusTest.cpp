@@ -12,9 +12,9 @@
 //
 // kKnownDeferred records every candidate model that cannot round-trip yet, each
 // with a specific one-line reason (sketch geometry, external-data builtins,
-// Stella-dialect gaps, builtin-semantic mismatches). kRejected records the
-// module-submodel documents the reader rejects by design and asserts the
-// rejection diagnostic. Together the three tables account for every .xmile/.stmx
+// Stella-dialect gaps, builtin-semantic mismatches). kModuleDocuments records the
+// module-submodel documents, which convert to .mdl only (their modules are
+// flattened), and asserts both directions. Together the three tables account for every .xmile/.stmx
 // model in test/fixtures -- nothing is silently dropped; a missing fixture fails.
 //
 // XmileCorpus_every_fixture_is_accounted_for enforces that invariant
@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "../../src/Model.h"
+#include "../../src/XMUtil.h"
 #include "../TestHarness.h"
 #include "RoundTrip.h"
 
@@ -329,7 +330,7 @@ const DeferredModel kKnownDeferred[] = {
     {"test/fixtures/test-models/tests/special_characters_xmile_simlin/test_special_variable_names.xmile",
      "special characters in names are not re-lexable in generated output"},
     // Wave 2: Stella .stmx dialect gaps (each a specific reader/writer limitation,
-    // not "arrayed"). The module-submodel .stmx files are in kRejected instead.
+    // not "arrayed"). The module-submodel .stmx files are in kModuleDocuments instead.
     {"test/fixtures/simlin-test/ai-information/GeneratedByAIThenEdited.stmx",
      "graphical-function <pts> without exactly 2 <pt> children not emittable"},
     {"test/fixtures/simlin-test/arrays1/arrays.stmx",
@@ -360,22 +361,15 @@ const DeferredModel kKnownDeferred[] = {
      "presentation-only Stella model: <aux> carries neither <eqn> nor <gf>"},
 };
 
-// Models the reader rejects by design -- real XMILE <module> submodel documents
-// (multiple sibling <model> elements). Unlike the deferred table (which only
-// checks the fixture exists), each entry here asserts ParseXMILE fails and the
-// diagnostic contains the expected substring, so a regression that silently
-// started accepting modules would be caught. Modules are out of scope for the
-// single-model conversion path (mirrors the <macro>/<module> rejection contract).
-struct RejectedModel {
-  const char *path;
-  const char *expected_error_substr;
-};
-
-const RejectedModel kRejected[] = {
-    {"test/fixtures/simlin-test/ai-information/WithModulesAndArrays.stmx", "multiple <model> elements"},
-    {"test/fixtures/test-models/samples/bpowers-hares_and_lynxes_modules/model.stmx", "multiple <model> elements"},
-    {"test/fixtures/test-models/samples/bpowers-hares_and_lynxes_modules/model_legacy.stmx",
-     "multiple <model> elements"},
+// Real XMILE <module> documents (several sibling <model> elements). The reader
+// flattens their modules into one namespace under module-qualified names, which
+// is what a .mdl needs and what XMILE cannot say back -- so each one must
+// convert to .mdl (and that .mdl must read back as Vensim), while writing it
+// back to XMILE is refused with the documented diagnostic.
+const char *const kModuleDocuments[] = {
+    "test/fixtures/simlin-test/ai-information/WithModulesAndArrays.stmx",
+    "test/fixtures/test-models/samples/bpowers-hares_and_lynxes_modules/model.stmx",
+    "test/fixtures/test-models/samples/bpowers-hares_and_lynxes_modules/model_legacy.stmx",
 };
 
 // XMILE fixtures that live under test/fixtures/ but are exercised by a different
@@ -469,39 +463,37 @@ TEST(XmileCorpus_known_deferred_are_documented) {
   }
 }
 
-// Each by-design rejection must actually fail to parse with the documented
-// diagnostic. This is a stronger assertion than the deferred table (which only
-// checks existence): a regression that started accepting module documents would
-// flip these from a clean rejection to a partial parse and be caught here.
-TEST(XmileCorpus_rejected_models_fail_cleanly) {
-  for (const RejectedModel &rm : kRejected) {
+// Each module document converts to .mdl, the .mdl reads back as Vensim, and
+// the way back to XMILE is refused rather than written wrong.
+TEST(XmileCorpus_module_documents_convert_to_mdl_only) {
+  for (const char *path : kModuleDocuments) {
     bool found = false;
-    std::string text = ReadFixture(rm.path, found);
+    std::string text = ReadFixture(path, found);
     CHECK(found);
     if (!found) {
-      printf("  rejected fixture missing: %s\n", rm.path);
+      printf("  module fixture missing: %s\n", path);
       continue;
     }
-    std::vector<std::string> errs;
-    Model *m = xmileroundtrip::ParseXMILE(text, errs);
-    CHECK(m == nullptr);
-    delete m;  // no-op on nullptr; guards against a future non-null return
-    bool matched = false;
-    for (const std::string &e : errs) {
-      if (e.find(rm.expected_error_substr) != std::string::npos) {
-        matched = true;
-        break;
-      }
+    char *mdl = convert_xmile_to_mdl(text.c_str(), static_cast<uint32_t>(text.size()), path, -1);
+    CHECK(mdl != nullptr);
+    if (!mdl) {
+      printf("  MODULES %s did not convert to .mdl\n", path);
+      continue;
     }
-    CHECK(matched);
-    if (!matched)
-      printf("  REJECT %s did not report expected error '%s'\n", rm.path, rm.expected_error_substr);
+    const std::string mdlText(mdl);
+    free(mdl);
+    char *again = convert_to_mdl(mdlText.c_str(), static_cast<uint32_t>(mdlText.size()), "modules.mdl", -1);
+    CHECK(again != nullptr);
+    free(again);
+    char *xmile = convert_xmile_to_xmile(text.c_str(), static_cast<uint32_t>(text.size()), path, -1, false);
+    CHECK(xmile == nullptr);
+    free(xmile);
   }
 }
 
 // Enforce the "every fixture is in exactly one table" invariant mechanically:
 // walk every *.xmile / *.stmx actually on disk under test/fixtures/ and fail if
-// any is in none of kAllowList / kKnownDeferred / kRejected / kCoveredElsewhere.
+// any is in none of kAllowList / kKnownDeferred / kModuleDocuments / kCoveredElsewhere.
 // A comment cannot catch a fixture added later, but this walk does -- so a new
 // model must be triaged into a table, never silently untested.
 TEST(XmileCorpus_every_fixture_is_accounted_for) {
@@ -510,8 +502,8 @@ TEST(XmileCorpus_every_fixture_is_accounted_for) {
     accounted.insert(p);
   for (const DeferredModel &dm : kKnownDeferred)
     accounted.insert(dm.path);
-  for (const RejectedModel &rm : kRejected)
-    accounted.insert(rm.path);
+  for (const char *p : kModuleDocuments)
+    accounted.insert(p);
   for (const char *p : kCoveredElsewhere)
     accounted.insert(p);
 
@@ -542,7 +534,7 @@ TEST(XmileCorpus_every_fixture_is_accounted_for) {
     checked++;
     if (accounted.find(rel) == accounted.end()) {
       unaccounted++;
-      printf("  UNACCOUNTED fixture (add to kAllowList / kKnownDeferred / kRejected): %s\n", rel.c_str());
+      printf("  UNACCOUNTED fixture (add to kAllowList / kKnownDeferred / kModuleDocuments): %s\n", rel.c_str());
     }
   }
 
