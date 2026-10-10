@@ -286,9 +286,14 @@ public:
   inline void SetActiveValue(int off, double val) {
     pVariableContent->SetActiveValue(off, val);
   }
+  // A variable with no equation has no content to hold the name in -- the time
+  // variables a macro refers to, which the XMILE writer renames to its builtins
+  // (TIME STEP -> DT) -- so it is held here instead.
   inline void SetAlternateName(const std::string &altname) {
     if (pVariableContent)
       pVariableContent->SetAlternateName(altname);
+    else
+      _altNameWithoutContent = altname;
   }
   std::string GetAlternateName(void);
 
@@ -355,6 +360,16 @@ public:
   bool SynthesizedFlowProxy() const {
     return _synthesizedFlowProxy;
   }
+  // Inside a Vensim macro, `name$` refers to the model's own `name` rather than
+  // a macro-local one. XMILE has no such reference, so the reader strips the
+  // `$` and marks the variable here; the .mdl writer puts the `$` back (it
+  // also does for the time builtins, which an XMILE macro names without one).
+  void MarkMacroGlobalReference() {
+    _macroGlobalReference = true;
+  }
+  bool MacroGlobalReference() const {
+    return _macroGlobalReference;
+  }
   void MarkUsesMemory() {
     bUsesMemory = true;
   }
@@ -415,6 +430,8 @@ private:
   bool _hasDownstream;
   bool _synthesizedNetFlow;
   bool _synthesizedFlowProxy;
+  bool _macroGlobalReference = false;
+  std::string _altNameWithoutContent;  // see SetAlternateName
   bool bAsFlow;
   bool bUsesMemory;
 };

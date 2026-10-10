@@ -727,6 +727,7 @@ void MDLGenerator::GenerateMacros(std::string &out) {
     // same suppression applies.
     std::unordered_set<Variable *> synthFlows = CollectSyntheticNetFlows(body);
 
+    _inMacroBody = true;
     for (Variable *v : body) {
       if (v->VariableType() == XMILE_Type_ARRAY_ELM)
         continue;
@@ -734,6 +735,7 @@ void MDLGenerator::GenerateMacros(std::string &out) {
         continue;
       GenerateVariableEntry(out, v);
     }
+    _inMacroBody = false;
     out += ":END OF MACRO:\n\n";
   }
 }
@@ -1237,6 +1239,14 @@ std::string MDLGenerator::RenderFunction(ExpressionFunction *fn) {
 std::string MDLGenerator::RenderVariableRef(ExpressionVariable *v) {
   NoteVariableNamed(v->GetVariable());
   std::string out = mdl::FormatMDLIdent(v->GetVariable()->GetName());
+  // Inside a macro, `name$` is how Vensim names the model's own variable: one
+  // the reader found spelled that way, and the time variables, which an XMILE
+  // macro names as plain builtins (TIME, DT, ...).
+  if (_inMacroBody) {
+    Variable *var = v->GetVariable();
+    if (var->MacroGlobalReference() || IsControlVar(var->GetName()) || StringMatch(var->GetName(), "Time"))
+      out += "$";
+  }
   SymbolList *subs = v->GetSubs();
   if (subs && subs->Length() > 0)
     out += RenderSubscripts(subs);

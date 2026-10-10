@@ -40,10 +40,11 @@ direction.
 - **Guarantees** (reader): emitted XMILE re-parses into a structurally
   equivalent Model (tests in `test/xmile/`); XMILE->MDL also round-trips
   structurally on the corpus. Unsupported envelope shapes get a descriptive
-  `errs` message and the parse fails: `<macro>`, and a `<module>` in a
-  single-`<model>` document (its submodel is not there). Several `<model>`
-  siblings are read as modules, for `.mdl` output only (see Key Decisions,
-  modules). Vendor-namespaced elements (any tag with `:` --
+  `errs` message and the parse fails: a `<module>` in a single-`<model>`
+  document (its submodel is not there). Several `<model>` siblings are read as
+  modules, for `.mdl` output only (see Key Decisions, modules). `<macro>`s are
+  read into Vensim macros (see Key Decisions, macros). Vendor-namespaced
+  elements (any tag with `:` --
   `isee:`, `simlin:`, ...) and the documented Stella UI widgets
   (`animation_object`, `button`, `gauge`, `graph`, `knob`, `loop_indicator`,
   `numeric_display`, `numeric_input`, `slider`, `spatial_map`) drop
@@ -82,6 +83,24 @@ direction.
   Expression tree, function registry, and view geometry.
 
 ## Key Decisions
+- **Macros: Vensim's `name$` becomes a plain name, and comes back.** Inside a
+  Vensim macro `name$` names the model's own `name`; XMILE has no such
+  reference, and knows the time variables as builtins (TIME, DT, STARTTIME,
+  STOPTIME). `VensimParse::InsertVariable` therefore drops the `$` inside a
+  macro and marks the variable (`Variable::MarkMacroGlobalReference`), so the
+  macro's own namespace holds `Time`, `TIME STEP`, ...; `generateSimSpecs`
+  renames those to the builtins in every macro namespace as in the model
+  (`Model::SetUnwanted(..., ns)`; a variable with no equation keeps its
+  alternate name on the Variable itself, which is what makes that work).
+  `XmileReader::ProcessMacro` reads each `<macro>` -- before any `<model>`, so
+  the model's calls resolve -- into a `MacroFunction` with a namespace of its
+  own: `<parm>`s are the arguments, `<variables>` the body, `<eqn>` names (or
+  defines) the body variable named after the macro; `time`/`dt`/... resolve to
+  the macro's own Time / TIME STEP / ... through the usual keyword lookup.
+  `MDLGenerator::RenderVariableRef` writes `$` after a reference inside a macro
+  body to a marked variable or a time variable (`Time`, `IsControlVar`), so
+  `.mdl` -> XMILE -> `.mdl` and `.mdl` -> `.mdl` both give `Time$`, `TIME STEP$`,
+  `scale$` back. Tests: `test/xmile/MacroXmileTest.cpp`.
 - **XMILE modules are read by flattening them, for `.mdl` output only.** A
   document with several `<model>` elements is read in module mode
   (`XmileReader::ScopedName`): the `.mdl` namespace is flat, so every variable is

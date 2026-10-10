@@ -1,0 +1,129 @@
+{UTF-8}
+:MACRO: RAMP FROM TO( xfrom, xto, tstart, tend, islinear)
+RAMP FROM TO = IF THEN ELSE( linear,linear ramp,exp ramp)
+	~	xfrom
+	~	Ramp function with different syntax (specifying from-to rather than slope) \
+		and selectable linear or exponential profile.
+	|
+
+linear = IF THEN ELSE( xfrom > 0 :AND: xto > 0, islinear, 1)
+	~	dmnl
+	~	Force linear behavior if endpoints are nonpositive
+	|
+
+linear ramp = xfrom + RAMP(slope,tstart,tend)
+	~	xfrom
+	~		|
+
+exp ramp = IF THEN ELSE(Time$ <= tstart, xfrom
+,IF THEN ELSE( Time$ > tend, xto, xfrom*EXP( rate*(Time$-tstart)) ))
+	~	xfrom
+	~		|
+
+slope = (xto-xfrom)/interval
+	~	xfrom/tstart
+	~		|
+
+rate = IF THEN ELSE( xfrom > 0 :AND: xto > 0, LN(xto/xfrom)/interval, :NA: )
+	~	1/tstart
+	~		|
+
+interval = MAX(tend-tstart,TIME STEP$)
+	~	tstart
+	~		|
+
+:END OF MACRO:
+uses ramp  = RAMP FROM TO(y start, y end, x start, x end, is linear)
+	~	Banana
+	~		|
+
+x end  = 72
+	~	Month
+	~		|
+
+x start  = 21
+	~	Month
+	~		|
+
+y end  = 87
+	~	Banana
+	~		|
+
+y start  = 11
+	~	Banana
+	~		|
+
+is linear = 0
+	~	dmnl
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
+10,1,uses ramp,299,204,33,11,8,3,0,0,0,0,0,0
+10,2,y start,131,154,21,11,8,3,0,0,0,0,0,0
+10,3,y end,194,91,19,11,8,3,0,0,0,0,0,0
+10,4,x start,297,66,21,11,8,3,0,0,0,0,0,0
+10,5,x end,512,105,19,11,8,3,0,0,0,0,0,0
+1,6,4,1,0,0,0,0,0,64,0,-1--1--1,,1|(297,127)|
+1,7,5,1,0,0,0,0,0,64,0,-1--1--1,,1|(413,150)|
+1,8,3,1,0,0,0,0,0,64,0,-1--1--1,,1|(241,142)|
+1,9,2,1,0,0,0,0,0,64,0,-1--1--1,,1|(202,174)|
+10,10,is linear,182,318,25,11,8,3,0,0,-1,0,0,0
+1,11,10,1,0,0,0,0,0,64,0,-1--1--1,,1|(234,265)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:uses ramp
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+24:0
+25:100
+26:100

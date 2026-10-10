@@ -269,11 +269,19 @@ void XMILEGenerator::generateSimSpecs(tinyxml2::XMLElement *element, std::vector
   if (std::isfinite(saveper) && saveper != dt)
     element->SetAttribute("isee:save_interval", ShortestDouble(saveper).c_str());
 
-  _model->SetUnwanted("TIME", "TIME");
-  _model->SetUnwanted("INITIAL TIME", "STARTTIME");
-  _model->SetUnwanted("FINAL TIME", "STOPTIME");
-  _model->SetUnwanted("TIME STEP", "DT");
-  _model->SetUnwanted("SAVEPER", "SAVEPER");
+  // The time variables are XMILE builtins, in the model and in every macro: a
+  // macro names them through its own namespace (a Vensim `Time$`, read as
+  // `Time`), and they are no more its variables than the model's.
+  std::vector<SymbolNameSpace *> spaces{nullptr};
+  for (MacroFunction *mf : _model->MacroFunctions())
+    spaces.push_back(mf->NameSpace());
+  for (SymbolNameSpace *ns : spaces) {
+    _model->SetUnwanted("TIME", "TIME", ns);
+    _model->SetUnwanted("INITIAL TIME", "STARTTIME", ns);
+    _model->SetUnwanted("FINAL TIME", "STOPTIME", ns);
+    _model->SetUnwanted("TIME STEP", "DT", ns);
+    _model->SetUnwanted("SAVEPER", "SAVEPER", ns);
+  }
 }
 
 // Emit <model_units>, one <unit> per Model::UnitEquivs() entry:

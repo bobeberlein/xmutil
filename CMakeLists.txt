@@ -329,6 +329,7 @@ if(XMUTIL_BUILD_TESTS)
     test/xmile/CEntryTest.cpp
     test/xmile/MdlXmileByteIdentityTest.cpp
     test/xmile/SketchMdlXmileRoundTripTest.cpp
+    test/xmile/MacroXmileTest.cpp
   )
   target_link_libraries(xmutil_test PRIVATE xmutil_platform)
   # The corpus tests join the repo root with relative fixture paths so they

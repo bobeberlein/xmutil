@@ -1,10 +1,11 @@
 // Phase 8 rejection-path coverage for the XMILE reader.
 //
 // Pins down AC5.1 (a <module> in a single-model document, whose submodel is
-// not there, rejected), AC5.2 (<macro> rejected), AC2.9 (postfix ' rejected at
-// document scope), and AC1.5 (extern-C entries return NULL on failure). A
-// document with several <model> elements is no longer rejected: it is read as
-// modules (test/xmile/SketchMdlXmileRoundTripTest.cpp). The Phase 4
+// not there, rejected), AC2.9 (postfix ' rejected at document scope), and AC1.5
+// (extern-C entries return NULL on failure). A document with several <model>
+// elements is no longer rejected: it is read as modules
+// (test/xmile/SketchMdlXmileRoundTripTest.cpp); nor is <macro>
+// (test/xmile/MacroXmileTest.cpp). The Phase 4
 // AuxRoundTrip_module_is_rejected and the Phase 2 equation-parser apostrophe
 // test cover the same ground at lower levels; the duplicate coverage here is
 // deliberate so a future refactor of the equation parser or envelope walker
@@ -28,14 +29,6 @@ const char *kWithModule = R"(<?xml version="1.0" encoding="utf-8"?>
     <aux name="x"><eqn>1</eqn></aux>
     <module name="m1"/>
   </variables></model>
-</xmile>
-)";
-
-const char *kWithMacro = R"(<?xml version="1.0" encoding="utf-8"?>
-<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
-  <macro name="my_macro"><eqn>x*2</eqn></macro>
-  <sim_specs method="euler"><start>0</start><stop>10</stop><dt>1</dt></sim_specs>
-  <model><variables><aux name="x"><eqn>1</eqn></aux></variables></model>
 </xmile>
 )";
 
@@ -86,10 +79,6 @@ void CheckRejected(const char *xmile, const char *expectedSubstring) {
 
 TEST(ErrorReject_module_with_clear_message) {
   CheckRejected(kWithModule, "modules are not supported");
-}
-
-TEST(ErrorReject_macro_with_clear_message) {
-  CheckRejected(kWithMacro, "macro");
 }
 
 // AC2.9 regression check at the document-level entry point. Phase 2 covers the

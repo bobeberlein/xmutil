@@ -791,8 +791,8 @@ UnitExpression *Model::GetUnits(const char *str) {
   return NULL;
 }
 
-void Model::SetUnwanted(const char *str, const char *defname) {
-  Symbol *s = mSymbolNameSpace.Find(str);
+void Model::SetUnwanted(const char *str, const char *defname, SymbolNameSpace *ns) {
+  Symbol *s = (ns ? ns : &mSymbolNameSpace)->Find(str);
   if (s && s->isType() == Symtype_Variable) {
     Variable *v = static_cast<Variable *>(s);
     v->SetUnwanted(true);

@@ -12,6 +12,7 @@ class XMLElement;
 
 class Expression;
 class ExpressionTable;
+class MacroFunction;
 class Model;
 class ModelGroup;
 class SymbolList;
@@ -518,6 +519,15 @@ private:
   std::unordered_map<std::string, std::string> _aliases;
   // The scope prefix of every model read in module mode, in document order.
   std::vector<std::string> _scopeOrder;
+
+  // Read one <macro> into a Vensim-style macro: a MacroFunction registered in
+  // the model's namespace (so the model's equations can call it by name) whose
+  // body variables live in a namespace of their own. Run for every <macro>
+  // before any <model>, since a document may put its macros after the model
+  // that calls them. The <parm>s are the macro's arguments; the macro's value
+  // is the body variable named after it, which <eqn> either names or defines.
+  bool ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::string> &errs);
+  std::vector<MacroFunction *> _macros;
 
   // Once the whole document is read: give every module-qualified variable its
   // own name back -- "Module.name" and ".name" become "name" -- adding _1, _2,

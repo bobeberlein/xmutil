@@ -502,7 +502,21 @@ Variable *VensimParse::FindVariable(const std::string &name) {
   return NULL;
 }
 
-Variable *VensimParse::InsertVariable(const std::string &name) {
+Variable *VensimParse::InsertVariable(const std::string &rawName) {
+  // Inside a macro, `name$` names the model's own `name`. The macro's local
+  // namespace keeps it as `name` (XMILE, where the macro is written next, has
+  // no such reference and knows Time, TIME STEP, ... as builtins under their
+  // plain names); the mark lets the .mdl writer restore the `$`.
+  std::string name = rawName;
+  bool globalReference = false;
+  if (mInMacro && !name.empty() && name.back() == '$') {
+    name.pop_back();
+    while (!name.empty() && (name.back() == ' ' || name.back() == '_'))
+      name.pop_back();
+    globalReference = !name.empty();
+    if (!globalReference)
+      name = rawName;
+  }
   Variable *var = static_cast<Variable *>(pSymbolNameSpace->Find(name));
   if (var && var->isType() != Symtype_Variable && var->isType() != Symtype_Function) {
     mSyntaxError.str = "Type meaning mismatch for " + name;
@@ -512,6 +526,8 @@ Variable *VensimParse::InsertVariable(const std::string &name) {
     var = new Variable(pSymbolNameSpace, name);
     // this will insert it into the name space for hash lookup as well
   }
+  if (globalReference && var->isType() == Symtype_Variable)
+    var->MarkMacroGlobalReference();
   return var;
 }
 Units *VensimParse::InsertUnits(const std::string &name) {
@@ -541,7 +557,7 @@ bool VensimParse::FindNextEq(bool want_comment) {
       this->pActiveVar->SetComment(comment);
   }
   // just zip through to the first | then whatever follows is it
-  bool rval =  mVensimLex.FindToken("|");
+  bool rval = mVensimLex.FindToken("|");
   if (rval) {  // if eof file then give up
     if (mVensimLex.EndOfFile())
       return false;

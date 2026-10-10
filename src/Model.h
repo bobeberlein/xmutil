@@ -165,7 +165,8 @@ public:
   void SetFromXmileModules(bool set) {
     bFromXmileModules = set;
   }
-  void SetUnwanted(const char *var, const char *nametouse);
+  // ns: the namespace to look var up in (a macro's own), or the model's.
+  void SetUnwanted(const char *var, const char *nametouse, SymbolNameSpace *ns = nullptr);
   std::vector<Variable *> GetVariables(SymbolNameSpace *ns = NULL);
   void AddView(View *view) {
     vViews.push_back(view);

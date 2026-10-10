@@ -186,6 +186,9 @@ private:
   // withholding a variable is honored here without being restated -- which is
   // why Print emits the sketch after all three equation passes.
   std::unordered_set<Variable *> _namedInEquations;
+  // True while a macro body is rendered: references to the model's own
+  // variables (and the time builtins) take Vensim's `$` there.
+  bool _inMacroBody = false;
 };
 
 #endif  // __MDLGENERATOR_H

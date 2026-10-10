@@ -70,7 +70,9 @@ void Variable::SetViewToCause(int depth) {
 }
 
 std::string Variable::GetAlternateName(void) {
-  std::string name = pVariableContent ? pVariableContent->GetAlternateName() : GetName();
+  std::string name = pVariableContent                 ? pVariableContent->GetAlternateName()
+                     : _altNameWithoutContent.empty() ? GetName()
+                                                      : _altNameWithoutContent;
   // strip out surrounding quotes if they exist - we want to deliver the name without them
   if (name.size() > 2 && name[0] == '\"' && name.back() == '\"' && name.find('.') == std::string::npos)
     name = name.substr(1, name.size() - 2);
@@ -418,7 +420,7 @@ void Variable::OutputComputable(ContextInfo *info) {
   else {
     if (mVariableType == XMILE_Type_ARRAY_ELM && !info->InSubList())
       *info << SpaceToUnderBar(this->Owner()->GetName()) << ".";
-    *info << SpaceToUnderBar(GetName());
+    *info << SpaceToUnderBar(_altNameWithoutContent.empty() ? GetName() : _altNameWithoutContent);
   }
 }
 

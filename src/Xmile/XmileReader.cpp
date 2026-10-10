@@ -11,6 +11,7 @@
 #include <set>
 #include <stdexcept>
 
+#include "../Function/Function.h"
 #include "../Mdl/MDLFormat.h"
 #include "../Model.h"
 #include "../Symbol/Expression.h"
@@ -234,6 +235,7 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
   // empty-input and malformed-XML returns above.
   int modelCount = 0;
   std::vector<tinyxml2::XMLElement *> modelEls;
+  std::vector<tinyxml2::XMLElement *> macroEls;
   std::vector<tinyxml2::XMLElement *> simSpecsEls;
   for (tinyxml2::XMLElement *child = root->FirstChildElement(); child; child = child->NextSiblingElement()) {
     const char *name = child->Name();
@@ -243,8 +245,8 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
       continue;
     std::string tag(name);
     if (tag == "macro") {
-      errs.push_back(filename + ": <macro> elements are not supported");
-      return false;
+      macroEls.push_back(child);
+      continue;
     }
     if (tag == "model") {
       ++modelCount;
@@ -278,6 +280,14 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
       break;
     }
   }
+  // Macros next, ahead of every model: a model's equations call a macro by
+  // name, and the call only resolves to it once it is registered.
+  for (tinyxml2::XMLElement *macro : macroEls) {
+    if (ok && !ProcessMacro(macro, errs))
+      ok = false;
+  }
+  if (!_macros.empty())
+    _model->SetMacroFunctions(_macros);
   for (tinyxml2::XMLElement *child = root->FirstChildElement(); ok && child; child = child->NextSiblingElement()) {
     const char *name = child->Name();
     if (!name)
@@ -290,7 +300,7 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
       // vendor, product); acknowledge the element so it doesn't fall into the
       // unknown bucket below.
       continue;
-    } else if (tag == "sim_specs") {
+    } else if (tag == "sim_specs" || tag == "macro") {
       continue;  // already dispatched by the pre-pass above
     } else if (tag == "model_units") {
       ok = ProcessModelUnits(child, errs);
@@ -2253,6 +2263,79 @@ Variable *XmileReader::InsertVariable(const std::string &bareName) {
   if (!_inModelScope)
     _globalVars.insert(v);
   return v;
+}
+
+bool XmileReader::ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::string> &errs) {
+  const char *nameAttr = macro->Attribute("name");
+  if (!nameAttr || !*nameAttr) {
+    errs.push_back("<macro> with no name attribute");
+    return false;
+  }
+  const std::string name = NormalizeName(nameAttr);
+  // The body is read into a namespace of its own, exactly as VensimParse reads
+  // a :MACRO: block: everything that resolves names (InsertVariable, the
+  // equation shims, the keyword lookups) goes through pSymbolNameSpace, so
+  // swapping it is the whole of the scoping -- `time` or `dt` in the body
+  // becomes the macro's own Time / TIME STEP, which the .mdl writer turns into
+  // Vensim's Time$ / TIME STEP$. The functions are registered there too.
+  SymbolNameSpace *main = pSymbolNameSpace;
+  SymbolNameSpace *local = new SymbolNameSpace();
+  RegisterXmutilFunctions(local);
+  pSymbolNameSpace = local;
+  struct Restore {
+    XmileReader *reader;
+    SymbolNameSpace *main;
+    ~Restore() {
+      reader->pSymbolNameSpace = main;
+    }
+  } restore{this, main};
+
+  ExpressionList *margs = new ExpressionList(local);
+  for (tinyxml2::XMLElement *parm = macro->FirstChildElement("parm"); parm; parm = parm->NextSiblingElement("parm")) {
+    Variable *v = InsertVariable(NormalizeName(parm->GetText()));
+    if (!v) {
+      errs.push_back("<macro name=\"" + name + "\">: <parm> names a non-variable symbol");
+      return false;
+    }
+    margs->Append(new ExpressionVariable(local, v, nullptr));
+  }
+
+  if (tinyxml2::XMLElement *variables = macro->FirstChildElement("variables")) {
+    for (tinyxml2::XMLElement *child = variables->FirstChildElement(); child; child = child->NextSiblingElement()) {
+      const char *tagC = child->Name();
+      if (!tagC || IsForeignNamespace(tagC))
+        continue;
+      const std::string tag(tagC);
+      bool ok = true;
+      if (tag == "aux" || tag == "flow")
+        ok = ProcessAuxOrFlow(child, errs);
+      else if (tag == "gf")
+        ok = ProcessStandaloneGf(child, errs);
+      else if (tag == "stock")
+        ok = ProcessStock(child, errs);
+      if (!ok)
+        return false;
+    }
+  }
+
+  // The macro's value. Vensim's is always the body variable named after the
+  // macro, and that is what <eqn> says for a macro this writer produced; any
+  // other expression defines that variable.
+  tinyxml2::XMLElement *eqnEl = macro->FirstChildElement("eqn");
+  const char *eqnText = eqnEl ? eqnEl->GetText() : nullptr;
+  if (eqnText && FoldNameKey(NormalizeName(eqnText)) != FoldNameKey(name)) {
+    Variable *out = InsertVariable(name);
+    if (out && out->GetAllEquations().empty()) {
+      if (Expression *rhs = ParseEqnFor(eqnEl, eqnText, errs))
+        AddEquationFor(out, nullptr, rhs, '=');
+      else
+        return false;
+    }
+  }
+  local->ConfirmAllAllocations();
+  // Registers the macro under its name in the model's namespace.
+  _macros.push_back(new MacroFunction(main, local, name, margs));
+  return true;
 }
 
 std::string XmileReader::ModelScopePrefix(tinyxml2::XMLElement *model) {
