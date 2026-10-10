@@ -158,9 +158,9 @@ public:
     return bFromXmile;
   }
   // Set by the XMILE reader when it flattened a document's modules into one
-  // namespace under module-qualified names ("Module.name", ".name"). That is
-  // the shape a .mdl needs; written back as XMILE, where a '.' in a name means
-  // module qualification, it would no longer mean what it says, so PrintXMILE
+  // namespace (each module's variables renamed apart with _1, _2, ... where
+  // their names collide). That is the shape a .mdl needs; written back as XMILE
+  // it would silently replace the modules with one renamed model, so PrintXMILE
   // refuses it.
   void SetFromXmileModules(bool set) {
     bFromXmileModules = set;

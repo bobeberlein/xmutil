@@ -111,6 +111,29 @@ static void EstimateNameSize(const std::string &name, int &halfWidth, int &halfH
   VensimDefaultNameSize(name, ghost, halfWidth, halfHeight);
 }
 
+// Put a flow's name record beside its valve, on the side the valve's tpos
+// names, a valve half-extent plus the name's own half-extent away.
+static void PlaceFlowName(VensimValveElement *valve, VensimVariableElement *label) {
+  int lx = valve->X();
+  int ly = valve->Y();
+  switch (valve->TextPos()) {
+  case 1:
+    ly += kValveHalfHeight + label->Height();
+    break;
+  case 2:
+    lx -= kValveHalfWidth + label->Width();
+    break;
+  case 3:
+    ly -= kValveHalfHeight + label->Height();
+    break;
+  case 4:
+    lx += kValveHalfWidth + label->Width();
+    break;
+  }
+  label->SetX(lx);
+  label->SetY(ly);
+}
+
 // An element with an explicit width and height is positioned by its top-left
 // corner (XMILE 1.2 section 5, view assumptions); otherwise x,y is the center.
 // Returns true when the element carried a size.
@@ -142,6 +165,29 @@ XmileView::XmileView(XmileReader *reader, Model *model, VensimView *view)
       // allocate the first usable slot at 1 so the MDL writer's slot-order
       // iteration produces the same on-wire UIDs that this reader recorded.
       _nextUid(1) {
+}
+
+void XmileView::ResizeNames(VensimView *view) {
+  VensimViewElements &els = view->Elements();
+  for (size_t uid = 0; uid < els.size(); uid++) {
+    VensimViewElement *e = els[uid];
+    if (!e || e->Type() != VensimViewElement::ElementTypeVARIABLE)
+      continue;
+    VensimVariableElement *ve = static_cast<VensimVariableElement *>(e);
+    Variable *var = ve->GetVariable();
+    if (!var)
+      continue;
+    // A stock is drawn as a box whose size came from the XMILE, not its name.
+    if (!ve->SizedByName())
+      continue;
+    int hw, hh;
+    EstimateNameSize(var->GetName(), hw, hh, ve->Ghost(nullptr, false));
+    ve->SetWidth(hw);
+    ve->SetHeight(hh);
+    VensimViewElement *valve = uid > 0 ? els[uid - 1] : nullptr;
+    if (ve->Attached() && valve && valve->Type() == VensimViewElement::ElementTypeVALVE)
+      PlaceFlowName(static_cast<VensimValveElement *>(valve), ve);
+  }
 }
 
 void XmileView::SetSectorRegion(const std::vector<Sector> &sectors, int index) {
@@ -288,6 +334,7 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
         ve->SetWidth(hw);
         ve->SetHeight(hh);
         ve->SetTextPos(0);
+        ve->SetSizedByName(true);
       }
       recordUid(child, d.var, uid);
     } else if (tag == "flow") {
@@ -317,27 +364,11 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
         valve->SetTextPos(tpos);
         int hw, hh;
         EstimateNameSize(d.var->GetName(), hw, hh);
-        int lx = d.x;
-        int ly = d.y;
-        switch (tpos) {
-        case 1:
-          ly += kValveHalfHeight + hh;
-          break;
-        case 2:
-          lx -= kValveHalfWidth + hw;
-          break;
-        case 3:
-          ly -= kValveHalfHeight + hh;
-          break;
-        case 4:
-          lx += kValveHalfWidth + hw;
-          break;
-        }
-        label->SetX(lx);
-        label->SetY(ly);
         label->SetWidth(hw);
         label->SetHeight(hh);
         label->SetTextPos(-1);  // placement is the valve's tpos
+        label->SetSizedByName(true);
+        PlaceFlowName(valve, label);
       }
       recordUid(child, d.var, varUid);
       // Pipe endpoints: <pts><pt x= y=/><pt x= y=/></pts>. Resolve each
@@ -525,6 +556,7 @@ int XmileView::AllocateGhost(Variable *var, int x, int y) {
   ve->SetWidth(hw);
   ve->SetHeight(hh);
   ve->SetTextPos(-1);
+  ve->SetSizedByName(true);
   _view->Elements()[uid] = ve;
   return uid;
 }

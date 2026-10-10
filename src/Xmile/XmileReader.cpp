@@ -330,7 +330,56 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
     ApplyDeferredTimeUnits();
   if (ok && !ValidateLookupTargets(errs))
     ok = false;
+  // Last, once every reference has been resolved through the qualified names:
+  // a module document's variables get their own names back.
+  if (ok && _moduleMode)
+    StripModulePrefixes();
   return ok;
+}
+
+void XmileReader::StripModulePrefixes() {
+  std::vector<Variable *> vars = _model->GetVariables(nullptr);  // name order
+  std::unordered_set<Variable *> done;
+  for (const std::string &prefix : _scopeOrder) {
+    // The qualified names were built from this very prefix, but a name entered
+    // through a <connect> before its declaration may differ from it in case or
+    // '_' vs ' ', so the prefix is matched the way the namespace matches names.
+    const bool base = prefix == ".";
+    const std::string foldedModule = base ? std::string() : FoldNameKey(prefix.substr(0, prefix.size() - 1));
+    for (Variable *v : vars) {
+      if (_globalVars.count(v) || done.count(v))
+        continue;
+      const std::string &name = v->GetName();
+      size_t cut;
+      if (base) {
+        if (name.empty() || name[0] != '.')
+          continue;
+        cut = 1;
+      } else {
+        size_t dot = name.find('.');
+        if (dot == std::string::npos || FoldNameKey(name.substr(0, dot)) != foldedModule)
+          continue;
+        cut = dot + 1;
+      }
+      done.insert(v);
+      // Rename re-keys the entry under the old name, so it can only work for a
+      // variable the namespace holds under that name -- and would otherwise
+      // refuse every candidate below.
+      if (pSymbolNameSpace->Find(name) != v)
+        continue;
+      const std::string stripped = name.substr(cut);
+      // Rename refuses a name already in the namespace (in its own folding of
+      // case, '_' and ' '), which is the uniqueness test.
+      std::string candidate = stripped;
+      for (int n = 1; !pSymbolNameSpace->Rename(v, candidate); n++)
+        candidate = stripped + "_" + std::to_string(n);
+      v->SetAlternateName(candidate);
+    }
+  }
+  for (View *view : _model->Views()) {
+    if (VensimView *vv = dynamic_cast<VensimView *>(view))
+      XmileView::ResizeNames(vv);
+  }
 }
 
 bool XmileReader::IsForeignNamespace(const char *qualifiedName) {
@@ -1823,6 +1872,7 @@ bool XmileReader::ProcessModel(tinyxml2::XMLElement *model, std::vector<std::str
   if (_moduleMode) {
     _scopePrefix = ModelScopePrefix(model);
     _inModelScope = true;
+    _scopeOrder.push_back(_scopePrefix);
   }
   ScanForShadowedKeywords(model);
   tinyxml2::XMLElement *variables = model->FirstChildElement("variables");

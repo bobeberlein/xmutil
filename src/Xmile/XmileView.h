@@ -45,6 +45,12 @@ public:
 
   XmileView(XmileReader *reader, Model *model, VensimView *view);
 
+  // Size every name-sized element of a view this reader built -- names, flow
+  // names, ghosts; not a stock's box -- for the name its variable has now, and
+  // put each flow's name back beside its valve at the new size. For after the
+  // variables have been renamed (XmileReader::StripModulePrefixes).
+  static void ResizeNames(VensimView *view);
+
   // Restrict this pass to the elements of one sector (index into sectors), or
   // with index -1 to the elements in none of them. An element belongs to the
   // first sector containing its center. Without a call, every element is taken

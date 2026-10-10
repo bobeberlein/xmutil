@@ -538,6 +538,14 @@ void VensimView::CheckGhostOwners() {
       if (var && var->GetView() == NULL) {
         var->SetView(this);
         vele->SetGhost(false);
+        // A ghost laid out by its name was sized as "<name>"; promoted, it is
+        // drawn as the plain name.
+        if (vele->SizedByName()) {
+          int hw, hh;
+          VensimDefaultNameSize(var->GetName(), false, hw, hh);
+          vele->SetWidth(hw);
+          vele->SetHeight(hh);
+        }
       }
     }
   }

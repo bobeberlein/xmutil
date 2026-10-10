@@ -223,10 +223,8 @@ struct ViewCounts {
   size_t variables = 0, ghosts = 0, valves = 0, clouds = 0, pipes = 0, arrows = 0;
 };
 
-// Hold the regenerated view b to the original view a. compareNameSizes is off
-// when b's names are not a's (module-qualified ones are longer, so sized
-// differently).
-ViewCounts CompareView(const Sketch &a, const Sketch &b, bool compareNameSizes = true) {
+// Hold the regenerated view b to the original view a.
+ViewCounts CompareView(const Sketch &a, const Sketch &b) {
   ViewCounts counts;
 
   // The frame header comes back verbatim: opener, version, title, font line.
@@ -253,14 +251,9 @@ ViewCounts CompareView(const Sketch &a, const Sketch &b, bool compareNameSizes =
     const Record &rb = *it->second;
     if ((ra.bits & 1) == 0)
       counts.ghosts++;
-    // A flow's name sits beside its valve at a distance that depends on the
-    // name's own size, so it can only be compared when the names are the same.
-    const bool placedBySize = (ra.shape & 32) != 0 && !compareNameSizes;
-    if (!placedBySize) {
-      if (ra.x != rb.x || ra.y != rb.y)
-        printf("  %s moved: (%d,%d) -> (%d,%d)\n", kv.first.c_str(), ra.x, ra.y, rb.x, rb.y);
-      CHECK(ra.x == rb.x && ra.y == rb.y);
-    }
+    if (ra.x != rb.x || ra.y != rb.y)
+      printf("  %s moved: (%d,%d) -> (%d,%d)\n", kv.first.c_str(), ra.x, ra.y, rb.x, rb.y);
+    CHECK(ra.x == rb.x && ra.y == rb.y);
     if (ra.shape != rb.shape || ra.bits != rb.bits || ra.tpos != rb.tpos)
       printf("  %s: shape/bits/tpos %d/%d/%d -> %d/%d/%d\n", kv.first.c_str(), ra.shape, ra.bits, ra.tpos, rb.shape,
              rb.bits, rb.tpos);
@@ -269,8 +262,6 @@ ViewCounts CompareView(const Sketch &a, const Sketch &b, bool compareNameSizes =
     CHECK(ra.tpos == rb.tpos);
     if (ra.shape == 3) {
       CHECK(ra.w == rb.w && ra.h == rb.h);
-    } else if (!compareNameSizes) {
-      CHECK(rb.w > 0 && rb.h > 0);
     } else {
       // A name comes back at the size Vensim gives a new one, which matches a
       // name Vensim sized itself to within a few pixels (and exactly in
@@ -384,23 +375,6 @@ ViewCounts CompareView(const Sketch &a, const Sketch &b, bool compareNameSizes =
   // Nothing is left over: the regenerated view has exactly these records.
   CHECK(b.byUid.size() == va.size() + counts.valves + cloudsA.size() + pa.size() + aa.size());
   return counts;
-}
-
-// The variable records' names without their module qualification
-// ("Population View.births" -> "births", ".x" -> "x"), so a view read from
-// modules can be compared with the view it came from.
-Sketch StripModulePrefixes(Sketch s) {
-  for (auto &kv : s.byUid) {
-    std::string &name = kv.second.name;
-    if (kv.second.type != 10)
-      continue;
-    if (name.size() >= 2 && name.front() == '"' && name.back() == '"')
-      name = name.substr(1, name.size() - 2);
-    size_t dot = name.find('.');
-    if (dot != std::string::npos)
-      name = name.substr(dot + 1);
-  }
-  return s;
 }
 
 }  // namespace
@@ -650,11 +624,11 @@ bool Defines(Model *m, const std::string &name) {
 
 // A model with two views, written without --sectors: each view becomes an XMILE
 // module, and an input a module takes from the other is a <connect>ed shadow.
-// On the way back every variable is entered under its module-qualified name
-// (the .mdl namespace is flat), each module becomes a view named after it, and a
-// connected input is a ghost of the variable it comes from -- which the
-// equations of its module refer to directly.
-TEST(SketchMdlXmile_population_resources_modules_to_mdl) {
+// On the way back the modules are read under module-qualified names and then
+// given their own names back, so the .mdl is the one the model started as: the
+// same variables and equations, each module a view named after it, and a
+// connected input a ghost of the variable it comes from.
+TEST(SketchMdlXmile_population_resources_modules_round_trip) {
   const std::string original = ReadFile(std::string(XMUTIL_SRC_ROOT) + kPopulationResourcesPath);
   CHECK(!original.empty());
   if (original.empty())
@@ -668,22 +642,21 @@ TEST(SketchMdlXmile_population_resources_modules_to_mdl) {
   if (back.empty())
     return;
 
-  // The equations: every variable is module-qualified, and a connected input
-  // is not defined twice but referred to where it is defined.
+  // The equations: the original names, each variable defined once, and a
+  // connected input referred to where it is defined.
   Model *m = roundtrip::ParseVensim(back);
   CHECK(m != nullptr);
   if (m) {
-    CHECK(Defines(m, "Population View.Population"));
-    CHECK(Defines(m, "Resource View.food adequacy"));
-    CHECK(!Defines(m, "Population View.food adequacy"));
-    CHECK(!Defines(m, "Resource View.Population"));
-    CHECK(InputsOf(m, "Population View.effect food deaths").count("Resource View.food adequacy") == 1);
-    CHECK(InputsOf(m, "Resource View.inidcated consumption").count("Population View.Population") == 1);
+    CHECK(Defines(m, "Population"));
+    CHECK(Defines(m, "food adequacy"));
+    CHECK(InputsOf(m, "effect food deaths").count("food adequacy") == 1);
+    CHECK(InputsOf(m, "inidcated consumption").count("Population") == 1);
     delete m;
   }
+  CHECK(back.find("View.") == std::string::npos);  // no qualified name is left anywhere
 
   // The sketch: one view per module, named after it, holding what the module's
-  // view held at the original coordinates.
+  // view held, at the original coordinates and at Vensim's sizes for the names.
   std::vector<Sketch> a = ParseSketches(original);
   std::vector<Sketch> b = ParseSketches(back);
   CHECK(a.size() == 2);
@@ -692,22 +665,25 @@ TEST(SketchMdlXmile_population_resources_modules_to_mdl) {
     return;
   ViewCounts total;
   for (size_t i = 0; i < a.size(); i++) {
-    ViewCounts c = CompareView(a[i], StripModulePrefixes(b[i]), /*compareNameSizes=*/false);
+    ViewCounts c = CompareView(a[i], b[i]);
     total.variables += c.variables;
     total.ghosts += c.ghosts;
+    total.pipes += c.pipes;
     total.arrows += c.arrows;
   }
   CHECK(total.variables == 14);
   CHECK(total.ghosts == 2);
+  CHECK(total.pipes == 6);
   CHECK(total.arrows == 13);
-  // The ghosts are of the qualified variables they stand for.
-  CHECK(back.find("10,14,\"Resource View.food adequacy\",329,374,") != std::string::npos);
-  CHECK(back.find("\"Population View.Population\",187,274,") != std::string::npos);
+
+  // After the first trip the .mdl is a fixpoint, equations and sketch alike.
+  const std::string again = XmileToMdl(MdlToXmile(back, false));
+  CHECK(again == back);
 }
 
-// A base-model variable fed into a module: base-model names get a leading '.',
-// the module's input resolves to it, and the module's view shows a ghost of it.
-// Writing the flattened model back to XMILE is refused rather than done wrong.
+// A base-model variable fed into a module: it is read as ".rate", the module's
+// input resolves to it, and on the way out every name is plain again. Writing
+// the flattened model back to XMILE is refused rather than done wrong.
 TEST(SketchMdlXmile_base_model_variable_feeds_a_module) {
   const char *kXmile = R"(<?xml version="1.0" encoding="utf-8"?>
 <xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
@@ -740,25 +716,31 @@ TEST(SketchMdlXmile_base_model_variable_feeds_a_module) {
   Model *m = roundtrip::ParseVensim(mdl);
   CHECK(m != nullptr);
   if (m) {
-    CHECK(Defines(m, ".rate"));
-    CHECK(Defines(m, "growth.level"));
-    CHECK(Defines(m, "growth.gain"));
-    CHECK(!Defines(m, "growth.rate"));
-    std::set<std::string> in = InputsOf(m, "growth.gain");
-    CHECK(in.count(".rate") == 1 && in.count("growth.level") == 1);
+    CHECK(Defines(m, "rate"));
+    CHECK(Defines(m, "level"));
+    CHECK(Defines(m, "gain"));
+    std::set<std::string> in = InputsOf(m, "gain");
+    CHECK(in.count("rate") == 1 && in.count("level") == 1);
     delete m;
   }
   std::vector<Sketch> views = ParseSketches(mdl);
   CHECK(views.size() == 1);
   if (views.size() == 1) {
     CHECK_EQ_STR(views[0].header[2], "*growth");
-    // The module's view draws the input as `.rate` and its arrow from it. (The
-    // base model has no view of its own here, so this drawing is the only one
-    // and CheckGhostOwners makes it .rate's home rather than a ghost.)
+    // The module's view draws the input and an arrow from it. (The base model
+    // has no view of its own here, so this drawing is the only one and
+    // CheckGhostOwners makes it rate's home rather than a ghost.) Its size is
+    // the plain name's.
     int rateUid = -1;
-    for (const auto &kv : views[0].byUid)
-      if (kv.second.type == 10 && kv.second.name == "\".rate\"")
+    for (const auto &kv : views[0].byUid) {
+      const Record &r = kv.second;
+      if (r.type == 10 && r.name == "rate") {
         rateUid = kv.first;
+        int hw, hh;
+        VensimDefaultNameSize("rate", false, hw, hh);
+        CHECK(r.w == hw && r.h == hh);
+      }
+    }
     CHECK(rateUid > 0);
     bool arrow = false;
     for (const auto &kv : views[0].byUid)
@@ -768,4 +750,74 @@ TEST(SketchMdlXmile_base_model_variable_feeds_a_module) {
   char *xmile = convert_xmile_to_xmile(kXmile, static_cast<uint32_t>(std::strlen(kXmile)), "m.xmile", -1, false);
   CHECK(xmile == nullptr);
   free(xmile);
+}
+
+// The same name in several models: the base model claims the plain name first,
+// then each module in document order takes the next free suffix -- and every
+// equation still refers to the variable it meant. XMILE and Vensim both treat
+// names that differ only in case or in '_' vs ' ' as the same name, so "X 1",
+// "x_1" and "X_1" are one name, on the way in and in the uniqueness test.
+TEST(SketchMdlXmile_module_name_collisions_get_suffixes) {
+  const char *kXmile = R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>10</stop><dt>1</dt></sim_specs>
+  <model>
+    <variables>
+      <aux name="x"><eqn>1</eqn></aux>
+      <module name="m"><connect to="m.input" from=".x"/></module>
+      <module name="n"/>
+    </variables>
+  </model>
+  <model name="m">
+    <variables>
+      <aux name="input" access="input"/>
+      <aux name="x"><eqn>input * 2</eqn></aux>
+    </variables>
+  </model>
+  <model name="n">
+    <variables>
+      <aux name="x"><eqn>3</eqn></aux>
+      <aux name="X 1"><eqn>x + 1</eqn></aux>
+      <aux name="y"><eqn>x_1 * 2</eqn></aux>
+    </variables>
+  </model>
+</xmile>
+)";
+  const std::string mdl = XmileToMdl(kXmile);
+  CHECK(!mdl.empty());
+  if (mdl.empty())
+    return;
+  Model *m = roundtrip::ParseVensim(mdl);
+  CHECK(m != nullptr);
+  if (!m)
+    return;
+  SymbolNameSpace *ns = m->GetNameSpace();
+  // The exact spelling the .mdl gives a variable (a quoted name keeps its
+  // quotes in the parsed model).
+  auto spelled = [ns](const std::string &name) {
+    Symbol *sym = ns->Find(name);
+    if (!sym)
+      return std::string("(none)");
+    std::string n = sym->GetName();
+    if (n.size() >= 2 && n.front() == '"' && n.back() == '"')
+      n = n.substr(1, n.size() - 2);
+    return n;
+  };
+  // base x keeps "x"; m's x is next and takes "x_1"; n's x finds "x_1" taken
+  // and takes "x_2"; n's "X 1" is the same name as "x_1", taken by then, so it
+  // becomes "X 1_1"; n's y keeps "y".
+  CHECK_EQ_STR(spelled("x"), "x");
+  CHECK_EQ_STR(spelled("x_1"), "x_1");
+  CHECK_EQ_STR(spelled("x_2"), "x_2");
+  CHECK_EQ_STR(spelled("X 1_1"), "X 1_1");
+  CHECK_EQ_STR(spelled("y"), "y");
+  // Spellings that differ only in case and '_' vs ' ' find the same variable.
+  CHECK(ns->Find("x_1") == ns->Find("X 1") && ns->Find("x_1") == ns->Find("X_1"));
+  CHECK(ns->Find("X 1_1") == ns->Find("x_1_1") && ns->Find("X 1_1") == ns->Find("x 1 1"));
+  CHECK(ns->Find("x_1") != ns->Find("X 1_1"));
+  // And each equation refers to the variable it meant.
+  CHECK(InputsOf(m, "x_1").count("x") == 1);      // m.x = input * 2, input fed by .x
+  CHECK(InputsOf(m, "X 1_1").count("x_2") == 1);  // n's "X 1" = n.x + 1
+  CHECK(InputsOf(m, "y").count("X 1_1") == 1);    // n's y = x_1 * 2: x_1 there is n's own "X 1"
+  delete m;
 }

@@ -836,8 +836,8 @@ std::string Model::PrintXMILE(bool isCompact, std::vector<std::string> &errs, do
   }
   if (bFromXmileModules) {
     errs.push_back(
-        "an XMILE model with modules can be converted to .mdl only; writing it back to XMILE is not "
-        "supported");
+        "an XMILE model with modules can be converted to .mdl only: its modules were flattened into one model, so "
+        "writing it back to XMILE would lose them");
     return "";
   }
   XMILEGenerator generator(this, xscale, yscale, bFromDyanmo);

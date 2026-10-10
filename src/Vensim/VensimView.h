@@ -118,6 +118,15 @@ public:
   void SetTextPos(int tpos) {
     _textPos = tpos;
   }
+  // True when the record's size is its name's extent (a name, a flow's name, a
+  // ghost) rather than a box of its own (a stock), so that a rename has to
+  // re-size it.
+  bool SizedByName() const {
+    return _sizedByName;
+  }
+  void SetSizedByName(bool set) {
+    _sizedByName = set;
+  }
 
 protected:
   Variable *_variable;
@@ -125,6 +134,7 @@ protected:
   bool _cross_level;
   bool _attached;  // to a valve for flows
   int _textPos = 0;
+  bool _sizedByName = false;
 };
 class VensimValveElement : public VensimViewElement {
 public:

@@ -516,6 +516,16 @@ private:
   std::string _scopePrefix;
   std::unordered_set<Variable *> _globalVars;
   std::unordered_map<std::string, std::string> _aliases;
+  // The scope prefix of every model read in module mode, in document order.
+  std::vector<std::string> _scopeOrder;
+
+  // Once the whole document is read: give every module-qualified variable its
+  // own name back -- "Module.name" and ".name" become "name" -- adding _1, _2,
+  // ... where that name is already taken, so the result is the flat namespace
+  // a .mdl has. Models claim names in document order (the base model first),
+  // variables within one in name order. The views' names are then re-sized,
+  // since they were laid out under the qualified names.
+  void StripModulePrefixes();
 
   // Read every <module>'s <connect> children in a model into _aliases. Runs for
   // the whole document before any model is read: a module may be read before

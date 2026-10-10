@@ -99,14 +99,21 @@ direction.
   becomes a Vensim view named after the module (`ProcessModuleView`; the base
   model's is "Main", and kept only if it draws a variable); a connected input
   drawn there is a ghost of its source; groups and sectors are dropped, as are
-  connectors to `<module>` icons. Writing the flattened model back to XMILE is
-  refused (`Model::SetFromXmileModules` -> `PrintXMILE` error): a `.` in an
-  XMILE name means module qualification, so the names would no longer mean
-  what they say. The corpus module documents are asserted both ways in
-  `XmileCorpus_module_documents_convert_to_mdl_only`; the view round trip
-  (`.mdl` -> XMILE modules -> `.mdl`, names qualified on the way back) in
-  `test/xmile/SketchMdlXmileRoundTripTest.cpp`. Not a fixpoint: a second trip
-  qualifies the already-qualified names again.
+  connectors to `<module>` icons. The qualified names exist only while reading:
+  once every reference has resolved, `StripModulePrefixes` gives each variable
+  its own name back, adding `_1`, `_2`, ... where it is taken (models claim
+  names in document order, base model first; within a model, in name order;
+  "taken" is the namespace's own folding, so `x 1` collides with `x_1`), and
+  then re-sizes the views' names (`XmileView::ResizeNames`, every element
+  marked `SizedByName`) and re-places flow names beside their valves, since
+  they were laid out under the qualified names. So `.mdl` -> XMILE modules ->
+  `.mdl` gives back the model it started from, and a second trip is a byte
+  fixpoint. Writing the flattened model back to XMILE is refused
+  (`Model::SetFromXmileModules` -> `PrintXMILE` error), since it would replace
+  the modules with one renamed model. The corpus module documents are asserted
+  both ways in `XmileCorpus_module_documents_convert_to_mdl_only`; the round
+  trip, the base-model case and the suffixing in
+  `test/xmile/SketchMdlXmileRoundTripTest.cpp`.
 - **Module decomposition is offered to Vensim/Dynamo input only; XMILE input is
   always emitted as sectors.** `XMILEGenerator` has two shapes.
   `generateModelAsModules` / `generateModelAsGroups` write a base `<model>` plus
