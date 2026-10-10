@@ -1,5 +1,6 @@
 #include "SymbolList.h"
 
+#include "../Model.h"
 #include "../XMUtil.h"
 #include "Equation.h"
 #include "Variable.h"
@@ -109,6 +110,16 @@ void SymbolList::OutputComputable(ContextInfo *info) {
         // Unbound `*` wildcard: XmileReader resolution binds these to a concrete
         // dimension before output, but guard against a null deref regardless.
         *info << "*";
+      } else if (info->BangAsDimStar() || (s->Owner() == s && info->SubscriptOwner() &&
+                                           Model::FamilyAtPosition(info->SubscriptOwner(), static_cast<int>(i)) != s)) {
+        // The iterated dimension is named, as `Dim.*`, where `*` would not say
+        // it: inside VECTOR SELECT (see ContextInfo::SetBangAsDimStar), and
+        // wherever the bang is over a dimension other than the variable's own
+        // at this position -- one mapped to it, `task quality[prereq!]` for a
+        // task quality[task] -- since the reader binds a bare `*` to the
+        // variable's own (Model::FamilyAtPosition). The reader accepts `Dim.*`
+        // as it does `*` and `*:Dim` (XmileEqYacc.y, sub_term).
+        *info << SpaceToUnderBar(s->GetName()) << ".*";
       } else if (s->Owner() != s) {
         // Subrange bang: emit `*:Sub`, the inverse of the reader's
         // `sub_term: '*' ':' symbol` production (XmileEqYacc.y). The older

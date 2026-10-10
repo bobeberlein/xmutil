@@ -69,6 +69,9 @@ equation : expr                                  { xpyy_set_result($1); }
 expr : XPTT_number                               { $$ = xpyy_num($1); }
      | XPTT_symbol                               { $$ = xpyy_resolve_symbol($1, NULL); }
      | XPTT_symbol '[' subs ']'                  { $$ = xpyy_resolve_symbol($1, $3); }
+     /* Dim.element names an element of a dimension (`edge = edge.top`); the
+        element is the symbol. */
+     | XPTT_symbol '.' XPTT_symbol               { $$ = xpyy_resolve_symbol($3, NULL); }
      | '(' expr ')'                              { $$ = xpyy_paren($2); }
      | '-' expr  %prec UMINUS                    { $$ = xpyy_unary('-', $2); }
      | '+' expr  %prec UMINUS                    { $$ = $2; }
@@ -106,6 +109,8 @@ subs : sub_term                                  { $$ = xpyy_sub_init($1); }
 sub_term : XPTT_symbol                           { $$ = xpyy_sub_name($1); }
          | '*'                                   { $$ = xpyy_sub_star(NULL); }
          | '*' ':' XPTT_symbol                   { $$ = xpyy_sub_star($3); }
+         | XPTT_symbol '.' '*'                   { $$ = xpyy_sub_star($1); }
+         | XPTT_symbol '.' XPTT_symbol           { $$ = xpyy_sub_name($3); }
          | XPTT_symbol ':' XPTT_symbol           { $$ = xpyy_sub_range($1, $3); }
          | '@' XPTT_number                       { $$ = xpyy_sub_index((int)$2); }
          ;

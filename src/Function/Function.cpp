@@ -1,5 +1,7 @@
 #include "Function.h"
 
+#include "../ContextInfo.h"
+#include "../Log.h"
 #include "../Symbol/ExpressionList.h"
 #include "../XMUtil.h"
 
@@ -46,6 +48,114 @@ void FunctionVectorLookup::OutputComputable(ContextInfo *info, ExpressionList *a
   // could try to figure this one out -
   *info << "{try INTERPORATE or just used arrays with variable arguments for indices}";
   Function::OutputComputable(info, arg);
+}
+
+void FunctionVectorSelect::OutputComputable(ContextInfo *info, ExpressionList *arg) {
+  // VECTOR SELECT(sel[..d!..], expr[..d!..], missing, action, error) reduces,
+  // over the bang (!) dimensions, the elements whose selection is nonzero, and
+  // gives `missing` when there are none. XMILE spells the same thing with its
+  // array builtins over the `*` the bang subscripts are written as:
+  //
+  //   ( IF SUM(IF sel <> 0 THEN 1 ELSE 0) = 0 THEN missing ELSE reduction )
+  //
+  // where the weighted actions (0-4) reduce sel * expr and the unweighted ones
+  // (6-10) expr, each over the selected elements only -- an unselected element
+  // contributes the reduction's identity (0 to a sum, 1 to a product, +/-1e38
+  // to a min/max). The error action only decides when Vensim raises a run-time
+  // error, which XMILE cannot do, so it is dropped. Action 5 (a weighted
+  // power product) and an action that is not a constant are passed through
+  // unchanged, with a warning: there is nothing XMILE to write.
+  //
+  // The two arrays are paired only through the dimensions they iterate, so
+  // their bang subscripts are written `Dim.*`, naming them, rather than the
+  // bare `*` used elsewhere (for the whole call, restored on the way out).
+  struct BangGuard {
+    ContextInfo *info;
+    bool was;
+    ~BangGuard() {
+      info->SetBangAsDimStar(was);
+    }
+  } bangGuard{info, info->BangAsDimStar()};
+  info->SetBangAsDimStar(true);
+  if (!arg || arg->Length() != 5 || arg->GetExp(3)->GetType() != EXPTYPE_Number) {
+    log("warning: VECTOR SELECT with a non-constant numerical action has no XMILE equivalent; written as is\n");
+    Function::OutputComputable(info, arg);
+    return;
+  }
+  const double actionValue = static_cast<ExpressionNumber *>(arg->GetExp(3))->GetValue();
+  const int action = static_cast<int>(actionValue);
+  if (action != actionValue || action < 0 || action > 10 || action == 5) {
+    log("warning: VECTOR SELECT numerical action %g has no XMILE equivalent; written as is\n", actionValue);
+    Function::OutputComputable(info, arg);
+    return;
+  }
+  Expression *sel = arg->GetExp(0);
+  Expression *expr = arg->GetExp(1);
+  // An operand is parenthesized unless it is a lone variable or number, which
+  // needs none.
+  auto operand = [&](Expression *e) {
+    const bool atom = e->GetType() == EXPTYPE_Variable || e->GetType() == EXPTYPE_Number;
+    if (!atom)
+      *info << "(";
+    e->OutputComputable(info);
+    if (!atom)
+      *info << ")";
+  };
+  auto selected = [&]() {
+    operand(sel);
+    *info << " <> 0";
+  };
+  auto value = [&]() {
+    if (action <= 4) {
+      operand(sel);
+      *info << "*";
+    }
+    operand(expr);
+  };
+  auto count = [&]() {
+    *info << "SUM(IF ";
+    selected();
+    *info << " THEN 1 ELSE 0)";
+  };
+  // The reduction over the selected elements, with the identity for the rest.
+  auto reduce = [&](const char *fn, const char *identity) {
+    *info << fn << "(IF ";
+    selected();
+    *info << " THEN ";
+    value();
+    *info << " ELSE " << identity << ")";
+  };
+
+  *info << "( IF ";
+  count();
+  *info << " = 0 THEN ";
+  arg->GetExp(2)->OutputComputable(info);
+  *info << " ELSE ";
+  switch (action) {
+  case 0:
+  case 6:
+    reduce("SUM", "0");
+    break;
+  case 1:
+  case 7:
+    reduce("PROD", "1");
+    break;
+  case 2:
+  case 8:
+    reduce("MIN", "1e+38");
+    break;
+  case 3:
+  case 9:
+    reduce("MAX", "-1e+38");
+    break;
+  case 4:
+  case 10:
+    reduce("SUM", "0");
+    *info << "/";
+    count();
+    break;
+  }
+  *info << " )";
 }
 
 void FunctionElmCount::OutputComputable(ContextInfo *info, ExpressionList *arg) {

@@ -197,6 +197,9 @@ const char *const kAllowList[] = {
     "test/fixtures/simlin-test/circular-dep-1/model.stmx",
     "test/fixtures/simlin-test/decoupled_stocks/decoupled.stmx",
     "test/fixtures/simlin-test/logistic_growth_ltm/logistic_growth.stmx",
+    // Dotted Dim.element references (`Location.Boston`) parse as of the grammar's
+    // `Dim.element` productions.
+    "test/fixtures/simlin-test/subscript_index_name_values/model.stmx",
     "test/fixtures/test-models/samples/arrays/a2a/a2a.stmx",
     "test/fixtures/test-models/samples/arrays/non-a2a/non-a2a.stmx",
     "test/fixtures/test-models/samples/SIR/SIR.stmx",
@@ -351,8 +354,6 @@ const DeferredModel kKnownDeferred[] = {
      "Stella PREVIOUS(SELF, ...) self-reference construct (Stella dialect)"},
     {"test/fixtures/simlin-test/step_into_smth1/model.stmx",
      "variable named \"initial\" collides with the INITIAL builtin keyword (Stella dialect)"},
-    {"test/fixtures/simlin-test/subscript_index_name_values/model.stmx",
-     "dotted dimension.element subscript reference (`Location.Boston`) not accepted by the equation grammar"},
     {"test/fixtures/test-models/samples/arrays/non-a2a/non-a2a-gf.stmx",
      "<gf> on a per-element subscripted variable is not supported by the reader"},
     {"test/fixtures/test-models/samples/display/1style.stmx",

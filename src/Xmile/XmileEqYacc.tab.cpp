@@ -140,17 +140,18 @@ enum yysymbol_kind_t
   YYSYMBOL_25_ = 25,                       /* '^'  */
   YYSYMBOL_26_ = 26,                       /* '['  */
   YYSYMBOL_27_ = 27,                       /* ']'  */
-  YYSYMBOL_28_ = 28,                       /* '('  */
-  YYSYMBOL_29_ = 29,                       /* ')'  */
-  YYSYMBOL_30_ = 30,                       /* ','  */
-  YYSYMBOL_31_ = 31,                       /* ':'  */
-  YYSYMBOL_32_ = 32,                       /* '@'  */
-  YYSYMBOL_YYACCEPT = 33,                  /* $accept  */
-  YYSYMBOL_equation = 34,                  /* equation  */
-  YYSYMBOL_expr = 35,                      /* expr  */
-  YYSYMBOL_arglist = 36,                   /* arglist  */
-  YYSYMBOL_subs = 37,                      /* subs  */
-  YYSYMBOL_sub_term = 38                   /* sub_term  */
+  YYSYMBOL_28_ = 28,                       /* '.'  */
+  YYSYMBOL_29_ = 29,                       /* '('  */
+  YYSYMBOL_30_ = 30,                       /* ')'  */
+  YYSYMBOL_31_ = 31,                       /* ','  */
+  YYSYMBOL_32_ = 32,                       /* ':'  */
+  YYSYMBOL_33_ = 33,                       /* '@'  */
+  YYSYMBOL_YYACCEPT = 34,                  /* $accept  */
+  YYSYMBOL_equation = 35,                  /* equation  */
+  YYSYMBOL_expr = 36,                      /* expr  */
+  YYSYMBOL_arglist = 37,                   /* arglist  */
+  YYSYMBOL_subs = 38,                      /* subs  */
+  YYSYMBOL_sub_term = 39                   /* sub_term  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -476,18 +477,18 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  17
+#define YYFINAL  18
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   221
+#define YYLAST   215
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  33
+#define YYNTOKENS  34
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  37
+#define YYNRULES  40
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  73
+#define YYNSTATES  78
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   275
@@ -508,9 +509,9 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      28,    29,    22,    20,    30,    21,     2,    23,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    31,     2,
-       2,     2,     2,     2,    32,     2,     2,     2,     2,     2,
+      29,    30,    22,    20,    31,    21,    28,    23,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    32,     2,
+       2,     2,     2,     2,    33,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,    26,     2,    27,    25,     2,     2,     2,     2,     2,
@@ -538,10 +539,11 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    66,    66,    69,    70,    71,    72,    73,    74,    75,
-      76,    77,    78,    79,    80,    81,    82,    83,    84,    85,
-      86,    87,    88,    89,    90,    91,    93,    94,    95,    98,
-      99,   102,   103,   106,   107,   108,   109,   110
+       0,    66,    66,    69,    70,    71,    74,    75,    76,    77,
+      78,    79,    80,    81,    82,    83,    84,    85,    86,    87,
+      88,    89,    90,    91,    92,    93,    94,    96,    97,    98,
+     101,   102,   105,   106,   109,   110,   111,   112,   113,   114,
+     115
 };
 #endif
 
@@ -561,9 +563,9 @@ static const char *const yytname[] =
   "XPTT_symbol", "XPTT_if", "XPTT_then", "XPTT_else", "XPTT_and",
   "XPTT_or", "XPTT_not", "XPTT_mod", "XPTT_eq", "XPTT_neq", "XPTT_lt",
   "XPTT_lte", "XPTT_gt", "XPTT_gte", "XPTT_safediv", "XPTT_apostrophe",
-  "'+'", "'-'", "'*'", "'/'", "UMINUS", "'^'", "'['", "']'", "'('", "')'",
-  "','", "':'", "'@'", "$accept", "equation", "expr", "arglist", "subs",
-  "sub_term", YY_NULLPTR
+  "'+'", "'-'", "'*'", "'/'", "UMINUS", "'^'", "'['", "']'", "'.'", "'('",
+  "')'", "','", "':'", "'@'", "$accept", "equation", "expr", "arglist",
+  "subs", "sub_term", YY_NULLPTR
 };
 
 static const char *
@@ -573,7 +575,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-22)
+#define YYPACT_NINF (-23)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -587,14 +589,14 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-      49,   -22,   -16,    49,    49,    49,    49,    49,    13,   126,
-       3,    28,    89,   -14,   -14,   -14,    67,   -22,    49,    49,
-      49,    49,    49,    49,    49,    49,    49,    49,   -22,    49,
-      49,    49,    49,    49,   -17,     9,    31,   -21,   -22,   -22,
-     126,     7,    49,   -22,   157,   142,   -14,   170,   170,   183,
-     183,   183,   183,   -14,   196,   196,   -14,   -14,   -14,    37,
-      38,   -22,   -22,     3,   -22,    49,   108,   -22,   -22,   -22,
-     126,    49,   126
+      41,   -23,    26,    41,    41,    41,    41,    41,     7,   120,
+       4,    10,    29,    83,   -14,   -14,   -14,    63,   -23,    41,
+      41,    41,    41,    41,    41,    41,    41,    41,    41,   -23,
+      41,    41,    41,    41,    41,   -22,   -17,    35,     9,   -23,
+     -23,   -23,   120,   -18,    41,   -23,   151,   136,   -14,   164,
+     164,   177,   177,   177,   177,   -14,   190,   190,   -14,   -14,
+     -14,    31,    38,    39,   -23,   -23,     4,   -23,    41,   102,
+     -23,   -23,   -23,   -23,   -23,   120,    41,   120
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -603,25 +605,25 @@ static const yytype_int16 yypact[] =
 static const yytype_int8 yydefact[] =
 {
        0,     3,     4,     0,     0,     0,     0,     0,     0,     2,
-       0,     0,     0,     9,     8,     7,     0,     1,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,    28,     0,
-       0,     0,     0,     0,    33,    34,     0,     0,    31,    26,
-      29,     0,     0,     6,    23,    24,    15,    17,    18,    19,
-      20,    21,    22,    14,    10,    11,    12,    13,    16,     0,
-       0,    37,     5,     0,    27,     0,     0,    36,    35,    32,
-      30,     0,    25
+       0,     0,     0,     0,    10,     9,     8,     0,     1,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    29,
+       0,     0,     0,     0,     0,    34,    35,     0,     0,    32,
+       6,    27,    30,     0,     0,     7,    24,    25,    16,    18,
+      19,    20,    21,    22,    23,    15,    11,    12,    13,    14,
+      17,     0,     0,     0,    40,     5,     0,    28,     0,     0,
+      38,    37,    39,    36,    33,    31,     0,    26
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -22,   -22,    -3,   -22,   -22,   -20
+     -23,   -23,    -3,   -23,   -23,   -19
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     8,     9,    41,    37,    38
+       0,     8,     9,    43,    38,    39
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -629,88 +631,88 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      12,    13,    14,    15,    16,    28,    62,    34,    40,    63,
-      10,    33,    11,    17,    59,    44,    45,    46,    47,    48,
-      49,    50,    51,    52,    53,    35,    54,    55,    56,    57,
-      58,     1,     2,     3,    61,    36,    64,    65,     4,    66,
-      60,    67,    68,    69,     0,     0,     0,     0,     5,     6,
-       0,     0,     1,     2,     3,     0,     7,    39,     0,     4,
-       0,     0,    70,     0,     0,     0,     0,     0,    72,     5,
-       6,     0,     0,     0,     0,    18,    19,     7,    20,    21,
-      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
-      32,     0,    33,     0,     0,    42,    43,    18,    19,     0,
-      20,    21,    22,    23,    24,    25,    26,    27,    28,    29,
-      30,    31,    32,     0,    33,    71,    18,    19,     0,    20,
-      21,    22,    23,    24,    25,    26,    27,    28,    29,    30,
-      31,    32,     0,    33,    18,    19,     0,    20,    21,    22,
-      23,    24,    25,    26,    27,    28,    29,    30,    31,    32,
-      18,    33,     0,    20,    21,    22,    23,    24,    25,    26,
-      27,    28,    29,    30,    31,    32,     0,    33,    20,    21,
-      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
-      32,    20,    33,     0,    23,    24,    25,    26,    27,    28,
-      29,    30,    31,    32,    20,    33,     0,     0,     0,     0,
-       0,    27,    28,    29,    30,    31,    32,    20,    33,     0,
-       0,     0,     0,     0,    27,    28,     0,     0,    31,    32,
-       0,    33
+      13,    14,    15,    16,    17,    29,    61,    18,    35,    42,
+      62,    34,    67,    68,    40,    63,    46,    47,    48,    49,
+      50,    51,    52,    53,    54,    55,    36,    56,    57,    58,
+      59,    60,     1,     2,     3,    70,    65,    37,    64,     4,
+      66,    69,    72,    73,     1,     2,     3,    74,     0,     5,
+       6,     4,    10,    71,    11,    12,     0,     0,     7,    41,
+       0,     5,     6,     0,     0,    75,     0,     0,     0,     0,
+       7,    19,    20,    77,    21,    22,    23,    24,    25,    26,
+      27,    28,    29,    30,    31,    32,    33,     0,    34,    44,
+       0,    19,    20,    45,    21,    22,    23,    24,    25,    26,
+      27,    28,    29,    30,    31,    32,    33,     0,    34,    76,
+      19,    20,     0,    21,    22,    23,    24,    25,    26,    27,
+      28,    29,    30,    31,    32,    33,     0,    34,    19,    20,
+       0,    21,    22,    23,    24,    25,    26,    27,    28,    29,
+      30,    31,    32,    33,    19,    34,     0,    21,    22,    23,
+      24,    25,    26,    27,    28,    29,    30,    31,    32,    33,
+       0,    34,    21,    22,    23,    24,    25,    26,    27,    28,
+      29,    30,    31,    32,    33,    21,    34,     0,    24,    25,
+      26,    27,    28,    29,    30,    31,    32,    33,    21,    34,
+       0,     0,     0,     0,     0,    28,    29,    30,    31,    32,
+      33,    21,    34,     0,     0,     0,     0,     0,    28,    29,
+       0,     0,    32,    33,     0,    34
 };
 
 static const yytype_int8 yycheck[] =
 {
-       3,     4,     5,     6,     7,    19,    27,     4,    11,    30,
-      26,    25,    28,     0,    31,    18,    19,    20,    21,    22,
-      23,    24,    25,    26,    27,    22,    29,    30,    31,    32,
-      33,     3,     4,     5,     3,    32,    29,    30,    10,    42,
-      31,     4,     4,    63,    -1,    -1,    -1,    -1,    20,    21,
-      -1,    -1,     3,     4,     5,    -1,    28,    29,    -1,    10,
-      -1,    -1,    65,    -1,    -1,    -1,    -1,    -1,    71,    20,
-      21,    -1,    -1,    -1,    -1,     8,     9,    28,    11,    12,
-      13,    14,    15,    16,    17,    18,    19,    20,    21,    22,
-      23,    -1,    25,    -1,    -1,     6,    29,     8,     9,    -1,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,    22,    23,    -1,    25,     7,     8,     9,    -1,    11,
-      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
-      22,    23,    -1,    25,     8,     9,    -1,    11,    12,    13,
+       3,     4,     5,     6,     7,    19,    28,     0,     4,    12,
+      32,    25,    30,    31,     4,    32,    19,    20,    21,    22,
+      23,    24,    25,    26,    27,    28,    22,    30,    31,    32,
+      33,    34,     3,     4,     5,     4,    27,    33,     3,    10,
+      31,    44,     4,     4,     3,     4,     5,    66,    -1,    20,
+      21,    10,    26,    22,    28,    29,    -1,    -1,    29,    30,
+      -1,    20,    21,    -1,    -1,    68,    -1,    -1,    -1,    -1,
+      29,     8,     9,    76,    11,    12,    13,    14,    15,    16,
+      17,    18,    19,    20,    21,    22,    23,    -1,    25,     6,
+      -1,     8,     9,    30,    11,    12,    13,    14,    15,    16,
+      17,    18,    19,    20,    21,    22,    23,    -1,    25,     7,
+       8,     9,    -1,    11,    12,    13,    14,    15,    16,    17,
+      18,    19,    20,    21,    22,    23,    -1,    25,     8,     9,
+      -1,    11,    12,    13,    14,    15,    16,    17,    18,    19,
+      20,    21,    22,    23,     8,    25,    -1,    11,    12,    13,
       14,    15,    16,    17,    18,    19,    20,    21,    22,    23,
-       8,    25,    -1,    11,    12,    13,    14,    15,    16,    17,
-      18,    19,    20,    21,    22,    23,    -1,    25,    11,    12,
-      13,    14,    15,    16,    17,    18,    19,    20,    21,    22,
-      23,    11,    25,    -1,    14,    15,    16,    17,    18,    19,
-      20,    21,    22,    23,    11,    25,    -1,    -1,    -1,    -1,
-      -1,    18,    19,    20,    21,    22,    23,    11,    25,    -1,
-      -1,    -1,    -1,    -1,    18,    19,    -1,    -1,    22,    23,
-      -1,    25
+      -1,    25,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,    11,    25,    -1,    14,    15,
+      16,    17,    18,    19,    20,    21,    22,    23,    11,    25,
+      -1,    -1,    -1,    -1,    -1,    18,    19,    20,    21,    22,
+      23,    11,    25,    -1,    -1,    -1,    -1,    -1,    18,    19,
+      -1,    -1,    22,    23,    -1,    25
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     4,     5,    10,    20,    21,    28,    34,    35,
-      26,    28,    35,    35,    35,    35,    35,     0,     8,     9,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,    22,    23,    25,     4,    22,    32,    37,    38,    29,
-      35,    36,     6,    29,    35,    35,    35,    35,    35,    35,
-      35,    35,    35,    35,    35,    35,    35,    35,    35,    31,
-      31,     3,    27,    30,    29,    30,    35,     4,     4,    38,
-      35,     7,    35
+       0,     3,     4,     5,    10,    20,    21,    29,    35,    36,
+      26,    28,    29,    36,    36,    36,    36,    36,     0,     8,
+       9,    11,    12,    13,    14,    15,    16,    17,    18,    19,
+      20,    21,    22,    23,    25,     4,    22,    33,    38,    39,
+       4,    30,    36,    37,     6,    30,    36,    36,    36,    36,
+      36,    36,    36,    36,    36,    36,    36,    36,    36,    36,
+      36,    28,    32,    32,     3,    27,    31,    30,    31,    36,
+       4,    22,     4,     4,    39,    36,     7,    36
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    33,    34,    35,    35,    35,    35,    35,    35,    35,
-      35,    35,    35,    35,    35,    35,    35,    35,    35,    35,
-      35,    35,    35,    35,    35,    35,    35,    35,    35,    36,
-      36,    37,    37,    38,    38,    38,    38,    38
+       0,    34,    35,    36,    36,    36,    36,    36,    36,    36,
+      36,    36,    36,    36,    36,    36,    36,    36,    36,    36,
+      36,    36,    36,    36,    36,    36,    36,    36,    36,    36,
+      37,    37,    38,    38,    39,    39,    39,    39,    39,    39,
+      39
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     1,     1,     4,     3,     2,     2,     2,
-       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     3,     6,     3,     4,     2,     1,
-       3,     1,     3,     1,     1,     3,     3,     2
+       0,     2,     1,     1,     1,     4,     3,     3,     2,     2,
+       2,     3,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     3,     3,     6,     3,     4,     2,
+       1,     3,     1,     3,     1,     1,     3,     3,     3,     3,
+       2
 };
 
 
@@ -1176,221 +1178,239 @@ yyreduce:
   case 2: /* equation: expr  */
 #line 66 "XmileEqYacc.y"
                                                  { xpyy_set_result((yyvsp[0].exn)); }
-#line 1180 "XmileEqYacc.tab.cpp"
+#line 1182 "XmileEqYacc.tab.cpp"
     break;
 
   case 3: /* expr: XPTT_number  */
 #line 69 "XmileEqYacc.y"
                                                  { (yyval.exn) = xpyy_num((yyvsp[0].num)); }
-#line 1186 "XmileEqYacc.tab.cpp"
+#line 1188 "XmileEqYacc.tab.cpp"
     break;
 
   case 4: /* expr: XPTT_symbol  */
 #line 70 "XmileEqYacc.y"
                                                  { (yyval.exn) = xpyy_resolve_symbol((yyvsp[0].lit), NULL); }
-#line 1192 "XmileEqYacc.tab.cpp"
+#line 1194 "XmileEqYacc.tab.cpp"
     break;
 
   case 5: /* expr: XPTT_symbol '[' subs ']'  */
 #line 71 "XmileEqYacc.y"
                                                  { (yyval.exn) = xpyy_resolve_symbol((yyvsp[-3].lit), (yyvsp[-1].sml)); }
-#line 1198 "XmileEqYacc.tab.cpp"
+#line 1200 "XmileEqYacc.tab.cpp"
     break;
 
-  case 6: /* expr: '(' expr ')'  */
-#line 72 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_paren((yyvsp[-1].exn)); }
-#line 1204 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 7: /* expr: '-' expr  */
-#line 73 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_unary('-', (yyvsp[0].exn)); }
-#line 1210 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 8: /* expr: '+' expr  */
+  case 6: /* expr: XPTT_symbol '.' XPTT_symbol  */
 #line 74 "XmileEqYacc.y"
-                                                 { (yyval.exn) = (yyvsp[0].exn); }
-#line 1216 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_resolve_symbol((yyvsp[0].lit), NULL); }
+#line 1206 "XmileEqYacc.tab.cpp"
     break;
 
-  case 9: /* expr: XPTT_not expr  */
+  case 7: /* expr: '(' expr ')'  */
 #line 75 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical_unary((yyvsp[0].exn)); }
-#line 1222 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_paren((yyvsp[-1].exn)); }
+#line 1212 "XmileEqYacc.tab.cpp"
     break;
 
-  case 10: /* expr: expr '+' expr  */
+  case 8: /* expr: '-' expr  */
 #line 76 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_binop('+', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1228 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_unary('-', (yyvsp[0].exn)); }
+#line 1218 "XmileEqYacc.tab.cpp"
     break;
 
-  case 11: /* expr: expr '-' expr  */
+  case 9: /* expr: '+' expr  */
 #line 77 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_binop('-', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1234 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = (yyvsp[0].exn); }
+#line 1224 "XmileEqYacc.tab.cpp"
     break;
 
-  case 12: /* expr: expr '*' expr  */
+  case 10: /* expr: XPTT_not expr  */
 #line 78 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_binop('*', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1240 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical_unary((yyvsp[0].exn)); }
+#line 1230 "XmileEqYacc.tab.cpp"
     break;
 
-  case 13: /* expr: expr '/' expr  */
+  case 11: /* expr: expr '+' expr  */
 #line 79 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_binop('/', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1246 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_binop('+', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1236 "XmileEqYacc.tab.cpp"
     break;
 
-  case 14: /* expr: expr XPTT_safediv expr  */
+  case 12: /* expr: expr '-' expr  */
 #line 80 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_safediv((yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1252 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_binop('-', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1242 "XmileEqYacc.tab.cpp"
     break;
 
-  case 15: /* expr: expr XPTT_mod expr  */
+  case 13: /* expr: expr '*' expr  */
 #line 81 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_function("MODULO", (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1258 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_binop('*', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1248 "XmileEqYacc.tab.cpp"
     break;
 
-  case 16: /* expr: expr '^' expr  */
+  case 14: /* expr: expr '/' expr  */
 #line 82 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_binop('^', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1264 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_binop('/', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1254 "XmileEqYacc.tab.cpp"
     break;
 
-  case 17: /* expr: expr XPTT_eq expr  */
+  case 15: /* expr: expr XPTT_safediv expr  */
 #line 83 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical('=', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1270 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_safediv((yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1260 "XmileEqYacc.tab.cpp"
     break;
 
-  case 18: /* expr: expr XPTT_neq expr  */
+  case 16: /* expr: expr XPTT_mod expr  */
 #line 84 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical_ne((yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1276 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_function("MODULO", (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1266 "XmileEqYacc.tab.cpp"
     break;
 
-  case 19: /* expr: expr XPTT_lt expr  */
+  case 17: /* expr: expr '^' expr  */
 #line 85 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical('<', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1282 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_binop('^', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1272 "XmileEqYacc.tab.cpp"
     break;
 
-  case 20: /* expr: expr XPTT_lte expr  */
+  case 18: /* expr: expr XPTT_eq expr  */
 #line 86 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical_le((yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1288 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical('=', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1278 "XmileEqYacc.tab.cpp"
     break;
 
-  case 21: /* expr: expr XPTT_gt expr  */
+  case 19: /* expr: expr XPTT_neq expr  */
 #line 87 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical('>', (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1294 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical_ne((yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1284 "XmileEqYacc.tab.cpp"
     break;
 
-  case 22: /* expr: expr XPTT_gte expr  */
+  case 20: /* expr: expr XPTT_lt expr  */
 #line 88 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical_ge((yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1300 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical('<', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1290 "XmileEqYacc.tab.cpp"
     break;
 
-  case 23: /* expr: expr XPTT_and expr  */
+  case 21: /* expr: expr XPTT_lte expr  */
 #line 89 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical_and((yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1306 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical_le((yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1296 "XmileEqYacc.tab.cpp"
     break;
 
-  case 24: /* expr: expr XPTT_or expr  */
+  case 22: /* expr: expr XPTT_gt expr  */
 #line 90 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_logical_or((yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1312 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical('>', (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1302 "XmileEqYacc.tab.cpp"
     break;
 
-  case 25: /* expr: XPTT_if expr XPTT_then expr XPTT_else expr  */
+  case 23: /* expr: expr XPTT_gte expr  */
+#line 91 "XmileEqYacc.y"
+                                                 { (yyval.exn) = xpyy_logical_ge((yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1308 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 24: /* expr: expr XPTT_and expr  */
 #line 92 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_if((yyvsp[-4].exn), (yyvsp[-2].exn), (yyvsp[0].exn)); }
-#line 1318 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical_and((yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1314 "XmileEqYacc.tab.cpp"
     break;
 
-  case 26: /* expr: XPTT_symbol '(' ')'  */
+  case 25: /* expr: expr XPTT_or expr  */
 #line 93 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_call((yyvsp[-2].lit), NULL); }
-#line 1324 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_logical_or((yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1320 "XmileEqYacc.tab.cpp"
     break;
 
-  case 27: /* expr: XPTT_symbol '(' arglist ')'  */
-#line 94 "XmileEqYacc.y"
-                                                 { (yyval.exn) = xpyy_call((yyvsp[-3].lit), (yyvsp[-1].exl)); }
-#line 1330 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 28: /* expr: expr XPTT_apostrophe  */
+  case 26: /* expr: XPTT_if expr XPTT_then expr XPTT_else expr  */
 #line 95 "XmileEqYacc.y"
-                                                 { xpyyerror("postfix ' (transpose) is not supported"); YYABORT; }
-#line 1336 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.exn) = xpyy_if((yyvsp[-4].exn), (yyvsp[-2].exn), (yyvsp[0].exn)); }
+#line 1326 "XmileEqYacc.tab.cpp"
     break;
 
-  case 29: /* arglist: expr  */
+  case 27: /* expr: XPTT_symbol '(' ')'  */
+#line 96 "XmileEqYacc.y"
+                                                 { (yyval.exn) = xpyy_call((yyvsp[-2].lit), NULL); }
+#line 1332 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 28: /* expr: XPTT_symbol '(' arglist ')'  */
+#line 97 "XmileEqYacc.y"
+                                                 { (yyval.exn) = xpyy_call((yyvsp[-3].lit), (yyvsp[-1].exl)); }
+#line 1338 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 29: /* expr: expr XPTT_apostrophe  */
 #line 98 "XmileEqYacc.y"
+                                                 { xpyyerror("postfix ' (transpose) is not supported"); YYABORT; }
+#line 1344 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 30: /* arglist: expr  */
+#line 101 "XmileEqYacc.y"
                                                  { (yyval.exl) = xpyy_arglist(NULL, (yyvsp[0].exn)); }
-#line 1342 "XmileEqYacc.tab.cpp"
+#line 1350 "XmileEqYacc.tab.cpp"
     break;
 
-  case 30: /* arglist: arglist ',' expr  */
-#line 99 "XmileEqYacc.y"
-                                                 { (yyval.exl) = xpyy_arglist((yyvsp[-2].exl), (yyvsp[0].exn)); }
-#line 1348 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 31: /* subs: sub_term  */
+  case 31: /* arglist: arglist ',' expr  */
 #line 102 "XmileEqYacc.y"
+                                                 { (yyval.exl) = xpyy_arglist((yyvsp[-2].exl), (yyvsp[0].exn)); }
+#line 1356 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 32: /* subs: sub_term  */
+#line 105 "XmileEqYacc.y"
                                                  { (yyval.sml) = xpyy_sub_init((yyvsp[0].sml)); }
-#line 1354 "XmileEqYacc.tab.cpp"
+#line 1362 "XmileEqYacc.tab.cpp"
     break;
 
-  case 32: /* subs: subs ',' sub_term  */
-#line 103 "XmileEqYacc.y"
-                                                 { (yyval.sml) = xpyy_sub_append((yyvsp[-2].sml), (yyvsp[0].sml)); }
-#line 1360 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 33: /* sub_term: XPTT_symbol  */
+  case 33: /* subs: subs ',' sub_term  */
 #line 106 "XmileEqYacc.y"
-                                                 { (yyval.sml) = xpyy_sub_name((yyvsp[0].lit)); }
-#line 1366 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.sml) = xpyy_sub_append((yyvsp[-2].sml), (yyvsp[0].sml)); }
+#line 1368 "XmileEqYacc.tab.cpp"
     break;
 
-  case 34: /* sub_term: '*'  */
-#line 107 "XmileEqYacc.y"
-                                                 { (yyval.sml) = xpyy_sub_star(NULL); }
-#line 1372 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 35: /* sub_term: '*' ':' XPTT_symbol  */
-#line 108 "XmileEqYacc.y"
-                                                 { (yyval.sml) = xpyy_sub_star((yyvsp[0].lit)); }
-#line 1378 "XmileEqYacc.tab.cpp"
-    break;
-
-  case 36: /* sub_term: XPTT_symbol ':' XPTT_symbol  */
+  case 34: /* sub_term: XPTT_symbol  */
 #line 109 "XmileEqYacc.y"
-                                                 { (yyval.sml) = xpyy_sub_range((yyvsp[-2].lit), (yyvsp[0].lit)); }
-#line 1384 "XmileEqYacc.tab.cpp"
+                                                 { (yyval.sml) = xpyy_sub_name((yyvsp[0].lit)); }
+#line 1374 "XmileEqYacc.tab.cpp"
     break;
 
-  case 37: /* sub_term: '@' XPTT_number  */
+  case 35: /* sub_term: '*'  */
 #line 110 "XmileEqYacc.y"
+                                                 { (yyval.sml) = xpyy_sub_star(NULL); }
+#line 1380 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 36: /* sub_term: '*' ':' XPTT_symbol  */
+#line 111 "XmileEqYacc.y"
+                                                 { (yyval.sml) = xpyy_sub_star((yyvsp[0].lit)); }
+#line 1386 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 37: /* sub_term: XPTT_symbol '.' '*'  */
+#line 112 "XmileEqYacc.y"
+                                                 { (yyval.sml) = xpyy_sub_star((yyvsp[-2].lit)); }
+#line 1392 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 38: /* sub_term: XPTT_symbol '.' XPTT_symbol  */
+#line 113 "XmileEqYacc.y"
+                                                 { (yyval.sml) = xpyy_sub_name((yyvsp[0].lit)); }
+#line 1398 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 39: /* sub_term: XPTT_symbol ':' XPTT_symbol  */
+#line 114 "XmileEqYacc.y"
+                                                 { (yyval.sml) = xpyy_sub_range((yyvsp[-2].lit), (yyvsp[0].lit)); }
+#line 1404 "XmileEqYacc.tab.cpp"
+    break;
+
+  case 40: /* sub_term: '@' XPTT_number  */
+#line 115 "XmileEqYacc.y"
                                                  { (yyval.sml) = xpyy_sub_index((int)(yyvsp[0].num)); }
-#line 1390 "XmileEqYacc.tab.cpp"
+#line 1410 "XmileEqYacc.tab.cpp"
     break;
 
 
-#line 1394 "XmileEqYacc.tab.cpp"
+#line 1414 "XmileEqYacc.tab.cpp"
 
       default: break;
     }
@@ -1583,5 +1603,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 113 "XmileEqYacc.y"
+#line 118 "XmileEqYacc.y"
 

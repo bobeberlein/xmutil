@@ -264,7 +264,13 @@ FSubclass(FunctionAbs, "ABS", 1, "ABS") FSubclass(FunctionExp, "EXP", 1, "EXP")
 FSubclass(FunctionProd, "PROD", 1, "PROD");
 FSubclass(FunctionVMax, "VMAX", 1, "MAX");
 FSubclass(FunctionVMin, "VMIN", 1, "MIN");
-FSubclass(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT");
+// VECTOR SELECT(selection, expression, missing, numerical action, error action)
+// has no XMILE counterpart; OutputComputable rewrites it in terms of XMILE's
+// array builtins (see Function.cpp).
+FSubclassStart(FunctionVectorSelect, "VECTOR SELECT", 5, "VECTOR SELECT") public
+    : virtual void OutputComputable(ContextInfo *info, ExpressionList *arg) override;
+}
+;
 FSubclass(FunctionVectorElmMap, "VECTOR ELM MAP", 2, "VECTOR ELM MAP");
 FSubclass(FunctionVectorSortOrder, "VECTOR SORT ORDER", 2, "VECTOR SORT ORDER");
 FSubclass(FunctionGame, "GAME", 1, "");  // don't need this

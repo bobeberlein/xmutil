@@ -248,8 +248,15 @@ private:
   void ResolveWildcardSubscripts(SymbolNameSpace *ns);
   void ResolveWildcardsInExpr(Expression *e);
   void ResolveWildcardsInVarRef(ExpressionVariable *ev);
+
+public:
+  // The dimension a bare `*` at subscript position pos of a reference to
+  // target binds to. Public because the XMILE writer asks the same question in
+  // reverse: a bang it writes as `*` must read back as the same dimension
+  // (SymbolList::OutputComputable).
   static Symbol *FamilyAtPosition(Variable *target, int pos);
 
+private:
   SymbolNameSpace mSymbolNameSpace;
   std::vector<ModelGroup *> vGroups;
   std::vector<View *> vViews;

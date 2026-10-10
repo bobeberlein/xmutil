@@ -124,8 +124,12 @@ public:
   virtual void OutputComputable(ContextInfo *info) {
     assert(pVariable);
     pVariable->OutputComputable(info);
-    if (pSubList)
+    if (pSubList) {
+      Variable *outer = info->SubscriptOwner();
+      info->SetSubscriptOwner(pVariable);
       pSubList->OutputComputable(info);
+      info->SetSubscriptOwner(outer);
+    }
   }
   virtual bool TestMarkFlows(SymbolNameSpace *sns, FlowList *fl, Equation *eq) {
     return false;

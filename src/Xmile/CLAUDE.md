@@ -83,6 +83,16 @@ direction.
   Expression tree, function registry, and view geometry.
 
 ## Key Decisions
+- **VECTOR SELECT is written with XMILE array builtins** (`FunctionVectorSelect::
+  OutputComputable`; .mdl -> XMILE only, so far): `( IF SUM(IF sel <> 0 THEN 1
+  ELSE 0) = 0 THEN missing ELSE red(IF sel <> 0 THEN v ELSE identity) )`, with
+  `v` = `sel*expr` for the weighted actions 0-4 and `expr` for 6-10, `red` =
+  SUM / PROD / MIN / MAX (identity 0, 1, 1e38, -1e38), and the means divided
+  by the selected count. The bang subscripts (`Dim!`) are written `Dim.*`,
+  which names the dimension each array is iterated over (elsewhere a bang is
+  just `*`). The error action only decides when Vensim raises a
+  run-time error and is dropped; action 5 and a non-constant action are
+  written as is, with a warning. Tests: `test/xmile/VectorSelectXmileTest.cpp`.
 - **Macros: Vensim's `name$` becomes a plain name, and comes back.** Inside a
   Vensim macro `name$` names the model's own `name`; XMILE has no such
   reference, and knows the time variables as builtins (TIME, DT, STARTTIME,
@@ -589,9 +599,20 @@ direction.
   model is parsed and `MarkVariableTypes` has set element/family ownership,
   `Model::ResolveWildcardSubscripts` binds each null bang to the referenced
   variable's dimension family at that position, so `SUM(a[*])` emits Vensim
-  `SUM(a[DimA!])` and XMILE `SUM(a[*])`. `*:Sub` already carries the concrete
-  dimension and is left alone. The subrange bang emits as `*:Sub` (the inverse of
-  the `'*' ':' symbol` grammar rule); the older `Sub.*` spelling did not re-parse.
+  `SUM(a[DimA!])` and XMILE `SUM(a[*])`. `*:Sub` and `Sub.*` already carry the
+  concrete dimension and are left alone. On output a bang is `*`, or `*:Sub`
+  for a subrange -- except where `*` would not read back as the same
+  dimension, which the writer names as `Dim.*` (`SymbolList::OutputComputable`):
+  inside VECTOR SELECT, whose two arrays are paired only through the dimensions
+  they iterate, every bang (`ContextInfo::SetBangAsDimStar`); elsewhere a bang
+  over a dimension other than the variable's own at that position (one mapped
+  to it, `task quality[prereq!]` for a task quality[task]), since the reader
+  binds a bare `*` to the variable's own (`Model::FamilyAtPosition`). Without
+  that, VECTOR SELECT's expanded form came back from a second trip iterating
+  the wrong dimension. On input all three forms are accepted:
+  `*`, `*:Dim` and `Dim.*` are the `sub_term` productions of `XmileEqYacc.y`.
+  The committed tables are bison 3.8.2's output (LF line endings; `win_bison`
+  writes CRLF, so convert after regenerating).
 - **The module decomposition is unreachable from XMILE input, and the
   multi-VIEW branch of it is doubly so.** `Model::PrintXMILE` sends every
   XMILE-sourced model down the sector path (Key Decisions), so neither

@@ -121,6 +121,23 @@ public:
   void SetWantFinalStar(bool set) {
     bWantFinalStar = set;
   }
+  // Write a bang subscript (Vensim `Dim!`) as `Dim.*` rather than `*` /
+  // `*:Sub`. Set while VECTOR SELECT is written: its two arrays are paired up
+  // only by the dimensions they iterate, so those have to be named.
+  bool BangAsDimStar() const {
+    return bBangAsDimStar;
+  }
+  void SetBangAsDimStar(bool set) {
+    bBangAsDimStar = set;
+  }
+  // The variable whose subscripts are being written, so a bang can tell
+  // whether a bare `*` would read back as its dimension (SymbolList).
+  Variable *SubscriptOwner() const {
+    return pSubscriptOwner;
+  }
+  void SetSubscriptOwner(Variable *v) {
+    pSubscriptOwner = v;
+  }
   Variable *LHS() {
     return pLHS;
   }
@@ -141,6 +158,8 @@ private:
   bool bInSubList;
   bool bSelfIsPrevious;
   bool bWantFinalStar;
+  bool bBangAsDimStar = false;
+  Variable *pSubscriptOwner = nullptr;
 };
 
 #endif

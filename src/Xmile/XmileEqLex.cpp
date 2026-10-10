@@ -226,8 +226,9 @@ int XmileEqLex::yylex() {
       PushBack(nx);
       return ScanNumber('.');
     }
-    // A bare '.' is not part of XMILE equation syntax; pass it through so
-    // the grammar surfaces an error pointed at the offending character.
+    // A bare '.' is the grammar's to judge: it is part of a `Dim.*`
+    // subscript, and anywhere else the grammar surfaces an error pointed at
+    // the offending character.
     if (nx)
       PushBack(nx);
     return '.';
