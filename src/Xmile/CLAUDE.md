@@ -90,7 +90,16 @@ direction.
   SUM / PROD / MIN / MAX (identity 0, 1, 1e38, -1e38), and the means divided
   by the selected count. The bang subscripts (`Dim!`) are written `Dim.*`,
   which names the dimension each array is iterated over (elsewhere a bang is
-  just `*`). The error action only decides when Vensim raises a
+  just `*`). The action is read at translation time: a number, or a variable
+  defined by one numeric equation -- an unchangeable constant (`VSSUM == 0`,
+  marked by the Vensim reader: `Variable::Unchangeable`) silently, an ordinary
+  one with `{check original for consistency}` appended to the equation
+  (`ContextInfo::AddTrailingComment`, written by `Equation::
+  RHSFormattedXMILE`). An action or error-action variable read that way is no
+  longer an input of the written equation, so `generateView` drops the arrow
+  from it unless the equation refers to it elsewhere (`ContextInfo::
+  NoteDroppedInput` / `NoteReferenced`, collected per variable over all its
+  equations into `XMILEGenerator::InputDropped`). The error action only decides when Vensim raises a
   run-time error and is dropped; action 5 and a non-constant action are
   written as is, with a warning. Tests: `test/xmile/VectorSelectXmileTest.cpp`.
 - **Macros: Vensim's `name$` becomes a plain name, and comes back.** Inside a

@@ -936,7 +936,8 @@ void MDLGenerator::GenerateVariableEntry(std::string &out, Variable *v) {
       // pExceptList, so a model using the [a]:EXCEPT:[b] form is filtered from
       // the corpus rather than emitted with a silently-dropped clause.
       std::string rhs = RenderExpression(rhsExpr);
-      EmitWrappedEntry(out, lhs + " = " + rhs, v);
+      // `==` keeps an unchangeable constant unchangeable.
+      EmitWrappedEntry(out, lhs + (v->Unchangeable() ? " == " : " = ") + rhs, v);
     }
     break;
   }
@@ -1248,9 +1249,84 @@ std::string MDLGenerator::RenderVariableRef(ExpressionVariable *v) {
       out += "$";
   }
   SymbolList *subs = v->GetSubs();
-  if (subs && subs->Length() > 0)
+  if (subs && subs->Length() > 0) {
+    std::string mapped;
+    if (RenderComputedSubscripts(v, out, mapped))
+      return mapped;
     out += RenderSubscripts(subs);
+  }
   return out;
+}
+
+bool MDLGenerator::RenderComputedSubscripts(ExpressionVariable *v, const std::string &name, std::string &out) {
+  // XMILE lets a subscript be a variable whose value picks the element
+  // (`a[i]` with i a number), which Vensim cannot say. Its idiom is VECTOR
+  // ELM MAP(vec[first], offset): the element `offset` places past `first`,
+  // counted with the last subscript varying fastest. So the reference becomes
+  //   VECTOR ELM MAP(a[..first element of each computed dimension..],
+  //                  (i - 1) * stride + ...)
+  // where a stride is the number of elements in the dimensions after it.
+  SymbolList *subs = v->GetSubs();
+  Variable *target = v->GetVariable();
+  const int n = subs->Length();
+  std::vector<int> computed;
+  for (int i = 0; i < n; i++) {
+    const SymbolList::SymbolListEntry &e = (*subs)[i];
+    if (e.eType == SymbolList::EntryType_LIST)
+      return false;
+    Symbol *s = e.u.pSymbol;
+    if (e.eType == SymbolList::EntryType_SYMBOL && s && s->isType() == Symtype_Variable) {
+      XMILE_Type type = static_cast<Variable *>(s)->VariableType();
+      if (type != XMILE_Type_ARRAY && type != XMILE_Type_ARRAY_ELM)
+        computed.push_back(i);
+    }
+  }
+  if (computed.empty())
+    return false;
+
+  // Each position's dimension, and its size (for the strides).
+  std::vector<Symbol *> dims(n);
+  std::vector<size_t> sizes(n, 0);
+  for (int i = 0; i < n; i++) {
+    dims[i] = Model::FamilyAtPosition(target, i);
+    if (!dims[i])
+      return false;
+    std::vector<Symbol *> elms;
+    Equation::GetSubscriptElements(elms, dims[i]);
+    if (elms.empty())
+      return false;
+    sizes[i] = elms.size();
+  }
+
+  std::string anchor = name + "[";
+  std::string offset;
+  for (int i = 0; i < n; i++) {
+    if (i)
+      anchor += ", ";
+    const SymbolList::SymbolListEntry &e = (*subs)[i];
+    if (std::find(computed.begin(), computed.end(), i) == computed.end()) {
+      NoteVariableNamed(e.u.pSymbol);
+      anchor += e.u.pSymbol ? mdl::FormatMDLIdent(e.u.pSymbol->GetName()) : std::string("*");
+      if (e.eType == SymbolList::EntryType_BANG_SYMBOL)
+        anchor += "!";
+      continue;
+    }
+    std::vector<Symbol *> elms;
+    Equation::GetSubscriptElements(elms, dims[i]);
+    NoteVariableNamed(elms[0]);
+    anchor += mdl::FormatMDLIdent(elms[0]->GetName());
+    size_t stride = 1;
+    for (int j = i + 1; j < n; j++)
+      stride *= sizes[j];
+    NoteVariableNamed(e.u.pSymbol);
+    const std::string index = mdl::FormatMDLIdent(e.u.pSymbol->GetName());
+    std::string term = (computed.size() == 1 && stride == 1) ? index + " - 1" : "(" + index + " - 1)";
+    if (stride != 1)
+      term += " * " + std::to_string(stride);
+    offset += (offset.empty() ? "" : " + ") + term;
+  }
+  out = "VECTOR ELM MAP(" + anchor + "], " + offset + ")";
+  return true;
 }
 
 std::string MDLGenerator::RenderSubscripts(SymbolList *subs) {

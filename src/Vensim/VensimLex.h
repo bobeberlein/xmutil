@@ -29,7 +29,16 @@ public:
   bool EndOfFile(void);
   bool BufferReadLine(char *buf, size_t buflen);  // start with buffer then read the line
   bool ReadLine(char *buf, size_t buflen);        // read a line if enough room otherwise part of it
+  // Whether an `==` (unchangeable constant) was read since the last call; the
+  // flag is cleared by asking.
+  bool TakeUnchangeable() {
+    bool was = bUnchangeable;
+    bUnchangeable = false;
+    return was;
+  }
+
 private:
+  bool bUnchangeable = false;
   char GetNextChar(bool store);
   void PushBack(char c, bool store);
   void SyncBuffers(void);

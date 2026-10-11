@@ -6,6 +6,7 @@ class Model;
 
 #include <tinyxml2.h>
 
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -42,6 +43,19 @@ protected:
 
 private:
   Model *_model;
+  // Per variable, as its equations are written: the inputs a translation read
+  // as literals, and the variables the written equations refer to. An input in
+  // the first and not the second is one the variable no longer depends on in
+  // XMILE, so its arrow is not drawn (InputDropped, generateView).
+  std::map<Variable *, std::set<Variable *>> _droppedInputs;
+  std::map<Variable *, std::set<Variable *>> _referencedInputs;
+  bool InputDropped(Variable *to, Variable *from) const {
+    auto d = _droppedInputs.find(to);
+    if (d == _droppedInputs.end() || !d->second.count(from))
+      return false;
+    auto r = _referencedInputs.find(to);
+    return r == _referencedInputs.end() || !r->second.count(from);
+  }
   double _xratio;
   double _yratio;
   bool _from_dynamo;

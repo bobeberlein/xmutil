@@ -129,6 +129,10 @@ private:
   std::string RenderLogical(ExpressionLogical *lg);
   std::string RenderFunction(ExpressionFunction *fn);
   std::string RenderVariableRef(ExpressionVariable *v);
+  // A reference with a computed subscript (an XMILE `a[i]`, i a number) as the
+  // VECTOR ELM MAP Vensim needs for it, written to out; false when there is
+  // none. name is the reference's own rendered name.
+  bool RenderComputedSubscripts(ExpressionVariable *v, const std::string &name, std::string &out);
   std::string RenderSubscripts(SymbolList *subs);
   // Render a table-like expression: a Lookup (embedded WITH LOOKUP or a named
   // lookup-variable call), a bare Table body, an arrayed NumberTable constant

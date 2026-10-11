@@ -31,7 +31,8 @@ void Equation::CheckPlaceholderVars(Model *m) {
 }
 
 std::string Equation::RHSFormattedXMILE(Variable *lhs, const std::vector<Symbol *> &subs,
-                                        const std::vector<Symbol *> &dims, bool init) {
+                                        const std::vector<Symbol *> &dims, bool init,
+                                        std::set<Variable *> *droppedInputs, std::set<Variable *> *referenced) {
   if (!pExpression)
     return "{empty}";
   ContextInfo info(lhs);
@@ -41,6 +42,16 @@ std::string Equation::RHSFormattedXMILE(Variable *lhs, const std::vector<Symbol 
   assert(subs.size() == dims.size());
   info.SetLHSElms(&subs, &dims);
   pExpression->OutputComputable(&info);
+  if (droppedInputs) {
+    const std::set<Variable *> &dropped = info.DroppedInputs();
+    droppedInputs->insert(dropped.begin(), dropped.end());
+  }
+  if (referenced) {
+    const std::set<Variable *> &used = info.Referenced();
+    referenced->insert(used.begin(), used.end());
+  }
+  if (!info.TrailingComment().empty())
+    return info.str() + " {" + info.TrailingComment() + "}";
   return info.str();
 }
 

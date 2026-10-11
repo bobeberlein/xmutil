@@ -235,6 +235,9 @@ Equation *VensimParse::AddTable(LeftHandSide *lhs, Expression *ex, ExpressionTab
 void VensimParse::AddFullEq(Equation *eq, UnitExpression *un) {
   pSymbolNameSpace->ConfirmAllAllocations();  // now independently allocated
   pActiveVar = eq->GetVariable();
+  // The equation just read was defined with `==`.
+  if (mVensimLex.TakeUnchangeable() && pActiveVar)
+    pActiveVar->MarkUnchangeable();
   if (!_model->Groups().empty() && pActiveVar->GetAllEquations().empty() && !mInMacro) {
     _model->Groups().back()->vVariables.push_back(pActiveVar);
     pActiveVar->SetGroup(_model->Groups().back());
@@ -331,12 +334,14 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
             sFilename.c_str());
         log(".... skipping the associated variable and looking for the next usable content.\n");
         pSymbolNameSpace->DeleteAllUnconfirmedAllocations();
+        mVensimLex.TakeUnchangeable();  // the failed equation's `==`, if any
         noerr = false;
         if (!FindNextEq(false))
           break;
 
       } catch (...) {
         pSymbolNameSpace->DeleteAllUnconfirmedAllocations();
+        mVensimLex.TakeUnchangeable();  // the failed equation's `==`, if any
         noerr = false;
         if (!FindNextEq(false))
           break;

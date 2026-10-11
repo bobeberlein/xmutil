@@ -370,6 +370,15 @@ public:
   bool MacroGlobalReference() const {
     return _macroGlobalReference;
   }
+  // Defined with Vensim's `==` (an unchangeable constant): its value is fixed
+  // for the whole run and cannot be changed between runs either, so a
+  // translation may use it as a literal (VECTOR SELECT's action codes).
+  void MarkUnchangeable() {
+    _unchangeable = true;
+  }
+  bool Unchangeable() const {
+    return _unchangeable;
+  }
   void MarkUsesMemory() {
     bUsesMemory = true;
   }
@@ -431,6 +440,7 @@ private:
   bool _synthesizedNetFlow;
   bool _synthesizedFlowProxy;
   bool _macroGlobalReference = false;
+  bool _unchangeable = false;
   std::string _altNameWithoutContent;  // see SetAlternateName
   bool bAsFlow;
   bool bUsesMemory;

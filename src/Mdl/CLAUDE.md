@@ -37,6 +37,13 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   conversion error, not broken output. The writer emits
   post-`AdjustGroupNames` group names, so skipping that step yields `.mdl` that
   does not round-trip.
+- **Computed subscripts**: XMILE allows a subscript to be a variable whose value
+  selects the element (`a[i]`). Vensim does not, so
+  `RenderComputedSubscripts` writes such a reference as
+  `VECTOR ELM MAP(a[<first element of each computed dim>, ...], offset)`. The
+  offset is the sum of `(idx - 1) * stride` over the computed positions, where
+  the last subscript varies fastest. A lone stride-1 term is written as
+  `idx - 1`.
 
 ## Dependencies
 - **Uses**: `Model`, `Expression` tree node types and `EXPTYPE` tags
@@ -134,6 +141,10 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   an undefined variable, every connector endpoint has a record, every attached
   valve is followed by a variable record -- are asserted in
   `test/mdl/SketchRoundTripTest.cpp`.
+
+- An unchangeable constant (`x == 3`) is written with `==`: `VensimLex` notes the
+  `==`, `VensimParse::AddFullEq` marks the variable (`Variable::Unchangeable`),
+  and `GenerateVariableEntry` writes it back.
 
 ## Key Files
 - `MDLGenerator.{h,cpp}` - the `Model` -> `.mdl` walker (equations, macros,

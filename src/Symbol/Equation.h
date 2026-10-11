@@ -26,9 +26,14 @@ public:
   void Execute(ContextInfo *info);
   void OutputComputable(ContextInfo *info);
   void CheckPlaceholderVars(Model *m);
+  // droppedInputs / referenced, when given, receive the variables a translation
+  // read as literals and the variables the written equation refers to (see
+  // ContextInfo::NoteDroppedInput); an input the variable no longer depends on
+  // is dropped in one of its equations and referenced in none.
   std::string RHSFormattedXMILE(Variable *lhs, const std::vector<Symbol *> &subs, const std::vector<Symbol *> &dims,
-                                bool init);  // need a_b*c
-  bool IsActiveInit();                       // true only for active
+                                bool init, std::set<Variable *> *droppedInputs = nullptr,
+                                std::set<Variable *> *referenced = nullptr);  // need a_b*c
+  bool IsActiveInit();                                                        // true only for active
 private:
   LeftHandSide *pLeftHandSide;
   Expression *pExpression;

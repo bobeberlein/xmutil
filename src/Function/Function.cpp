@@ -2,7 +2,9 @@
 
 #include "../ContextInfo.h"
 #include "../Log.h"
+#include "../Symbol/Equation.h"
 #include "../Symbol/ExpressionList.h"
+#include "../Symbol/Variable.h"
 #include "../XMUtil.h"
 
 // model symbol - most variables including subscript ranges but not
@@ -50,6 +52,38 @@ void FunctionVectorLookup::OutputComputable(ContextInfo *info, ExpressionList *a
   Function::OutputComputable(info, arg);
 }
 
+namespace {
+
+// The value of an expression that is a number, or names a variable defined by
+// a single numeric equation. changeable is set for the latter unless the
+// variable is an unchangeable constant (`==`): its value then holds only for
+// as long as nobody changes it.
+bool ConstantValue(Expression *e, double &value, bool &changeable) {
+  while (e && e->GetType() == EXPTYPE_Operator && std::string(e->GetBefore()) == "(")
+    e = e->GetArg(0);
+  if (!e)
+    return false;
+  if (e->GetType() == EXPTYPE_Number) {
+    value = static_cast<ExpressionNumber *>(e)->GetValue();
+    return true;
+  }
+  if (e->GetType() != EXPTYPE_Variable)
+    return false;
+  ExpressionVariable *ev = static_cast<ExpressionVariable *>(e);
+  if (ev->GetSubs() && ev->GetSubs()->Length() > 0)
+    return false;
+  Variable *v = ev->GetVariable();
+  std::vector<Equation *> eqs = v->GetAllEquations();
+  if (eqs.size() != 1 || !eqs[0]->GetExpression() || eqs[0]->GetExpression()->GetType() != EXPTYPE_Number)
+    return false;
+  value = static_cast<ExpressionNumber *>(eqs[0]->GetExpression())->GetValue();
+  if (!v->Unchangeable())
+    changeable = true;
+  return true;
+}
+
+}  // namespace
+
 void FunctionVectorSelect::OutputComputable(ContextInfo *info, ExpressionList *arg) {
   // VECTOR SELECT(sel[..d!..], expr[..d!..], missing, action, error) reduces,
   // over the bang (!) dimensions, the elements whose selection is nonzero, and
@@ -66,6 +100,12 @@ void FunctionVectorSelect::OutputComputable(ContextInfo *info, ExpressionList *a
   // power product) and an action that is not a constant are passed through
   // unchanged, with a warning: there is nothing XMILE to write.
   //
+  // The action is chosen at translation time, so it must be a constant. Models
+  // commonly name the codes (`VSSUM == 0`); an unchangeable constant like that
+  // is as good as the literal. An ordinary constant is used too, but its value
+  // could be changed for a run, so the equation is marked
+  // {check original for consistency}.
+  //
   // The two arrays are paired only through the dimensions they iterate, so
   // their bang subscripts are written `Dim.*`, naming them, rather than the
   // bare `*` used elsewhere (for the whole call, restored on the way out).
@@ -77,17 +117,30 @@ void FunctionVectorSelect::OutputComputable(ContextInfo *info, ExpressionList *a
     }
   } bangGuard{info, info->BangAsDimStar()};
   info->SetBangAsDimStar(true);
-  if (!arg || arg->Length() != 5 || arg->GetExp(3)->GetType() != EXPTYPE_Number) {
+  double actionValue = 0;
+  bool checkOriginal = false;
+  if (!arg || arg->Length() != 5 || !ConstantValue(arg->GetExp(3), actionValue, checkOriginal)) {
     log("warning: VECTOR SELECT with a non-constant numerical action has no XMILE equivalent; written as is\n");
     Function::OutputComputable(info, arg);
     return;
   }
-  const double actionValue = static_cast<ExpressionNumber *>(arg->GetExp(3))->GetValue();
   const int action = static_cast<int>(actionValue);
   if (action != actionValue || action < 0 || action > 10 || action == 5) {
     log("warning: VECTOR SELECT numerical action %g has no XMILE equivalent; written as is\n", actionValue);
     Function::OutputComputable(info, arg);
     return;
+  }
+  if (checkOriginal)
+    info->AddTrailingComment("check original for consistency");
+  // The action was read as a number and the error action is dropped, so the
+  // written equation no longer depends on a variable naming either; the view
+  // then drops the arrow from it (XMILEGenerator::generateView).
+  for (int i : {3, 4}) {
+    Expression *a = arg->GetExp(i);
+    while (a && a->GetType() == EXPTYPE_Operator && std::string(a->GetBefore()) == "(")
+      a = a->GetArg(0);
+    if (a && a->GetType() == EXPTYPE_Variable)
+      info->NoteDroppedInput(static_cast<ExpressionVariable *>(a)->GetVariable());
   }
   Expression *sel = arg->GetExp(0);
   Expression *expr = arg->GetExp(1);

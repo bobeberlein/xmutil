@@ -123,6 +123,7 @@ public:
   }
   virtual void OutputComputable(ContextInfo *info) {
     assert(pVariable);
+    info->NoteReferenced(pVariable);
     pVariable->OutputComputable(info);
     if (pSubList) {
       Variable *outer = info->SubscriptOwner();

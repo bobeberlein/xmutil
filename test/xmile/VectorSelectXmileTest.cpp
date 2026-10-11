@@ -211,3 +211,136 @@ TEST(VectorSelect_round_trip_comes_back_as_its_translation) {
   free(again);
   CHECK(back2 == back);
 }
+// The action is chosen at translation time. A named code is as good as the
+// number when it is an unchangeable constant (`VSSUM == 0`, as C-LEARN writes
+// them); an ordinary constant is used as well, but its value could be changed
+// for a run, so the equation says so.
+TEST(VectorSelect_named_action_codes) {
+  const std::string mdl =
+      "{UTF-8}\n"
+      "d : d1, d2, d3\n\t~\t\n\t~\t\n\t|\n"
+      "s[d] = 1, 0, 2\n\t~\t\n\t~\t\n\t|\n"
+      "e[d] = 4, 5, 6\n\t~\t\n\t~\t\n\t|\n"
+      "VSMAX == 3\n\t~\t\n\t~\t\n\t|\n"
+      "VSERRNONE == 0\n\t~\t\n\t~\t\n\t|\n"
+      "my sum = 0\n\t~\t\n\t~\t\n\t|\n"
+      "fixed = VECTOR SELECT(s[d!], e[d!], 7, VSMAX, VSERRNONE)\n\t~\t\n\t~\t\n\t|\n"
+      "changeable = VECTOR SELECT(s[d!], e[d!], 7, my sum, 0)\n\t~\t\n\t~\t\n\t|\n"
+      "INITIAL TIME = 0\n\t~\t\n\t~\t\n\t|\n"
+      "FINAL TIME = 1\n\t~\t\n\t~\t\n\t|\n"
+      "TIME STEP = 1\n\t~\t\n\t~\t\n\t|\n"
+      "SAVEPER = 1\n\t~\t\n\t~\t\n\t|\n";
+  const std::string xmile = Unescape(MdlToXmile(mdl));
+  auto eqnOf = [&](const char *name) {
+    size_t at = xmile.find(std::string("<aux name=\"") + name + "\">");
+    if (at == std::string::npos)
+      return std::string();
+    size_t start = xmile.find("<eqn>", at);
+    return xmile.substr(start, xmile.find("</eqn>", start) - start);
+  };
+  const std::string fixedEqn = eqnOf("fixed");
+  CHECK(Contains(fixedEqn, "MAX(IF s[d.*] <> 0 THEN s[d.*]*e[d.*] ELSE -1e+38) )"));
+  CHECK(!Contains(fixedEqn, "{"));
+  const std::string changeableEqn = eqnOf("changeable");
+  CHECK(Contains(changeableEqn, "SUM(IF s[d.*] <> 0 THEN s[d.*]*e[d.*] ELSE 0) ) {check original for consistency}"));
+  CHECK(!Contains(xmile, "VECTOR SELECT"));
+  // .mdl -> .mdl keeps the unchangeable constants unchangeable.
+  char *out = convert_to_mdl(mdl.c_str(), static_cast<uint32_t>(mdl.size()), "c.mdl", -1);
+  const std::string back(out ? out : "");
+  free(out);
+  CHECK(Contains(back, "VSMAX == 3"));
+  CHECK(Contains(back, "my sum = 0"));
+}
+// An action code read as a number is no longer an input of the XMILE
+// equation, so the view does not draw the arrow from it -- unless the
+// equation also refers to it directly. Arrows from the arrays stay.
+TEST(VectorSelect_view_drops_arrows_from_action_codes) {
+  const std::string mdl =
+      "{UTF-8}\n"
+      "d : d1, d2\n\t~\t\n\t~\t\n\t|\n"
+      "s[d] = 1, 0\n\t~\t\n\t~\t\n\t|\n"
+      "VSMAX == 3\n\t~\t\n\t~\t\n\t|\n"
+      "VSSUM == 0\n\t~\t\n\t~\t\n\t|\n"
+      "picked = VECTOR SELECT(s[d!], s[d!], 0, VSMAX, 0)\n\t~\t\n\t~\t\n\t|\n"
+      "plus code = VECTOR SELECT(s[d!], s[d!], 0, VSSUM, 0) + VSSUM\n\t~\t\n\t~\t\n\t|\n"
+      "INITIAL TIME = 0\n\t~\t\n\t~\t\n\t|\n"
+      "FINAL TIME = 1\n\t~\t\n\t~\t\n\t|\n"
+      "TIME STEP = 1\n\t~\t\n\t~\t\n\t|\n"
+      "SAVEPER = 1\n\t~\t\n\t~\t\n\t|\n"
+      "\\\\\\---/// Sketch information - do not modify anything except names\n"
+      "V300  Do not put anything below this section - it will be ignored\n"
+      "*View 1\n"
+      "$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0\n"
+      "10,1,s,100,100,6,11,8,3,0,0,0,0,0,0\n"
+      "10,2,VSMAX,100,200,20,11,8,3,0,0,0,0,0,0\n"
+      "10,3,picked,300,150,20,11,8,3,0,0,0,0,0,0\n"
+      "1,4,1,3,1,0,0,0,0,64,0,-1--1--1,,1|(200,120)|\n"
+      "1,5,2,3,1,0,0,0,0,64,0,-1--1--1,,1|(200,180)|\n"
+      "10,6,VSSUM,100,300,20,11,8,3,0,0,0,0,0,0\n"
+      "10,7,plus code,300,300,30,11,8,3,0,0,0,0,0,0\n"
+      "1,8,6,7,1,0,0,0,0,64,0,-1--1--1,,1|(200,300)|\n"
+      "1,9,1,7,1,0,0,0,0,64,0,-1--1--1,,1|(200,200)|\n"
+      "///---\\\\\\\n";
+  const std::string xmile = MdlToXmile(mdl);
+  CHECK(!xmile.empty());
+  auto arrow = [&](const char *from, const char *to) {
+    const std::string want = std::string("<from>") + from + "</from>";
+    const std::string target = std::string("<to>") + to + "</to>";
+    for (size_t at = 0; (at = xmile.find(want, at)) != std::string::npos; at++) {
+      size_t end = xmile.find("</connector>", at);
+      if (xmile.substr(at, end - at).find(target) != std::string::npos)
+        return true;
+    }
+    return false;
+  };
+  CHECK(arrow("s", "picked"));
+  CHECK(!arrow("VSMAX", "picked"));    // read as the number 3
+  CHECK(arrow("VSSUM", "plus_code"));  // also added in directly
+  CHECK(arrow("s", "plus_code"));
+}
+// XMILE lets a subscript be a variable whose value picks the element; Vensim
+// cannot, and says it with VECTOR ELM MAP(vec[first], offset) -- the element
+// `offset` places past `first`, the last subscript varying fastest.
+TEST(VectorElmMap_computed_subscript_from_xmile) {
+  const std::string stmx = ReadFile(std::string(XMUTIL_SRC_ROOT) + "/test_models/NeedsVectorElmMap.stmx");
+  CHECK(!stmx.empty());
+  if (stmx.empty())
+    return;
+  char *out = convert_xmile_to_mdl(stmx.c_str(), static_cast<uint32_t>(stmx.size()), "n.stmx", -1);
+  CHECK(out != nullptr);
+  const std::string mdl(out ? out : "");
+  free(out);
+  CHECK(Contains(mdl, "Converter 1 = VECTOR ELM MAP(arrayed var[Element_1], array elm to use - 1)"));
+  // It is Vensim this tool reads back.
+  char *again = convert_to_mdl(mdl.c_str(), static_cast<uint32_t>(mdl.size()), "n.mdl", -1);
+  CHECK(again != nullptr);
+  free(again);
+}
+
+TEST(VectorElmMap_computed_subscript_stride) {
+  const char *kXmile = R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>1</stop><dt>1</dt></sim_specs>
+  <dimensions>
+    <dim name="r"><elem name="r1"/><elem name="r2"/><elem name="r3"/></dim>
+    <dim name="c"><elem name="c1"/><elem name="c2"/></dim>
+  </dimensions>
+  <model>
+    <variables>
+      <aux name="m"><dimensions><dim name="r"/><dim name="c"/></dimensions><eqn>r * 10 + c</eqn></aux>
+      <aux name="i"><eqn>2</eqn></aux>
+      <aux name="row"><dimensions><dim name="c"/></dimensions><eqn>m[i, c]</eqn></aux>
+      <aux name="col"><dimensions><dim name="r"/></dimensions><eqn>m[r, i]</eqn></aux>
+    </variables>
+  </model>
+</xmile>
+)";
+  char *out = convert_xmile_to_mdl(kXmile, static_cast<uint32_t>(std::string(kXmile).size()), "s.xmile", -1);
+  CHECK(out != nullptr);
+  const std::string mdl(out ? out : "");
+  free(out);
+  // A computed first subscript steps over whole rows of c (2 elements each).
+  CHECK(Contains(mdl, "row[c] = VECTOR ELM MAP(m[r1, c], (i - 1) * 2)"));
+  // A computed last subscript steps one element at a time.
+  CHECK(Contains(mdl, "col[r] = VECTOR ELM MAP(m[r, c1], i - 1)"));
+}

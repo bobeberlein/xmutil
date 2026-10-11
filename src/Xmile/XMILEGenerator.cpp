@@ -501,7 +501,7 @@ void XMILEGenerator::generateEquation(Variable *var, tinyxml2::XMLDocument *doc,
       }
     }
     // skip it altogether if it is an A FUNCTION OF equation
-    std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false);
+    std::string rhs = eqn->RHSFormattedXMILE(var, subs, dims, false, &_droppedInputs[var], &_referencedInputs[var]);
     // Standalone graphical-function variable: the equation's RHS *is* the
     // ExpressionTable (token '(' from VensimParse::AddTable, mirrored by the
     // XMILE reader for an <aux> carrying only <gf>). Emitting the placeholder
@@ -527,13 +527,18 @@ void XMILEGenerator::generateEquation(Variable *var, tinyxml2::XMLDocument *doc,
         tinyxml2::XMLElement *xieqn = doc->NewElement("init_eqn");
         xelement->InsertEndChild(xieqn);
         if (eqn->IsActiveInit())
-          xieqn->SetText(eqn->RHSFormattedXMILE(var, subs, dims, true).c_str());
+          xieqn->SetText(
+              eqn->RHSFormattedXMILE(var, subs, dims, true, &_droppedInputs[var], &_referencedInputs[var]).c_str());
         else {
           // this will not work correctly for complicated situations
           if (eq_ind < init_eqns.size())
-            xieqn->SetText(init_eqns[eq_ind]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+            xieqn->SetText(init_eqns[eq_ind]
+                               ->RHSFormattedXMILE(var, subs, dims, true, &_droppedInputs[var], &_referencedInputs[var])
+                               .c_str());
           else
-            xieqn->SetText(init_eqns[0]->RHSFormattedXMILE(var, subs, dims, true).c_str());
+            xieqn->SetText(init_eqns[0]
+                               ->RHSFormattedXMILE(var, subs, dims, true, &_droppedInputs[var], &_referencedInputs[var])
+                               .c_str());
         }
       }
 
@@ -1290,9 +1295,12 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
               // XMILE view, so a connector touching one has no endpoint to
               // reference; ghosts and cross-level stubs likewise cannot be a
               // connector target.
+              // Nor is an arrow drawn from an input the written equation no
+              // longer depends on (a VECTOR SELECT action code read as a
+              // number).
               if (from->GetVariable() && to->GetVariable() && to->GetVariable()->VariableType() != XMILE_Type_STOCK &&
                   !from->GetVariable()->Unwanted() && !to->GetVariable()->Unwanted() && !to->Ghost(NULL, false) &&
-                  !to->CrossLevel()) {
+                  !to->CrossLevel() && !InputDropped(to->GetVariable(), from->GetVariable())) {
                 // valid xmile connector
                 tinyxml2::XMLElement *xconnector = doc->NewElement("connector");
                 element->InsertEndChild(xconnector);

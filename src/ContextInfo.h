@@ -1,7 +1,9 @@
 #ifndef _XMUTIL_CONTEXTINFO_H
 #define _XMUTIL_CONTEXTINFO_H
 #include <cassert>
+#include <set>
 #include <sstream>
+#include <string>
 #include <vector>
 /* a utility class helpfu in sorting and evaluating equations
  */
@@ -138,6 +140,36 @@ public:
   void SetSubscriptOwner(Variable *v) {
     pSubscriptOwner = v;
   }
+  // A note for whoever reads the translated equation, written after it as an
+  // XMILE `{...}` comment (Equation::RHSFormattedXMILE). The same note is kept
+  // once however many parts of the equation ask for it.
+  void AddTrailingComment(const std::string &text) {
+    if (sTrailingComment.find(text) != std::string::npos)
+      return;
+    if (!sTrailingComment.empty())
+      sTrailingComment += "; ";
+    sTrailingComment += text;
+  }
+  const std::string &TrailingComment() const {
+    return sTrailingComment;
+  }
+  // Inputs the written equation may no longer depend on: a translation that
+  // read a variable's value as a literal (VECTOR SELECT's action codes) notes
+  // it dropped, and every variable reference written notes itself referenced.
+  // An input is gone when it is dropped and nowhere referenced -- which the
+  // caller decides over all of a variable's equations (XMILEGenerator).
+  void NoteDroppedInput(Variable *v) {
+    sDroppedInputs.insert(v);
+  }
+  void NoteReferenced(Variable *v) {
+    sReferenced.insert(v);
+  }
+  const std::set<Variable *> &DroppedInputs() const {
+    return sDroppedInputs;
+  }
+  const std::set<Variable *> &Referenced() const {
+    return sReferenced;
+  }
   Variable *LHS() {
     return pLHS;
   }
@@ -160,6 +192,9 @@ private:
   bool bWantFinalStar;
   bool bBangAsDimStar = false;
   Variable *pSubscriptOwner = nullptr;
+  std::string sTrailingComment;
+  std::set<Variable *> sDroppedInputs;
+  std::set<Variable *> sReferenced;
 };
 
 #endif

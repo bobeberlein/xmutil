@@ -192,8 +192,12 @@ int VensimLex::NextToken()  // also sets token type
     iInUnitsComment++;
     break;
   case '=':  // := is handled by :
-    if (TestTokenMatch("=", true))
-      return '=';  // we ignore the invariant == that Vensim supports
+    if (TestTokenMatch("=", true)) {
+      // `==` defines an unchangeable constant. The grammar reads it as `=`;
+      // the parser marks the variable when the equation is added.
+      bUnchangeable = true;
+      return '=';
+    }
     break;
   case '/':
     // either / or ///---\\\      but skip last \ because continuation line chars will mess thigns up xxx
