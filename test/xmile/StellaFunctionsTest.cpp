@@ -6,6 +6,8 @@
 // warning per call. Also here: SELF, a parameterless macro called by its bare
 // name, quoted names in a <connect>, and a comment-only <eqn>.
 #include <cstdlib>
+#include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -233,4 +235,67 @@ TEST(StellaFunctions_mostly_a_function_of_is_saved_on_cld_layer) {
   const char *half = "{UTF-8}\na = A FUNCTION OF(b)\n\t~\t\n\t~\t\n\t|\n\nb = 2\n\t~\t\n\t~\t\n\t|\n\n";
   CHECK(std::string(layerOf(mostly)) == "cld");
   CHECK(std::string(layerOf(half)) == "model");
+}
+
+namespace {
+
+// The right-hand side of `name = ...` in .mdl text, its 80-column wrapping
+// undone.
+std::string Rhs(std::string mdl, const std::string &name) {
+  for (size_t at; (at = mdl.find('\\')) != std::string::npos;) {
+    size_t end = at + 1;
+    while (end < mdl.size() && (mdl[end] == '\r' || mdl[end] == '\n' || mdl[end] == '\t'))
+      end++;
+    mdl.erase(at, end - at);
+  }
+  const size_t start = mdl.find("\n" + name + " = ");
+  if (start == std::string::npos)
+    return "";
+  const size_t from = start + name.size() + 4;
+  return mdl.substr(from, mdl.find_first_of("\r\n", from) - from);
+}
+
+std::string Renumbered(std::string text, char from, char to) {
+  for (size_t at; (at = text.find(std::string(" ") + from)) != std::string::npos;)
+    text[at + 1] = to;
+  return text;
+}
+
+}  // namespace
+
+// ConveyorTranslation.stmx draws a conveyor (1) beside the stock-and-DELAY
+// structure it should become in Vensim (2): translated, the two are the same.
+TEST(StellaFunctions_conveyor_becomes_stock_and_delay) {
+  const std::string stmx = [] {
+    std::ifstream in(std::string(XMUTIL_SRC_ROOT) + "/test_models/ConveyorTranslation.stmx", std::ios::binary);
+    return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  }();
+  CHECK(!stmx.empty());
+  if (stmx.empty())
+    return;
+  const std::string mdl = ToMdl(stmx);
+  for (const char *name : {"outflow", "leakage", "Conveyor"}) {
+    const std::string one = Rhs(mdl, std::string(name) + " 1");
+    CHECK(!one.empty());
+    CHECK(Renumbered(one, '1', '2') == Rhs(mdl, std::string(name) + " 2"));
+  }
+}
+
+// Without a leak the outflow is the inflow delayed; a fractional leak (not
+// exponential) loses its fraction evenly along the way.
+TEST(StellaFunctions_conveyor_without_and_with_fractional_leak) {
+  const std::string mdl = ToMdl(Xmile(R"(
+    <stock name="belt"><eqn>0</eqn><inflow>load</inflow><outflow>unload</outflow>
+      <conveyor><len>4</len></conveyor></stock>
+    <flow name="load"><eqn>x</eqn></flow>
+    <flow name="unload"><eqn>0</eqn></flow>
+    <stock name="pipe"><eqn>0</eqn><inflow>feed</inflow><outflow>drain</outflow><outflow>seep</outflow>
+      <conveyor><len>4</len></conveyor></stock>
+    <flow name="feed"><eqn>x</eqn></flow>
+    <flow name="drain"><eqn>0</eqn></flow>
+    <flow name="seep"><eqn>0.1</eqn><leak/></flow>
+)"));
+  CHECK(Rhs(mdl, "unload") == "DELAY FIXED(load, 4, belt / 4)");
+  CHECK(Rhs(mdl, "drain") == "DELAY FIXED(feed * (1 - 0.1), 4, pipe / 4 * (1 - 0.1) / (1 - 0.1 / 2))");
+  CHECK(Rhs(mdl, "seep") == "pipe * 0.1 / (4 * (1 - 0.1 / 2))");
 }

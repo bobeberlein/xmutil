@@ -63,6 +63,10 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
   own input (a `.stmx` input yields a `.xmile` output, so no rename is needed).
 - `XMUtil --to-mdl <model>` converts to Vensim `.mdl`. A Vensim->Vensim run
   writes `<base>.regen.mdl` to avoid clobbering its own input.
+- `XMUtil <model> <output>` writes to `<output>` as given (no `.regen`); its
+  extension picks the format (`.mdl` -> Vensim, `.xmile`/`.stmx` -> XMILE), and
+  `--to-mdl` with an XMILE output name is an error. With `--stdio` the output
+  path still applies.
 - `--stdio` reads stdin / writes stdout; `--sectors`, `--names`/`--no-names`
   as before. Input format is chosen by file extension (case-insensitive):
   `.dyn` -> Dynamo, `.xmile` or `.stmx` -> XMILE, else Vensim.

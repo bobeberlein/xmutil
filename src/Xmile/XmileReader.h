@@ -556,6 +556,9 @@ private:
   // The document was saved on Stella's causal loop diagram layer
   // (<isee:prefs layer="cld">); see ParseEqnFor.
   bool _cldLayer = false;
+  // Equations standing in for a conveyor's flows in the <model> being read,
+  // keyed by the flow's folded name; see TranslateConveyors.
+  std::unordered_map<std::string, std::string> _conveyorFlowEqns;
   std::unordered_map<Function *, std::vector<Expression *>> _macroDefaults;
   std::vector<ExpressionVariable *> _selfRefs;
   // The scope prefix of every model read in module mode, in document order.
@@ -593,6 +596,14 @@ private:
                            std::vector<std::unique_ptr<tinyxml2::XMLDocument>> &docs, std::vector<std::string> &errs);
   // The scope prefix for a <model> element: "Name." or "." for the base model.
   static std::string ModelScopePrefix(tinyxml2::XMLElement *model);
+  // Vensim has no conveyors. A <stock> with a <conveyor> stays a stock, and
+  // its flows are given the equations of the same structure built from a
+  // DELAY (Vensim DELAY FIXED) of the inflow over the transit time <len>,
+  // with each <leak/> outflow taking its fraction of the contents (see
+  // test_models/ConveyorTranslation.stmx, which draws both side by side).
+  // Fills _conveyorFlowEqns for this <variables>; a warning names each
+  // conveyor translated.
+  void TranslateConveyors(tinyxml2::XMLElement *variables, std::vector<std::string> &errs);
   // Read one module's (or the base model's) first sketch <view> into a Vensim
   // view titled after the module. Sectors are not views here, so groups are
   // ignored.

@@ -470,6 +470,21 @@ direction.
   each bend, and the target's center; the reader takes the points between the
   ends back as the record's point list (`SketchMdlXmile_polyline_arrow_round_
   trips`, `test_models/PolyLine.mdl`).
+- **A conveyor becomes a stock drained by a DELAY.** Vensim has no conveyors.
+  `XmileReader::TranslateConveyors` (run per `<model>` before its variables)
+  keeps a `<stock>` with `<conveyor>` as an ordinary stock and gives its flows
+  equations instead of their own (`_conveyorFlowEqns`, consulted by
+  `ProcessAppliesToAllEquation`), as `test_models/ConveyorTranslation.stmx`
+  draws side by side. With inflow I, transit time L (`<len>`), and k the sum
+  of the `<leak/>` outflows' fractions (their own `<eqn>`s): the conveyor
+  outflow is `DELAY(I * EXP(-k*L), L, S/L * EXP(-k*L/2))` and each leak
+  `S * k_i` when `exponential_leak="true"`; for the default fractional leak
+  `DELAY(I*(1-k), L, S/L*(1-k)/(1-k/2))` and `S*k_i/(L*(1-k/2))` (the
+  steady-state contents are I*L*(1-k/2)); without leaks `DELAY(I, L, S/L)`.
+  Capacity, inflow limit, sampling, arrest and leak zones have no Vensim
+  counterpart and are warned about and ignored; each translated conveyor gets
+  a warning. Since the translation happens on reading, XMILE -> XMILE writes
+  the stock-and-DELAY form too.
 - **`NAN` is Vensim's `A FUNCTION OF`.** The writer spells `A FUNCTION OF(x)`
   as `NAN(x)` and a bare `A FUNCTION OF()` as `NAN`. The lexer reads `NAN`
   followed by `(` as a call (`XmileEqLex::NextNonSpaceIs`), which `xpyy_call`

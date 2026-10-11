@@ -62,11 +62,13 @@ static bool extensionMatchesInsensitive(const char *path, const char *ext) {
 // Prints the usage text and exits with `status`: EXIT_SUCCESS when it was asked
 // for (--help), EXIT_FAILURE when it follows a command-line error.
 [[noreturn]] void cliUsage(int status) {
-  log("Usage: %s [OPTION...] PATH\n"
+  log("Usage: %s [OPTION...] PATH [OUTPUT]\n"
       "Convert Vensim .mdl, Dynamo .dyn, or XMILE .xmile/.stmx files to XMILE or .mdl.\n"
       "The input format is chosen by extension (case-insensitive); anything other than\n"
-      ".dyn, .xmile or .stmx is read as Vensim. Output is written next to the input as\n"
-      "<base>.xmile or <base>.mdl, with .regen inserted when that would overwrite the input.\n\n"
+      ".dyn, .xmile or .stmx is read as Vensim. The output goes to OUTPUT when given,\n"
+      "whose extension also picks the format (.mdl for Vensim, .xmile or .stmx for\n"
+      "XMILE); otherwise it is written next to the input as <base>.xmile or <base>.mdl,\n"
+      "with .regen inserted when that would overwrite the input.\n\n"
       "Options:\n"
       "  --help           show this message\n"
       "  --stdio          read from stdin, write to stdout (XMILE input is detected from\n"
@@ -86,6 +88,7 @@ static bool extensionMatchesInsensitive(const char *path, const char *ext) {
 int cliMain(int argc, char *argv[], Model *m) {
   int ret = 0;
   const char *path = nullptr;
+  const char *outPath = nullptr;
   bool useStdio = false;
   bool wantComplete = false;
   int longNames = -1;
@@ -112,10 +115,25 @@ int cliMain(int argc, char *argv[], Model *m) {
       log("unknown arg '%s'\n", arg);
       cliUsage(EXIT_FAILURE);
     } else {
-      if (!path) {
+      if (!path && !useStdio) {
         path = arg;
+      } else if (!outPath) {
+        outPath = arg;
       } else {
-        log("specify a single path to a model\n");
+        log("specify a model and at most one output path\n");
+        cliUsage(EXIT_FAILURE);
+      }
+    }
+  }
+
+  // An output path names its format; --to-mdl alongside an XMILE name is a
+  // contradiction rather than a preference.
+  if (outPath) {
+    if (extensionMatchesInsensitive(outPath, "mdl")) {
+      toMdl = true;
+    } else if (extensionMatchesInsensitive(outPath, "xmile") || extensionMatchesInsensitive(outPath, "stmx")) {
+      if (toMdl) {
+        log("--to-mdl conflicts with the XMILE output path '%s'\n", outPath);
         cliUsage(EXIT_FAILURE);
       }
     }
@@ -178,11 +196,13 @@ int cliMain(int argc, char *argv[], Model *m) {
   }
 
   std::ofstream fileOutput;
-  if (!useStdio) {
+  const bool toStdout = useStdio && !outPath;
+  if (!toStdout) {
     // A Vensim->Vensim or XMILE->XMILE conversion derives an output name equal
     // to its input's; DeriveOutputPath interposes ".regen" in that case so the
-    // model being read is not truncated out from under the reader.
-    const std::string p = DeriveOutputPath(path, toMdl ? "mdl" : "xmile");
+    // model being read is not truncated out from under the reader. A path
+    // given outright is used as is: the input has been read in full by now.
+    const std::string p = outPath ? std::string(outPath) : DeriveOutputPath(path, toMdl ? "mdl" : "xmile");
     fileOutput = std::ofstream{p, std::ofstream::out | std::ios::binary | std::ios::trunc};
     if (!fileOutput.is_open()) {
       log("ERROR: couldn't open '%s' for writing.\n", p.c_str());
@@ -190,8 +210,8 @@ int cliMain(int argc, char *argv[], Model *m) {
     }
   }
 
-  (useStdio ? std::cout : fileOutput) << output;
-  (useStdio ? std::cout : fileOutput).flush();
+  (toStdout ? std::cout : fileOutput) << output;
+  (toStdout ? std::cout : fileOutput).flush();
 
   // convert_to_mdl/convert_mdl_to_xmile hand back a strdup'd heap buffer (C
   // allocation), so it must be released with free, not delete. output is known

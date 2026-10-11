@@ -86,4 +86,21 @@ if [ "$missing_status" -eq 0 ]; then
 fi
 grep -q "couldn't open file" "$TMP/missing.err"
 
+# An explicit output path is used as given, and its extension picks the
+# format: .mdl writes Vensim without --to-mdl, .xmile writes XMILE.
+"$BIN" "$TMP/teacup.mdl" "$TMP/named.mdl"
+head -1 "$TMP/named.mdl" | grep -q '{UTF-8}'
+"$BIN" "$TMP/named.mdl" "$TMP/named.xmile"
+grep -q '<xmile' "$TMP/named.xmile"
+test ! -e "$TMP/named.regen.mdl"
+# --to-mdl with an XMILE output name is a contradiction, not a preference.
+set +e
+"$BIN" --to-mdl "$TMP/teacup.mdl" "$TMP/wrong.xmile" > /dev/null 2>&1
+conflict_status=$?
+set -e
+if [ "$conflict_status" -eq 0 ]; then
+  echo "error: --to-mdl with an .xmile output path exited 0" >&2
+  exit 1
+fi
+
 echo "CLI round-trip OK"

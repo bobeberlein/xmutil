@@ -1356,6 +1356,12 @@ bool XmileReader::ProcessAppliesToAllEquation(tinyxml2::XMLElement *varEl, Varia
   tinyxml2::XMLElement *eqnEl = varEl->FirstChildElement("eqn");
   tinyxml2::XMLElement *gfEl = varEl->FirstChildElement("gf");
   const char *eqnText = (eqnEl && eqnEl->GetText()) ? eqnEl->GetText() : "";
+  // A flow of a conveyor is defined by the conveyor (TranslateConveyors).
+  if (vname) {
+    auto conveyed = _conveyorFlowEqns.find(FoldNameKey(NormalizeName(vname)));
+    if (conveyed != _conveyorFlowEqns.end())
+      eqnText = conveyed->second.c_str();
+  }
   // A whitespace-only or newline-only <eqn> body (e.g. `<eqn>\n</eqn>`) must
   // not be treated as a real equation: it would route to the WITH LOOKUP branch
   // and then fail to parse, silently dropping a standalone-GF variable. The
@@ -1959,6 +1965,7 @@ bool XmileReader::ProcessModel(tinyxml2::XMLElement *model, std::vector<std::str
   }
   ScanForShadowedKeywords(model);
   tinyxml2::XMLElement *variables = model->FirstChildElement("variables");
+  TranslateConveyors(variables, errs);
   for (tinyxml2::XMLElement *child = variables ? variables->FirstChildElement() : nullptr; child;
        child = child->NextSiblingElement()) {
     const char *name = child->Name();
@@ -2479,6 +2486,98 @@ bool XmileReader::ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::str
     _macroDefaults[mf] = defaults;
   }
   return true;
+}
+
+void XmileReader::TranslateConveyors(tinyxml2::XMLElement *variables, std::vector<std::string> &errs) {
+  _conveyorFlowEqns.clear();
+  if (!variables)
+    return;
+  // A reference to a declared name, quoted so any spelling reads back as it.
+  auto ref = [](const char *name) { return "\"" + NormalizeName(name) + "\""; };
+  auto key = [](const char *name) { return FoldNameKey(NormalizeName(name)); };
+  std::unordered_map<std::string, tinyxml2::XMLElement *> flows;
+  for (tinyxml2::XMLElement *f = variables->FirstChildElement("flow"); f; f = f->NextSiblingElement("flow")) {
+    if (const char *n = f->Attribute("name"))
+      flows[key(n)] = f;
+  }
+  for (tinyxml2::XMLElement *stock = variables->FirstChildElement("stock"); stock;
+       stock = stock->NextSiblingElement("stock")) {
+    tinyxml2::XMLElement *conveyor = stock->FirstChildElement("conveyor");
+    const char *stockName = stock->Attribute("name");
+    if (!conveyor || !stockName)
+      continue;
+    tinyxml2::XMLElement *lenEl = conveyor->FirstChildElement("len");
+    if (!lenEl || !lenEl->GetText()) {
+      errs.push_back(std::string("warning: conveyor \"") + stockName +
+                     "\" has no <len>; it is read as an ordinary stock");
+      continue;
+    }
+    for (const char *option : {"capacity", "in_limit", "sample", "arrest", "leak_start", "leak_end"}) {
+      if (conveyor->FirstChildElement(option))
+        errs.push_back(std::string("warning: conveyor \"") + stockName + "\": <" + option +
+                       "> has no Vensim counterpart and is ignored");
+    }
+    const std::string len = "(" + std::string(lenEl->GetText()) + ")";
+    const std::string s = ref(stockName);
+    std::string in;
+    for (tinyxml2::XMLElement *i = stock->FirstChildElement("inflow"); i; i = i->NextSiblingElement("inflow")) {
+      if (i->GetText())
+        in += (in.empty() ? "" : " + ") + ref(i->GetText());
+    }
+    if (in.empty())
+      in = "0";
+    // The outflows: the conveyor's own (what arrives at the end) and its leaks,
+    // each leaking the fraction its <eqn> gives.
+    std::vector<std::string> outs;
+    std::vector<std::pair<std::string, std::string>> leaks;  // flow key, fraction
+    for (tinyxml2::XMLElement *o = stock->FirstChildElement("outflow"); o; o = o->NextSiblingElement("outflow")) {
+      if (!o->GetText())
+        continue;
+      auto f = flows.find(key(o->GetText()));
+      if (f == flows.end())
+        continue;
+      tinyxml2::XMLElement *eqn = f->second->FirstChildElement("eqn");
+      if (f->second->FirstChildElement("leak"))
+        leaks.emplace_back(f->first, "(" + std::string(eqn && eqn->GetText() ? eqn->GetText() : "0") + ")");
+      else
+        outs.push_back(f->first);
+    }
+    std::string k;
+    for (const auto &leak : leaks)
+      k += (k.empty() ? "" : " + ") + leak.second;
+    if (leaks.size() > 1)
+      k = "(" + k + ")";
+    // In steady state an inflow I fills the conveyor with I * len of material
+    // less what leaks on the way. An exponential leak at rate k leaves
+    // e^(-k*len) of each batch to arrive and leaks k of the contents; a
+    // fractional leak (the default) loses the fraction k of each batch evenly
+    // along the way, so the contents are I*len*(1 - k/2). The outflow is the
+    // inflow delayed by the transit time, less what leaked; until the first
+    // batch arrives, it is the contents spread over the transit time.
+    const bool exponential = conveyor->BoolAttribute("exponential_leak", false);
+    std::string arrive, initial;
+    if (leaks.empty()) {
+      arrive = in;
+      initial = s + " / " + len;
+    } else if (exponential) {
+      arrive = "(" + in + ") * EXP(-" + k + " * " + len + ")";
+      initial = s + " / " + len + " * EXP(-" + k + " * " + len + " / 2)";
+      for (const auto &leak : leaks)
+        _conveyorFlowEqns[leak.first] = s + " * " + leak.second;
+    } else {
+      arrive = "(" + in + ") * (1 - " + k + ")";
+      initial = s + " / " + len + " * (1 - " + k + ") / (1 - " + k + " / 2)";
+      for (const auto &leak : leaks)
+        _conveyorFlowEqns[leak.first] = s + " * " + leak.second + " / (" + len + " * (1 - " + k + " / 2))";
+    }
+    for (const std::string &out : outs)
+      _conveyorFlowEqns[out] = "DELAY(" + arrive + ", " + len + ", " + initial + ")";
+    if (outs.size() > 1)
+      errs.push_back(std::string("warning: conveyor \"") + stockName +
+                     "\" has more than one outflow that is not a leak; each is given its whole output");
+    errs.push_back(std::string("warning: conveyor \"") + stockName +
+                   "\" is translated as a stock whose outflow is a fixed delay of its inflow");
+  }
 }
 
 std::string XmileReader::ModelScopePrefix(tinyxml2::XMLElement *model) {
