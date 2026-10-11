@@ -87,6 +87,7 @@ ExpressionList *xpyy_arglist(ExpressionList *prev, Expression *e);
 SymbolList *xpyy_sub_init(SymbolList *first);
 SymbolList *xpyy_sub_append(SymbolList *list, SymbolList *next);
 SymbolList *xpyy_sub_name(const char *name);
+SymbolList *xpyy_sub_expr(Expression *e);
 SymbolList *xpyy_sub_star(const char *bound);
 SymbolList *xpyy_sub_range(const char *lo, const char *hi);
 SymbolList *xpyy_sub_index(int idx);

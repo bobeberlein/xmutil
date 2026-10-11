@@ -107,6 +107,11 @@ constexpr KeywordMapping kKeywordMap[] = {
     {"final_time", "FINAL TIME"},
 };
 
+constexpr const char *kStellaOnly[] = {
+    "agecount",    "allocate",      "derivn",  "expbound", "history",
+    "interpolate", "logisticbound", "maxsoft", "minsoft",  "runcum",
+};
+
 std::string ToLower(const std::string &in) {
   std::string out(in);
   std::transform(out.begin(), out.end(), out.begin(),
@@ -129,6 +134,19 @@ std::string UnderbarToSpaceUpper(const std::string &in) {
   }
   return out;
 }
+
+}  // namespace
+
+bool IsStellaOnlyFunction(const std::string &xmileName) {
+  const std::string lower = ToLower(xmileName);
+  for (const char *name : kStellaOnly) {
+    if (lower == name)
+      return true;
+  }
+  return false;
+}
+
+namespace {
 
 Function *FindFunction(SymbolNameSpace *sns, const std::string &vensimName) {
   if (!sns)

@@ -257,8 +257,8 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       // TREND, ...). There is no Variable to place, and every allocator below
       // dereferences the pointer it is handed, so the element is dropped with
       // the same wording DeclareVariable uses at the declaration sites.
-      errs.push_back(std::string("<") + child->Name() + " name=\"" + name +
-                     "\">: name collides with a non-variable symbol; the sketch element is dropped");
+      errs.push_back(std::string("<") + child->Name() + " name=\"" + name + "\">: " + _reader->CollisionWith(d.norm) +
+                     "; the sketch element is dropped");
       return false;
     }
     _reader->ScopedName(d.norm, &d.isAlias);
@@ -383,8 +383,13 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
         endpoints.emplace_back(static_cast<int>(std::lround(pt->DoubleAttribute("x", 0.0) - _offX)),
                                static_cast<int>(std::lround(pt->DoubleAttribute("y", 0.0) - _offY)));
       }
-      if (endpoints.size() != 2) {
-        errs.push_back(std::string("<flow name=\"") + d.norm + "\">: <pts> does not have exactly 2 <pt> children");
+      if (endpoints.size() < 2) {
+        errs.push_back(std::string("<flow name=\"") + d.norm + "\">: <pts> has fewer than 2 <pt> children");
+        continue;
+      }
+      if (endpoints.size() > 2) {
+        ReadBentPipe(varUid - 1, d.x, d.y, endpoints,
+                     _reader->StocksForFlow(XmileReader::FoldNameKey(d.var->GetName())));
         continue;
       }
       // Only stocks structurally connected to this flow (its name appears in
@@ -452,8 +457,8 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       std::replace(ofName.begin(), ofName.end(), '_', ' ');
       Variable *v = _reader->InsertVariable(ofName);
       if (!v) {
-        errs.push_back(std::string("<alias><of>") + ofName +
-                       "</of></alias>: name collides with a non-variable symbol; the sketch element is dropped");
+        errs.push_back(std::string("<alias><of>") + ofName + "</of></alias>: " + _reader->CollisionWith(ofName) +
+                       "; the sketch element is dropped");
         continue;
       }
       int x, y, hw = 0, hh = 0;
@@ -567,6 +572,67 @@ int XmileView::AllocateConnector(int fromUid, int toUid, int midX, int midY, cha
   int uid = ReserveNextSlot();
   _view->Elements()[uid] = new VensimConnectorElement(fromUid, toUid, midX, midY, polarity);
   return uid;
+}
+
+void XmileView::ReadBentPipe(int valveUid, int vx, int vy, std::vector<std::pair<int, int>> path,
+                             const std::vector<std::string> *anchorStocks) {
+  // The valve is a point of the path, or lies on one of its segments; split
+  // there. (A path that misses it entirely is split at its nearest point.)
+  const std::pair<int, int> valve(vx, vy);
+  size_t at = path.size();
+  for (size_t i = 0; i < path.size() && at == path.size(); i++) {
+    if (std::abs(path[i].first - vx) <= 1 && std::abs(path[i].second - vy) <= 1)
+      at = i;
+  }
+  for (size_t i = 0; i + 1 < path.size() && at == path.size(); i++) {
+    const std::pair<int, int> &a = path[i];
+    const std::pair<int, int> &b = path[i + 1];
+    const bool onRow = std::abs(a.second - vy) <= 2 && std::abs(b.second - vy) <= 2 &&
+                       vx >= std::min(a.first, b.first) && vx <= std::max(a.first, b.first);
+    const bool onColumn = std::abs(a.first - vx) <= 2 && std::abs(b.first - vx) <= 2 &&
+                          vy >= std::min(a.second, b.second) && vy <= std::max(a.second, b.second);
+    if (onRow || onColumn) {
+      path.insert(path.begin() + i + 1, valve);
+      at = i + 1;
+    }
+  }
+  if (at == path.size()) {
+    double best = 1e300;
+    for (size_t i = 0; i < path.size(); i++) {
+      const double dist = std::hypot(path[i].first - vx, path[i].second - vy);
+      if (dist < best) {
+        best = dist;
+        at = i;
+      }
+    }
+  }
+  path[at] = valve;
+  // Each half, from the valve out: the source half runs backwards.
+  std::vector<std::pair<int, int>> legs[2];
+  legs[0].assign(path.rend() - at - 1, path.rend());
+  legs[1].assign(path.begin() + at, path.end());
+  for (int i = 0; i < 2; i++) {
+    std::vector<std::pair<int, int>> &leg = legs[i];
+    if (leg.size() < 2)
+      leg.push_back(valve);  // the valve sits at an end of the pipe
+    const std::pair<int, int> end = leg.back();
+    const int endUid = ResolveFlowEndpoint(end.first, end.second, anchorStocks);
+    // A Vensim pipe record lists its corners from the valve out, the first
+    // twice, then its end; a straight half keeps the one midway handle.
+    int uid;
+    if (leg.size() == 2) {
+      uid = AllocateConnector(valveUid, endUid, (vx + end.first) / 2, (vy + end.second) / 2, 0);
+    } else {
+      std::vector<std::pair<int, int>> points(1, leg[1]);
+      points.insert(points.end(), leg.begin() + 1, leg.end());
+      uid = AllocateConnector(valveUid, endUid, points[0].first, points[0].second, 0);
+      if (uid >= 0)
+        static_cast<VensimConnectorElement *>(_view->Elements()[uid])->SetPoints(points);
+    }
+    if (uid >= 0)
+      static_cast<VensimConnectorElement *>(_view->Elements()[uid])
+          ->SetShape(i == 0 ? VensimConnectorElement::kPipeUpstream : VensimConnectorElement::kPipeDownstream);
+  }
 }
 
 int XmileView::ResolveFlowEndpoint(double x, double y, const std::vector<std::string> *anchorStocks) {
@@ -706,6 +772,21 @@ void XmileView::ResolveConnectors(tinyxml2::XMLElement *viewEl, std::vector<std:
                                 polarity);
     if (hasAngle && uid >= 0)
       static_cast<VensimConnectorElement *>(els[uid])->SetAngle(angle);
+    // A connector drawn as line segments lists its points, the two ends
+    // (the elements' centers) included; the Vensim record lists the bends.
+    tinyxml2::XMLElement *pts = crossing ? nullptr : child->FirstChildElement("pts");
+    if (pts && uid >= 0) {
+      std::vector<std::pair<int, int>> points;
+      for (tinyxml2::XMLElement *pt = pts->FirstChildElement("pt"); pt; pt = pt->NextSiblingElement("pt")) {
+        points.emplace_back(static_cast<int>(std::lround(pt->DoubleAttribute("x", 0.0) - _offX)),
+                            static_cast<int>(std::lround(pt->DoubleAttribute("y", 0.0) - _offY)));
+      }
+      if (points.size() >= 3) {
+        VensimConnectorElement *conn = static_cast<VensimConnectorElement *>(els[uid]);
+        conn->SetPoints(std::vector<std::pair<int, int>>(points.begin() + 1, points.end() - 1));
+        conn->SetShape(VensimConnectorElement::kPolyline);
+      }
+    }
   }
 }
 

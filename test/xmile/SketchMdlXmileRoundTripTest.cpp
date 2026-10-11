@@ -42,6 +42,8 @@ std::string ReadFile(const std::string &path) {
 const char *kSimplePopulationPath = "/test_models/SimplePopulation.mdl";
 const char *kPopulationResourcesPath = "/test_models/PopulationResources.mdl";
 const char *kNameSizingPath = "/test_models/NameSizing.mdl";
+const char *kBendingFlowPath = "/test_models/BendingFlow.mdl";
+const char *kPolyLinePath = "/test_models/PolyLine.mdl";
 
 // sectors: write a multi-view model as sectors of one XMILE model (--sectors).
 std::string MdlToXmile(const std::string &mdl, bool sectors) {
@@ -468,6 +470,59 @@ TEST(SketchMdlXmile_simple_population_round_trips) {
 
   // After the first trip the .mdl sketch is a fixpoint: going around again
   // reproduces it exactly.
+  const std::string again = XmileToMdl(MdlToXmile(back, false));
+  CHECK(SketchLines(again) == SketchLines(back));
+}
+
+// A flow whose pipe bends twice on its way into the stock and once on its way
+// out to the cloud. XMILE draws it as one right-angled <pts> path from cloud to
+// stock through the valve; coming back, each half of the path is a Vensim pipe
+// listing its corners. Each end is where the pipe meets its element (the
+// stock's edge, the cloud's center), so the stale end points Vensim saved are
+// not kept, but every corner is.
+TEST(SketchMdlXmile_bending_flow_round_trips) {
+  const std::string original = ReadFile(std::string(XMUTIL_SRC_ROOT) + kBendingFlowPath);
+  CHECK(!original.empty());
+  if (original.empty()) {
+    printf("  fixture missing: %s\n", kBendingFlowPath);
+    return;
+  }
+  const std::string xmile = MdlToXmile(original, false);
+  CHECK(xmile.find("<pt x=\"915\" y=\"300\"/>") != std::string::npos);
+  CHECK(xmile.find("<pt x=\"352\" y=\"162\"/>") != std::string::npos);
+  const std::string back = XmileToMdl(xmile);
+  CHECK(back.find(",,4|(262,57)|(262,57)|(262,162)|(352,162)|") != std::string::npos);
+  CHECK(back.find(",,4|(539,300)|(539,300)|(758,300)|(915,300)|") != std::string::npos);
+
+  std::vector<Sketch> a = ParseSketches(original);
+  std::vector<Sketch> b = ParseSketches(back);
+  CHECK(a.size() == 1 && b.size() == 1);
+  if (a.size() != 1 || b.size() != 1)
+    return;
+  ViewCounts counts = CompareView(a[0], b[0]);
+  CHECK(counts.variables == 2 && counts.valves == 1 && counts.clouds == 1 && counts.pipes == 2);
+
+  const std::string again = XmileToMdl(MdlToXmile(back, false));
+  CHECK(SketchLines(again) == SketchLines(back));
+}
+
+// An arrow drawn as line segments: XMILE lists its points as the connector's
+// <pts> (the two ends' centers, then each bend), and they come back as the
+// Vensim record's point list. A FUNCTION OF goes out as NAN(...) and back.
+TEST(SketchMdlXmile_polyline_arrow_round_trips) {
+  const std::string original = ReadFile(std::string(XMUTIL_SRC_ROOT) + kPolyLinePath);
+  CHECK(!original.empty());
+  if (original.empty())
+    return;
+  const std::string xmile = MdlToXmile(original, false);
+  CHECK(xmile.find("<eqn>NAN(from)</eqn>") != std::string::npos);
+  CHECK(xmile.find("<pt x=\"579\" y=\"220\"/>") != std::string::npos);
+  const std::string back = XmileToMdl(xmile);
+  const std::string arrow = "1,3,1,2,3,0,0,0,0,64,0,-1--1--1,,5|(375,102)|(505,162)|(579,220)|(546,291)|(328,349)|";
+  CHECK(original.find(arrow) != std::string::npos);
+  CHECK(back.find(arrow) != std::string::npos);
+  CHECK(back.find("from = A FUNCTION OF()") != std::string::npos);
+  CHECK(back.find("to = A FUNCTION OF(from)") != std::string::npos);
   const std::string again = XmileToMdl(MdlToXmile(back, false));
   CHECK(SketchLines(again) == SketchLines(back));
 }

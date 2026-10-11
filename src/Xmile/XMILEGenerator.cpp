@@ -5,7 +5,11 @@
 #include <cmath>
 #include <map>
 
+#include "../Function/Function.h"
+#include "../Mdl/MDLGenerator.h"
 #include "../Model.h"
+#include "../Symbol/Equation.h"
+#include "../Symbol/Expression.h"
 #include "../Symbol/ExpressionList.h"
 #include "../Vensim/VensimView.h"
 #include "../XMUtil.h"
@@ -72,6 +76,70 @@ bool GroupIsEmitted(const ModelGroup *group) {
   return false;
 }
 
+// The <pts> of a flow whose Vensim pipe bends: source end to sink end, through
+// each pipe's corners and the valve. A pipe record lists its corners from the
+// valve outward, the first twice, and last the point where it meets its stock
+// or cloud. That last point is replaced by where the final segment meets the
+// element -- a cloud's center, the facing edge of a stock -- along the
+// segment's own axis, so the path keeps XMILE's right angles. The same rule
+// applied to an XMILE path read back (XmileView) gives the same points, so the
+// geometry is a fixpoint.
+std::vector<std::pair<int, int>> BentPipePath(VensimViewElement *valve, VensimConnectorElement *pipes[2],
+                                              VensimViewElement *anchors[2], int toind) {
+  std::vector<std::pair<int, int>> legs[2];
+  for (int i = 0; i < 2; i++) {
+    std::vector<std::pair<int, int>> &leg = legs[i];
+    leg.emplace_back(valve->X(), valve->Y());
+    std::pair<int, int> last(anchors[i]->X(), anchors[i]->Y());
+    if (pipes[i]->IsBent()) {
+      for (const std::pair<int, int> &pt : pipes[i]->Points()) {
+        if (pt != leg.back())
+          leg.push_back(pt);
+      }
+      if (leg.size() > 1) {
+        last = leg.back();
+        leg.pop_back();
+      }
+    }
+    const std::pair<int, int> prev = leg.back();
+    VensimViewElement *a = anchors[i];
+    const bool isStock = a->Type() == VensimViewElement::ElementTypeVARIABLE;
+    std::pair<int, int> end;
+    if (std::abs(last.first - prev.first) >= std::abs(last.second - prev.second)) {
+      end.second = prev.second;
+      end.first = a->X() + (isStock ? (a->X() > prev.first ? -a->Width() : a->Width()) : 0);
+    } else {
+      end.first = prev.first;
+      end.second = a->Y() + (isStock ? (a->Y() > prev.second ? -a->Height() : a->Height()) : 0);
+    }
+    leg.push_back(end);
+  }
+  // Source leg reversed (end to valve), then the sink leg past the valve.
+  std::vector<std::pair<int, int>> path(legs[1 - toind].rbegin(), legs[1 - toind].rend());
+  path.insert(path.end(), legs[toind].begin() + 1, legs[toind].end());
+  return path;
+}
+
+// True when more than half the model's equations (dimensions and the control
+// variables aside) are A FUNCTION OF.
+bool MostlyAFunctionOf(Model *model) {
+  int total = 0;
+  int afo = 0;
+  for (Variable *var : model->GetVariables(nullptr)) {
+    const XMILE_Type type = var->VariableType();
+    if (type == XMILE_Type_ARRAY || type == XMILE_Type_ARRAY_ELM || MDLGenerator::IsControlVar(var->GetName()))
+      continue;
+    for (Equation *eq : var->GetAllEquations()) {
+      total++;
+      Expression *e = eq->GetExpression();
+      if (e && (e->GetType() == EXPTYPE_Function || e->GetType() == EXPTYPE_FunctionMemory) &&
+          static_cast<ExpressionFunction *>(e)->GetFunction()->GetName() == "A FUNCTION OF")
+        afo++;
+    }
+  }
+  return afo * 2 > total;
+}
+
 }  // namespace
 
 XMILEGenerator::XMILEGenerator(Model *model, double xratio, double yratio, bool from_dynamo) {
@@ -94,7 +162,10 @@ std::string XMILEGenerator::Print(bool is_compact, std::vector<std::string> &err
   tinyxml2::XMLElement *prefs = doc.NewElement("isee:prefs");
   root->InsertEndChild(prefs);
   prefs->SetAttribute("show_module_prefix", "true");
-  prefs->SetAttribute("layer", "model");
+  // A model that is mostly A FUNCTION OF is a causal loop diagram still to be
+  // quantified; Stella opens it on its CLD layer. The reader takes that layer
+  // as the sign that an equation of NAN alone is A FUNCTION OF().
+  prefs->SetAttribute("layer", MostlyAFunctionOf(_model) ? "cld" : "model");
 
   tinyxml2::XMLElement *header = doc.NewElement("header");
   this->generateHeader(header, errs);
@@ -1155,6 +1226,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
             int xanchor[2];
             int yanchor[2];
             VensimViewElement *anchorEle[2] = {NULL, NULL};
+            VensimConnectorElement *pipeEle[2] = {NULL, NULL};
             for (size_t i = 0; i < n; i++) {
               // Type() is checked on the base pointer BEFORE the downcast: the
               // slot may hold any element kind (or nothing), and casting first
@@ -1181,6 +1253,7 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
                 continue;
               xpt[count] = cele->X();
               anchorEle[count] = endpoint;
+              pipeEle[count] = cele;
               xanchor[count] = endpoint->X();
               ypt[count] = cele->Y();
               yanchor[count] = endpoint->Y();
@@ -1250,16 +1323,17 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
                 }
               }
             }
+            std::vector<std::pair<int, int>> path{{xpt[1 - toind], ypt[1 - toind]}, {xpt[toind], ypt[toind]}};
+            if (count == 2 && (pipeEle[0]->IsBent() || pipeEle[1]->IsBent()))
+              path = BentPipePath(valve ? valve : vele, pipeEle, anchorEle, toind);
             tinyxml2::XMLElement *xpts = doc->NewElement("pts");
             xvar->InsertEndChild(xpts);
-            tinyxml2::XMLElement *xxpt = doc->NewElement("pt");
-            xpts->InsertEndChild(xxpt);
-            xxpt->SetAttribute("x", xpt[1 - toind]);
-            xxpt->SetAttribute("y", ypt[1 - toind]);
-            xxpt = doc->NewElement("pt");
-            xpts->InsertEndChild(xxpt);
-            xxpt->SetAttribute("x", xpt[toind]);
-            xxpt->SetAttribute("y", ypt[toind]);
+            for (const std::pair<int, int> &pt : path) {
+              tinyxml2::XMLElement *xxpt = doc->NewElement("pt");
+              xpts->InsertEndChild(xxpt);
+              xxpt->SetAttribute("x", pt.first);
+              xxpt->SetAttribute("y", pt.second);
+            }
           }
         }
       } else if (ele->Type() == VensimViewElement::ElementTypeCONNECTOR) {
@@ -1308,10 +1382,17 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
                 // the takeoff angle of the arc through the 3 points -- unless
                 // the connector came from XMILE, whose own angle is exact where
                 // the rebuilt point is rounded
-                xconnector->SetAttribute("angle", cele->HasAngle()
-                                                      ? cele->Angle()
-                                                      : AngleFromPoints(fromGeom->X(), fromGeom->Y(), cele->X(),
-                                                                        cele->Y(), toGeom->X(), toGeom->Y()));
+                // A polyline (a Vensim arrow listing several points) leaves
+                // along its first segment; its points follow as <pts>, from the
+                // source's center through each bend to the target's.
+                const bool polyline = cele->IsBent();
+                double angle = cele->HasAngle() ? cele->Angle()
+                                                : AngleFromPoints(fromGeom->X(), fromGeom->Y(), cele->X(), cele->Y(),
+                                                                  toGeom->X(), toGeom->Y());
+                if (polyline && !cele->HasAngle())
+                  angle = AngleFromPoints(fromGeom->X(), fromGeom->Y(), 0, 0, cele->Points()[0].first,
+                                          cele->Points()[0].second);
+                xconnector->SetAttribute("angle", angle);
                 if (cele->Polarity()) {
                   char cbuf[2];
                   cbuf[0] = cele->Polarity();
@@ -1330,6 +1411,19 @@ void XMILEGenerator::generateView(VensimView *view, tinyxml2::XMLElement *elemen
                 tinyxml2::XMLElement *xto = doc->NewElement("to");
                 xconnector->InsertEndChild(xto);
                 xto->SetText(QuotedSpaceToUnderBar(to->GetVariable()->GetAlternateName()).c_str());
+                if (polyline) {
+                  std::vector<std::pair<int, int>> pts{{fromGeom->X(), fromGeom->Y()}};
+                  pts.insert(pts.end(), cele->Points().begin(), cele->Points().end());
+                  pts.emplace_back(toGeom->X(), toGeom->Y());
+                  tinyxml2::XMLElement *xpts = doc->NewElement("pts");
+                  xconnector->InsertEndChild(xpts);
+                  for (const std::pair<int, int> &pt : pts) {
+                    tinyxml2::XMLElement *xpt = doc->NewElement("pt");
+                    xpts->InsertEndChild(xpt);
+                    xpt->SetAttribute("x", pt.first);
+                    xpt->SetAttribute("y", pt.second);
+                  }
+                }
               }
             }
           }

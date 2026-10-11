@@ -1,5 +1,7 @@
 #include "XmileParseFunctions.h"
 
+#include <algorithm>
+#include <cctype>
 #include <string>
 #include <vector>
 
@@ -198,6 +200,20 @@ Expression *xpyy_resolve_symbol(const char *name, SymbolList *subs) {
   // the reference belongs to it -- see XmileReader::DeclaresPi.
   if (!subs && StringMatch(s, "pi") && !XPObject->DeclaresPi())
     return new ExpressionNumber(Sns(), kPi);
+  // SELF (Stella) is the variable whose equation this is.
+  if (StringMatch(s, "self")) {
+    if (ExpressionVariable *self = XPObject->SelfReference(subs))
+      return self;
+  }
+  // Stella calls a macro without parameters by its bare name (FRIDA's
+  // `MAX(EPSILON, x)`).
+  if (!subs) {
+    Symbol *sym = Sns() ? Sns()->Find(s) : nullptr;
+    if (MacroFunction *macro = dynamic_cast<MacroFunction *>(sym)) {
+      if (macro->NumberArgs() == 0)
+        return xpyy_call(name, nullptr);
+    }
+  }
   Variable *var = xmile::LookupBareKeyword(Sns(), s);
   if (!var)
     var = XPObject->InsertVariable(s);
@@ -352,7 +368,51 @@ Expression *xpyy_call(const char *xmileName, ExpressionList *args) {
   // than the constant here and the variable there.
   if (StringMatch(s, "pi") && argCount == 0 && XPObject && !XPObject->DeclaresPi())
     return new ExpressionNumber(sns, kPi);
+  // PREVIOUS(x, init) is x one DT ago (init at the start), which is exactly
+  // Vensim's DELAY FIXED(x, TIME STEP, init).
+  if (StringMatch(s, "previous") && (argCount == 1 || argCount == 2)) {
+    Function *fixed = FindVensimFunction(sns, "DELAY FIXED");
+    Expression *dt = ControlRef("dt");
+    if (fixed && dt) {
+      ExpressionList *delayArgs = new ExpressionList(sns);
+      delayArgs->Append(args->GetExp(0));
+      delayArgs->Append(dt);
+      delayArgs->Append(argCount == 2 ? args->GetExp(1) : new ExpressionNumber(sns, 0));
+      return WrapFunction(sns, fixed, delayArgs);
+    }
+  }
+  // NAN(inputs) is how the XMILE writer spells Vensim's A FUNCTION OF(inputs),
+  // an equation still to be written.
+  if (StringMatch(s, "nan")) {
+    if (Function *afo = FindVensimFunction(sns, "A FUNCTION OF"))
+      return WrapFunction(sns, afo, args ? args : new ExpressionList(sns));
+  }
+  // LOG10(x) is Vensim's LOG(x, 10).
+  if (StringMatch(s, "log10") && argCount == 1) {
+    if (Function *log = FindVensimFunction(sns, "LOG")) {
+      args->Append(new ExpressionNumber(sns, 10));
+      return WrapFunction(sns, log, args);
+    }
+  }
+  // MEAN of several values is their sum over their count; MEAN of one array is
+  // kept whole, since the count is its dimensions' sizes, known only once the
+  // wildcards are bound (see FunctionMean).
+  if (StringMatch(s, "mean") && argCount >= 1) {
+    if (argCount == 1)
+      return WrapFunction(sns, new FunctionMean(new SymbolNameSpace()), args);
+    Expression *sum = args->GetExp(0);
+    for (int i = 1; i < argCount; i++)
+      sum = new ExpressionAdd(sns, sum, args->GetExp(i));
+    return new ExpressionDivide(sns, new ExpressionParen(sns, sum, nullptr), new ExpressionNumber(sns, argCount));
+  }
   Function *f = xmile::LookupFunction(sns, s, argCount);
+  if (!f && xmile::IsStellaOnlyFunction(s)) {
+    std::string upper = s;
+    std::transform(upper.begin(), upper.end(), upper.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    PushErr("warning: " + upper + " has no Vensim equivalent; the call is kept as written for a macro to supply");
+    return WrapFunction(sns, new UnknownFunction(new SymbolNameSpace(), upper, argCount), args);
+  }
   if (!f) {
     // Not a known function. A single-argument call whose callee names a model
     // variable is a graphical-function (lookup) application: `table(x)`
@@ -378,6 +438,14 @@ Expression *xpyy_call(const char *xmileName, ExpressionList *args) {
   // (delay/trend/ramp/uniform); this may grow args, so the range check below
   // uses the post-padding count.
   PadOptionalArgs(f, args);
+  // A macro call leaving out trailing parms that have defaults gets them.
+  if (const std::vector<Expression *> *defaults = XPObject ? XPObject->MacroDefaults(f) : nullptr) {
+    for (size_t i = args ? args->Length() : 0; i < defaults->size() && (*defaults)[i]; i++) {
+      if (!args)
+        args = new ExpressionList(sns);
+      args->Append((*defaults)[i]->Clone(sns));
+    }
+  }
   const int finalCount = args ? args->Length() : 0;
   // A negative NumberArgs() marks a variadic function; those bypass the count
   // check. Otherwise the accepted range is [MinNumberArgs, MaxNumberArgs] --
@@ -417,7 +485,9 @@ static void FoldSubTerm(SymbolList *acc, SymbolList *term) {
   if (!acc || !term || term->Length() != 1)
     return;
   const SymbolList::SymbolListEntry &e = (*term)[0];
-  if (term->IsMapList())
+  if (e.eType == SymbolList::EntryType_EXPRESSION)
+    acc->Append(e.u.pExpression);
+  else if (term->IsMapList())
     // A range subscript (lo:hi) carries a whole-list map range that a flat
     // symbol cannot represent; keep it as a nested LIST entry so no data is
     // lost. No corpus reference uses this form, so the flat path above covers
@@ -448,6 +518,19 @@ SymbolList *xpyy_sub_name(const char *name) {
     return nullptr;
   Variable *v = XPObject->InsertVariable(name);
   return new SymbolList(Sns(), v, false);
+}
+
+SymbolList *xpyy_sub_expr(Expression *e) {
+  if (!e)
+    return nullptr;
+  // A plain name (or Dim.element) is a symbolic subscript, as it always was;
+  // the expression node that carried it is not kept.
+  if (e->GetType() == EXPTYPE_Variable && !static_cast<ExpressionVariable *>(e)->GetSubs()) {
+    Variable *v = static_cast<ExpressionVariable *>(e)->GetVariable();
+    delete e;
+    return new SymbolList(Sns(), v, false);
+  }
+  return new SymbolList(Sns(), e);
 }
 
 SymbolList *xpyy_sub_star(const char *bound) {

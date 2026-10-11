@@ -75,6 +75,22 @@ protected:
   int iMaxArgs;
 };
 
+// XMILE MEAN(array): the mean of the array's elements. Vensim has no such
+// builtin, so the .mdl writer expands it to SUM over ELMCOUNT once the
+// wildcards are bound (MDLGenerator::RenderFunction); XMILE writes it back as
+// MEAN. Only the XMILE reader makes one; the n-argument form MEAN(a, b, ...)
+// is read as (a + b + ...) / n instead.
+class FunctionMean : public Function {
+public:
+  FunctionMean(SymbolNameSpace *sns) : Function(sns, "MEAN", 1) {
+  }
+  ~FunctionMean() {
+  }
+  std::string ComputableName(void) override {
+    return "MEAN";
+  }
+};
+
 class DFunction : public Function {
 public:
   DFunction(SymbolNameSpace *sns, const std::string &name, int narg) : Function(sns, name, narg) {

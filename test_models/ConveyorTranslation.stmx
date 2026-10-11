@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.2" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE">
+	<header>
+		<options namespace="std, isee">
+			<uses_conveyor/>
+		</options>
+		<name>ConveyorTranslation</name>
+		<uuid>052f384d-8ace-431d-a0fe-6f0fe11088c1</uuid>
+		<vendor>isee systems, inc.</vendor>
+		<product version="4.5" isee:build_number="9999" isee:saved_by_v1="true" lang="en">Stella Architect</product>
+	</header>
+	<ai_information>
+		<status verified="true" mixed="false" trusted="true" tampered="false" uses="false" analyzed="false" log_truncated="false" timestamp="1791720283" algorithm="ed25519" keyurl="https://iseesystems.com/keys/stella01.txt" want_var_info="true" want_var_status="false" want_log="false" sampling="1" signature="sKnMRiQaVi2b2WeI8bcxScII/tSYfqiUmY9wWIjd9S/bV/EnV7kpgCvlkUPW9v9KO+Bnx5xxZnA8HhWLL/FOCg=="/>
+		<testing signed_message_body="algorithm=ed25519 analyzed=false keyurl=https://iseesystems.com/keys/stella01.txt logtruncated=false mixed=false sampling=1 tampered=false timestamp=1791720283 trusted=true uses=false verified=true wantlog=false wantvarinfo=true wantvarstatus=false Conveyor1=32 Conveyor2=32 inflow1=10+STEP(10,10) inflow2=10+STEP(10,10) leakrate1=0.12 leakrate2=0.12 leakage1=leakrate1 leakage2=Conveyor2*leakrate2 outflow1=0 outflow2=DELAY(inflow2*EXP(-leakrate2*transittime2),transittime2,Conveyor2/transittime2*EXP(-leakrate2*transittime2/2)) transittime1=9 transittime2=9"/>
+	</ai_information>
+	<sim_specs isee:sim_duration="1.5" isee:run_prefix="Run" isee:simulation_delay="0.03" isee:restore_on_start="false" method="Euler" time_units="Months" isee:instantaneous_flows="false" isee:ignore_module_errors="false" isee:strict_units="true" isee:loop_scores="true" isee:loop_exhaustive_allowed="1000">
+		<start>0</start>
+		<stop>50</stop>
+		<dt reciprocal="true">4</dt>
+	</sim_specs>
+	<isee:prefs saved_runs="5" keep="false" show_module_prefix="true" live_update_on_drag="true" show_restore_buttons="false" layer="model" isee:design="Deluxe Prev-Next Blue Green Pastel" isee:design_custom="false" interface_scale_ui="true" interface_max_page_width="10000" interface_max_page_height="10000" interface_min_page_width="0" interface_min_page_height="0" rifp="true"/>
+	<isee:multiplayer_settings include_chat="true" allow_observers="false" advance_time_increment="1" max_advance_time_in_ms="0" model_stops_when_players_drop="false" observer_start_page="home_page" enabled="false"/>
+	<isee:time_formats default_format="Builtin">
+		<isee:time_format name="Builtin" type="adaptive"/>
+	</isee:time_formats>
+	<isee:number_format_extenders/>
+	<default_format/>
+	<model_units>
+		<unit name="Widgets">
+			<eqn/>
+			<alias>widget</alias>
+		</unit>
+		<unit name="Months">
+			<eqn/>
+			<alias>mo</alias>
+			<alias>month</alias>
+		</unit>
+		<unit name="Per Month">
+			<eqn>1/Months</eqn>
+		</unit>
+	</model_units>
+	<model>
+		<variables>
+			<flow name="inflow 1">
+				<eqn>10 + STEP(10, 10)</eqn>
+				<non_negative/>
+				<units>widget/Months</units>
+			</flow>
+			<stock name="Conveyor 1">
+				<eqn>32</eqn>
+				<inflow>inflow_1</inflow>
+				<outflow>outflow_1</outflow>
+				<outflow>leakage_1</outflow>
+				<conveyor exponential_leak="true" force_leak_fraction="true">
+					<len>transit_time_1</len>
+				</conveyor>
+				<units>widget</units>
+			</stock>
+			<aux name="transit time 2">
+				<eqn>9</eqn>
+				<units>Months</units>
+			</aux>
+			<flow name="outflow 1">
+				<eqn>0</eqn>
+				<non_negative/>
+				<units>widget/Months</units>
+			</flow>
+			<flow name="leakage 1">
+				<eqn>leak_rate_1</eqn>
+				<non_negative/>
+				<leak/>
+				<units>widget/Months</units>
+			</flow>
+			<aux name="leak rate 1">
+				<eqn>0.12</eqn>
+				<units>Per Month</units>
+			</aux>
+			<flow name="inflow 2">
+				<eqn>10 + STEP(10, 10)</eqn>
+				<non_negative/>
+				<units>widget/Months</units>
+			</flow>
+			<stock name="Conveyor 2">
+				<eqn>32</eqn>
+				<inflow>inflow_2</inflow>
+				<outflow>outflow_2</outflow>
+				<outflow>leakage_2</outflow>
+				<units>widget</units>
+			</stock>
+			<flow name="outflow 2">
+				<eqn>DELAY(inflow_2 * EXP(-leak_rate_2 * transit_time_2),  transit_time_2,  Conveyor_2/transit_time_2 * EXP(-leak_rate_2 * transit_time_2/2) )</eqn>
+				<non_negative/>
+				<units>widget/Months</units>
+			</flow>
+			<flow name="leakage 2">
+				<eqn>Conveyor_2 * leak_rate_2</eqn>
+				<non_negative/>
+				<units>widget/Months</units>
+			</flow>
+			<aux name="transit time 1">
+				<eqn>9</eqn>
+				<units>Months</units>
+			</aux>
+			<aux name="leak rate 2">
+				<eqn>0.12</eqn>
+				<units>Per Month</units>
+			</aux>
+		</variables>
+		<views>
+			<view isee:show_pages="false" background="white" page_width="1122" page_height="793" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
+				<flow x="93.65" y="155.2" name="inflow 1">
+					<pts>
+						<pt x="25" y="155.2"/>
+						<pt x="162.3" y="155.2"/>
+					</pts>
+				</flow>
+				<stock x="184.8" y="155.2" name="Conveyor 1"/>
+				<aux x="389.6" y="425.7" name="transit time 2"/>
+				<flow x="251.55" y="155.2" name="outflow 1">
+					<pts>
+						<pt x="207.3" y="155.2"/>
+						<pt x="319.8" y="155.2"/>
+					</pts>
+				</flow>
+				<flow x="184" y="217.45" name="leakage 1">
+					<pts>
+						<pt x="184" y="172.7"/>
+						<pt x="184" y="283.2"/>
+					</pts>
+				</flow>
+				<aux x="284.8" y="282.4" name="leak rate 1"/>
+				<connector uid="1" angle="112.249">
+					<from>leak_rate_1</from>
+					<to>leakage_1</to>
+				</connector>
+				<flow x="93.05" y="399.2" name="inflow 2">
+					<pts>
+						<pt x="24.4" y="399.2"/>
+						<pt x="161.7" y="399.2"/>
+					</pts>
+				</flow>
+				<stock x="184.2" y="399.2" name="Conveyor 2"/>
+				<flow x="250.95" y="399.2" name="outflow 2">
+					<pts>
+						<pt x="206.7" y="399.2"/>
+						<pt x="319.2" y="399.2"/>
+					</pts>
+				</flow>
+				<flow x="183.4" y="461.45" name="leakage 2">
+					<pts>
+						<pt x="183.4" y="416.7"/>
+						<pt x="183.4" y="527.2"/>
+					</pts>
+				</flow>
+				<connector uid="2" angle="57.8434">
+					<from>inflow_2</from>
+					<to>outflow_2</to>
+				</connector>
+				<connector uid="3" angle="298.409">
+					<from>Conveyor_2</from>
+					<to>leakage_2</to>
+				</connector>
+				<connector uid="5" angle="242.459">
+					<from>transit_time_2</from>
+					<to>outflow_2</to>
+				</connector>
+				<connector uid="7" angle="36.0825">
+					<from>Conveyor_2</from>
+					<to>outflow_2</to>
+				</connector>
+				<aux x="266.8" y="74" name="transit time 1"/>
+				<aux label_side="top" x="369.2" y="508" name="leak rate 2"/>
+				<connector uid="9" angle="190.935">
+					<from>leak_rate_2</from>
+					<to>leakage_2</to>
+				</connector>
+				<connector uid="10" angle="173.13">
+					<from>leak_rate_2</from>
+					<to>outflow_2</to>
+				</connector>
+			</view>
+		</views>
+	</model>
+</xmile>
+

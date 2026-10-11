@@ -18,7 +18,8 @@ Symbol *ContextInfo::GetLHSSpecific(Symbol *dim) {
   std::vector<Equation *> eqs = v->GetAllEquations();
   if (!eqs.empty()) {
     Expression *exp = eqs[0]->GetExpression();
-    assert(exp->GetType() == EXPTYPE_Symlist);
+    // Only a dimension maps to anything. An XMILE subscript may also be a
+    // variable whose value picks the element (`a[i]`), which is left as is.
     if (exp->GetType() == EXPTYPE_Symlist) {
       ExpressionSymbolList *esl = static_cast<ExpressionSymbolList *>(exp);
       SymbolList *map = esl->Map();

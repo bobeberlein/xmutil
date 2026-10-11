@@ -3,12 +3,13 @@
 #include "../Model.h"
 #include "../XMUtil.h"
 #include "Equation.h"
+#include "Expression.h"
 #include "Variable.h"
 
 void SymbolList::SymbolListEntry::SetOwner(Variable *var) {
   if (eType == EntryType_LIST)
     this->u.pSymbolList->SetOwner(var);
-  else
+  else if (eType != EntryType_EXPRESSION)
     this->u.pSymbol->SetOwner(var);
 }
 
@@ -18,6 +19,11 @@ SymbolList::SymbolList(SymbolNameSpace *sns, Symbol *first, bool bang) : SymbolT
 }
 
 SymbolList::SymbolList(SymbolNameSpace *sns, SymbolList *first) : SymbolTableBase(sns) {
+  vSymbols.push_back(SymbolListEntry(first));
+  pMapRange = NULL;
+}
+
+SymbolList::SymbolList(SymbolNameSpace *sns, Expression *first) : SymbolTableBase(sns) {
   vSymbols.push_back(SymbolListEntry(first));
   pMapRange = NULL;
 }
@@ -41,6 +47,12 @@ SymbolList *SymbolList::Clone() {
         copy = new SymbolList(sns, nested);
       else
         copy->Append(nested);
+    } else if (entry.eType == EntryType_EXPRESSION) {
+      Expression *e = entry.u.pExpression->Clone(sns);
+      if (!copy)
+        copy = new SymbolList(sns, e);
+      else
+        copy->Append(e);
     } else {
       bool bang = (entry.eType == EntryType_BANG_SYMBOL);
       if (!copy)
@@ -104,6 +116,11 @@ void SymbolList::OutputComputable(ContextInfo *info) {
       *info << SpaceToUnderBar(s->GetName());
       if (i == vSymbols.size() - 1 && info->WantFinalStar())
         *info << ".*";
+    } else if (vSymbols[i].eType == EntryType_EXPRESSION) {
+      // The expression's own references are not subscripts of this one.
+      info->SetInSubList(false);
+      vSymbols[i].u.pExpression->OutputComputable(info);
+      info->SetInSubList(true);
     } else if (vSymbols[i].eType == EntryType_BANG_SYMBOL) {
       Symbol *s = vSymbols[i].u.pSymbol;
       if (!s) {

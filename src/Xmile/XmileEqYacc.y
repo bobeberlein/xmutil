@@ -106,11 +106,13 @@ subs : sub_term                                  { $$ = xpyy_sub_init($1); }
      | subs ',' sub_term                         { $$ = xpyy_sub_append($1, $3); }
      ;
 
-sub_term : XPTT_symbol                           { $$ = xpyy_sub_name($1); }
+/* A subscript is any expression: a bare name or Dim.element is the dimension
+   or element it names (xpyy_sub_expr unwraps it), anything else computes the
+   element (`Dim - 1`, the one before the current one). */
+sub_term : expr                                  { $$ = xpyy_sub_expr($1); }
          | '*'                                   { $$ = xpyy_sub_star(NULL); }
          | '*' ':' XPTT_symbol                   { $$ = xpyy_sub_star($3); }
          | XPTT_symbol '.' '*'                   { $$ = xpyy_sub_star($1); }
-         | XPTT_symbol '.' XPTT_symbol           { $$ = xpyy_sub_name($3); }
          | XPTT_symbol ':' XPTT_symbol           { $$ = xpyy_sub_range($1, $3); }
          | '@' XPTT_number                       { $$ = xpyy_sub_index((int)$2); }
          ;

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 #include "../Symbol/Variable.h"
 #include "VensimParse.h"
@@ -227,9 +228,18 @@ VensimConnectorElement::VensimConnectorElement(char *curpos, char *buf, VensimPa
   curpos = parser->GetString(curpos, ignore);
   curpos = parser->GetString(curpos, ignore);
 
-  int npoints;
+  int npoints = 0;
   sscanf(curpos, "%d|(%d,%d)", &npoints, &_x, &_y);
-  _npoints = 1;  // todo get all of them
+  // The rest of the list, `|(x,y)` each: the corners of a bent pipe.
+  _points.emplace_back(_x, _y);
+  const char *p = strchr(curpos, '(');
+  for (int i = 1; p && i < npoints; i++) {
+    p = strchr(p + 1, '(');
+    int x, y;
+    if (!p || sscanf(p, "(%d,%d)", &x, &y) != 2)
+      break;
+    _points.emplace_back(x, y);
+  }
 
   std::string name;
   curpos = parser->GetString(curpos, name);  // this might be an index number
@@ -238,9 +248,9 @@ VensimConnectorElement::VensimConnectorElement(char *curpos, char *buf, VensimPa
 VensimConnectorElement::VensimConnectorElement(int from, int to, int x, int y, char polarity) {
   _from = from;
   _to = to;
-  _npoints = 1;
   _x = x;
   _y = y;
+  _points.emplace_back(x, y);
   _polarity = polarity;
 }
 
@@ -271,6 +281,10 @@ bool VensimConnectorElement::ScalePoints(double xs, double ys, int xo, int yo) {
   {
     _x = _x * xs + xo;
     _y = _y * ys + yo;
+    for (std::pair<int, int> &pt : _points) {
+      pt.first = pt.first * xs + xo;
+      pt.second = pt.second * ys + yo;
+    }
   }
   return true;
 }

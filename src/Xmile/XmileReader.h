@@ -1,5 +1,6 @@
 #ifndef _XMUTIL_XMILE_XMILEREADER_H
 #define _XMUTIL_XMILE_XMILEREADER_H
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -7,11 +8,14 @@
 #include <vector>
 
 namespace tinyxml2 {
+class XMLDocument;
 class XMLElement;
-}
+}  // namespace tinyxml2
 
 class Expression;
 class ExpressionTable;
+class ExpressionVariable;
+class Function;
 class MacroFunction;
 class Model;
 class ModelGroup;
@@ -55,6 +59,15 @@ public:
   // parser action code is patterned on.
   Variable *FindVariable(const std::string &name);
   Variable *InsertVariable(const std::string &name);
+  // Why InsertVariable(name) returned NULL, for a diagnostic: what the name
+  // collides with (e.g. "name collides with the built-in function INITIAL").
+  std::string CollisionWith(const std::string &name);
+  // XMILE keeps variable and function names apart (a call is a name followed
+  // by '('), so a model may have a variable `initial` beside INITIAL(). xmutil
+  // shares one namespace between them, as Vensim does, so such a variable is
+  // entered as `initial 1` (the first free suffix) and a warning says so.
+  // Returns the name to enter; any other name comes back unchanged.
+  std::string RenameAwayFromBuiltin(const std::string &bareName);
 
   // Module scoping. A document with more than one <model> is read in module
   // mode: the .mdl namespace is flat, so every variable is entered under its
@@ -117,6 +130,18 @@ public:
   // between a declaration and a reference, so deciding at the reference would
   // make one half of a document see the constant and the other half the
   // variable, purely on element order.
+  // A reference to SELF, the variable whose equation is being read (set by
+  // DeclareVariable): Stella's PREVIOUS(SELF, init). Without subscripts of its
+  // own it takes the equation's left-hand side ones, filled in by
+  // AddEquationFor. NULL when no variable is being read, or the document
+  // declares a variable named self.
+  ExpressionVariable *SelfReference(SymbolList *subs);
+  // The default of each of a macro's parms (NULL where it has none), when some
+  // trailing ones have one; NULL for any other function.
+  const std::vector<Expression *> *MacroDefaults(Function *f) const {
+    auto it = _macroDefaults.find(f);
+    return it == _macroDefaults.end() ? nullptr : &it->second;
+  }
   bool DeclaresPi() const {
     return _declaresPi;
   }
@@ -268,7 +293,9 @@ private:
   // elements to XMILE_Type_ARRAY / XMILE_Type_ARRAY_ELM; the reader never sets
   // those types directly. <dim size="N"/> expands to synthesized numeric
   // element names "1".."N", which XMILE permits as legal identifier strings.
-  bool ProcessDimensions(tinyxml2::XMLElement *dimsEl, std::vector<std::string> &errs);
+  // skipDefined passes over a <dim> whose name already names a dimension --
+  // every module file carries its own copy of the dimensions it shares.
+  bool ProcessDimensions(tinyxml2::XMLElement *dimsEl, std::vector<std::string> &errs, bool skipDefined = false);
 
   // Builds a SymbolList of element Variables from a <dim>'s <elem name="..."/>
   // children. Names are looked up or created via InsertVariable so multiple
@@ -517,6 +544,20 @@ private:
   std::string _scopePrefix;
   std::unordered_set<Variable *> _globalVars;
   std::unordered_map<std::string, std::string> _aliases;
+  // RenameAwayFromBuiltin's choices, per namespace (a macro body has its own),
+  // keyed by the folded bare name.
+  std::unordered_map<SymbolNameSpace *, std::unordered_map<std::string, std::string>> _builtinRenames;
+  // The document's diagnostics while ProcessFile runs, for the warnings raised
+  // where no errs is at hand (RenameAwayFromBuiltin).
+  std::vector<std::string> *_docErrs = nullptr;
+  // See SelfReference: the variable being read, and the SELF references in its
+  // equation still waiting for the left-hand side's subscripts.
+  Variable *_selfVar = nullptr;
+  // The document was saved on Stella's causal loop diagram layer
+  // (<isee:prefs layer="cld">); see ParseEqnFor.
+  bool _cldLayer = false;
+  std::unordered_map<Function *, std::vector<Expression *>> _macroDefaults;
+  std::vector<ExpressionVariable *> _selfRefs;
   // The scope prefix of every model read in module mode, in document order.
   std::vector<std::string> _scopeOrder;
 
@@ -541,6 +582,15 @@ private:
   // the whole document before any model is read: a module may be read before
   // the one it is connected to.
   void CollectConnects(tinyxml2::XMLElement *model, std::vector<std::string> &errs);
+  // Stella can save a module's model in a file of its own, named by the
+  // <module url="...">. Load every such file whose model the document set does
+  // not already hold -- following the files' own module urls in turn -- and add
+  // its <model>s and <macro>s to modelEls / macroEls and its <dimensions> to
+  // dimsEls. docs owns the loaded documents, which the elements point into.
+  // filename is the document's own path, which a relative url is taken from.
+  bool LoadExternalModules(const std::string &filename, std::vector<tinyxml2::XMLElement *> &modelEls,
+                           std::vector<tinyxml2::XMLElement *> &macroEls, std::vector<tinyxml2::XMLElement *> &dimsEls,
+                           std::vector<std::unique_ptr<tinyxml2::XMLDocument>> &docs, std::vector<std::string> &errs);
   // The scope prefix for a <model> element: "Name." or "." for the base model.
   static std::string ModelScopePrefix(tinyxml2::XMLElement *model);
   // Read one module's (or the base model's) first sketch <view> into a Vensim

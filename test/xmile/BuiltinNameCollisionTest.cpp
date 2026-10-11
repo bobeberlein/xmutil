@@ -1,16 +1,13 @@
 // Regression coverage for XMILE names that collide with a registered builtin.
 //
-// XmileReader::InsertVariable answers NULL for a name already held by a
-// non-Variable symbol -- every function the XmileReader ctor registers (STEP,
-// SUM, TREND, ...) occupies its name in the same namespace variables live in.
-// Declaration sites have always checked that (DeclareVariable reports "name
-// collides with a non-variable symbol" and fails the conversion); the sites
-// exercised here did not, and handed the NULL to code that dereferences it.
-//
-// A .xmile carrying such a name is ordinary user input, not a malformed
-// document: nothing in XMILE reserves `Step` as a variable name, and Stella
-// happily exports one. So each case below has to reach a diagnostic rather
-// than a signal.
+// Every function the XmileReader ctor registers (STEP, SUM, TREND, ...)
+// occupies its name in the same namespace variables live in. XMILE keeps the
+// two apart (a call is a name followed by '('), so a .xmile carrying such a
+// name is ordinary user input: nothing in XMILE reserves `Step` as a variable
+// name, and Stella happily exports one (FRIDA has a macro parm `initial`).
+// XmileReader::RenameAwayFromBuiltin enters the variable as `Step 1` and says
+// so. These sites once handed the NULL InsertVariable then answered to code
+// that dereferences it; each case below has to convert, with the warning.
 
 #include <string>
 #include <vector>
@@ -22,8 +19,8 @@
 namespace {
 
 // A <view> element naming a builtin, for a variable that is never declared.
-// InsertVariable answers NULL, and the three XmileView allocators fed it
-// straight to VensimVariableElement's ctor, whose first act is
+// InsertVariable once answered NULL here, and the three XmileView allocators
+// fed it straight to VensimVariableElement's ctor, whose first act is
 // `var->GetView()`.
 const char *kViewAuxNamesBuiltin = R"(<?xml version="1.0" encoding="utf-8"?>
 <xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
@@ -66,9 +63,8 @@ const char *kViewAliasNamesBuiltin = R"(<?xml version="1.0" encoding="utf-8"?>
 
 // A stock whose <inflow>/<outflow> names a builtin. Unlike a sketch element,
 // this claim is structural: the net-flow expression BuildNetFlowSubscripted
-// synthesizes IS the stock's equation, so there is nothing to drop and still
-// have the same model. A <flow name="Step"> declaration already fails the
-// conversion (DeclareVariable), and the reference form has to agree.
+// synthesizes IS the stock's equation, so the reference has to reach the same
+// renamed variable a <flow name="Step"> declaration would.
 const char *kStockInflowNamesBuiltin = R"(<?xml version="1.0" encoding="utf-8"?>
 <xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
   <sim_specs method="euler"><start>0</start><stop>10</stop><dt>1</dt></sim_specs>
@@ -101,25 +97,7 @@ const char *kStockSubscriptedFlowNamesBuiltin = R"(<?xml version="1.0" encoding=
 </xmile>
 )";
 
-void CheckRejected(const char *xmile, const char *expectedSubstring) {
-  std::vector<std::string> errs;
-  Model *m = xmileroundtrip::ParseXMILE(xmile, errs);
-  CHECK(m == nullptr);
-  bool sawExpected = false;
-  for (const std::string &e : errs) {
-    if (e.find(expectedSubstring) != std::string::npos)
-      sawExpected = true;
-  }
-  if (!sawExpected) {
-    printf("  expected substring not found: %s\n", expectedSubstring);
-    for (const std::string &e : errs)
-      printf("  err: %s\n", e.c_str());
-  }
-  CHECK(sawExpected);
-  delete m;
-}
-
-// The parse survives, the colliding sketch element is dropped, and the drop is
+// The parse survives, the colliding name is renamed, and the rename is
 // explained. Everything else in the document still converts.
 void CheckSurvivesWithDiagnostic(const char *xmile, const char *expectedSubstring) {
   std::vector<std::string> errs;
@@ -154,26 +132,63 @@ void CheckSurvivesWithDiagnostic(const char *xmile, const char *expectedSubstrin
 
 }  // namespace
 
-TEST(BuiltinNameCollision_view_aux_is_dropped_not_dereferenced) {
-  CheckSurvivesWithDiagnostic(kViewAuxNamesBuiltin, "collides with a non-variable symbol");
+TEST(BuiltinNameCollision_view_aux_is_renamed) {
+  CheckSurvivesWithDiagnostic(kViewAuxNamesBuiltin, "is the name of the built-in function");
 }
 
-TEST(BuiltinNameCollision_view_flow_is_dropped_not_dereferenced) {
-  CheckSurvivesWithDiagnostic(kViewFlowNamesBuiltin, "collides with a non-variable symbol");
+TEST(BuiltinNameCollision_view_flow_is_renamed) {
+  CheckSurvivesWithDiagnostic(kViewFlowNamesBuiltin, "is the name of the built-in function");
 }
 
-TEST(BuiltinNameCollision_view_alias_is_dropped_not_dereferenced) {
-  CheckSurvivesWithDiagnostic(kViewAliasNamesBuiltin, "collides with a non-variable symbol");
+TEST(BuiltinNameCollision_view_alias_is_renamed) {
+  CheckSurvivesWithDiagnostic(kViewAliasNamesBuiltin, "is the name of the built-in function");
 }
 
-TEST(BuiltinNameCollision_stock_inflow_is_rejected) {
-  CheckRejected(kStockInflowNamesBuiltin, "collides with a non-variable symbol");
+TEST(BuiltinNameCollision_stock_inflow_is_renamed) {
+  CheckSurvivesWithDiagnostic(kStockInflowNamesBuiltin, "is the name of the built-in function");
 }
 
-TEST(BuiltinNameCollision_stock_outflow_is_rejected) {
-  CheckRejected(kStockOutflowNamesBuiltin, "collides with a non-variable symbol");
+TEST(BuiltinNameCollision_stock_outflow_is_renamed) {
+  CheckSurvivesWithDiagnostic(kStockOutflowNamesBuiltin, "is the name of the built-in function");
 }
 
-TEST(BuiltinNameCollision_subscripted_stock_flow_is_rejected) {
-  CheckRejected(kStockSubscriptedFlowNamesBuiltin, "collides with a non-variable symbol");
+TEST(BuiltinNameCollision_subscripted_stock_flow_is_renamed) {
+  CheckSurvivesWithDiagnostic(kStockSubscriptedFlowNamesBuiltin, "is the name of the built-in function");
+}
+
+// The renamed variable is the one every reference reaches, declared or used
+// first, and a macro parm is renamed the same way inside the macro's own
+// namespace.
+TEST(BuiltinNameCollision_declared_variable_and_macro_parm_are_renamed) {
+  const char *kXmile = R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>10</stop><dt>1</dt></sim_specs>
+  <macro name="GROW">
+    <eqn>input*(1+initial)</eqn>
+    <parm>input</parm>
+    <parm>initial</parm>
+  </macro>
+  <model><variables>
+    <aux name="y"><eqn>trend*2 + GROW(trend, 1)</eqn></aux>
+    <aux name="trend"><eqn>3</eqn></aux>
+  </variables></model>
+</xmile>
+)";
+  std::vector<std::string> errs;
+  Model *m = xmileroundtrip::ParseXMILE(kXmile, errs);
+  CHECK(m != nullptr);
+  if (!m)
+    return;
+  int renames = 0;
+  for (const std::string &e : errs) {
+    if (e.find("is the name of the built-in function") != std::string::npos)
+      renames++;
+  }
+  CHECK(renames == 2);  // trend, and the macro's initial
+  std::vector<std::string> mdlErrs;
+  const std::string mdl = m->PrintMDL(mdlErrs);
+  CHECK(mdl.find("y = trend 1 * 2 + GROW(trend 1, 1)") != std::string::npos);
+  CHECK(mdl.find("trend 1 = 3") != std::string::npos);
+  CHECK(mdl.find(":MACRO: GROW(input, initial 1)") != std::string::npos);
+  delete m;
 }

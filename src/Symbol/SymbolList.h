@@ -6,9 +6,15 @@
 #include "Symbol.h"
 #include "SymbolTableBase.h"
 
+class Expression;
+
 class SymbolList : public SymbolTableBase {
 public:
-  enum EntryType { EntryType_SYMBOL, EntryType_BANG_SYMBOL, EntryType_LIST };
+  // EntryType_EXPRESSION is a subscript computed by an expression, which only
+  // XMILE has (`a[Dim - 1]`, the element before the current one); the .mdl
+  // writer turns a reference holding one into VECTOR ELM MAP. It appears only
+  // in references, never on a left-hand side or in a dimension definition.
+  enum EntryType { EntryType_SYMBOL, EntryType_BANG_SYMBOL, EntryType_LIST, EntryType_EXPRESSION };
   class SymbolListEntry {
   public:
     SymbolListEntry(Symbol *s, bool bang) {
@@ -19,21 +25,31 @@ public:
       u.pSymbolList = s;
       eType = EntryType_LIST;
     }
+    SymbolListEntry(Expression *e) {
+      u.pExpression = e;
+      eType = EntryType_EXPRESSION;
+    }
     union {
       Symbol *pSymbol;
       SymbolList *pSymbolList;
+      Expression *pExpression;
     } u;
     void SetOwner(Variable *var);
     EntryType eType;
   };
   SymbolList(SymbolNameSpace *sns, Symbol *first, bool bang);
   SymbolList(SymbolNameSpace *sns, SymbolList *first);
+  SymbolList(SymbolNameSpace *sns, Expression *first);
   ~SymbolList(void);
   SymbolList *Append(Symbol *last, bool bang) {
     vSymbols.push_back(SymbolListEntry(last, bang));
     return this;
   }
   SymbolList *Append(SymbolList *next) {
+    vSymbols.push_back(SymbolListEntry(next));
+    return this;
+  }
+  SymbolList *Append(Expression *next) {
     vSymbols.push_back(SymbolListEntry(next));
     return this;
   }

@@ -91,6 +91,11 @@ private:
   // Allocate a VensimConnectorElement with explicit polarity.
   int AllocateConnector(int fromUid, int toUid, int midX, int midY, char polarity);
 
+  // A flow whose <pts> bends (more than two points): split at the valve into
+  // the two Vensim pipe records, each listing its corners (see
+  // VensimConnectorElement::Points). Undoes XMILEGenerator's BentPipePath.
+  void ReadBentPipe(int valveUid, int vx, int vy, std::vector<std::pair<int, int>> path,
+                    const std::vector<std::string> *anchorStocks);
   // For a flow endpoint position, find the nearest structurally-connected
   // stock (anchorStocks: folded names from XmileReader::StocksForFlow) within
   // a small pixel tolerance and return its UID. If none matches -- no

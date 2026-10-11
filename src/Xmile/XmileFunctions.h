@@ -16,6 +16,12 @@ class Variable;
 // own state and do not touch global parser objects.
 namespace xmile {
 
+// Stella builtins with no Vensim equivalent that a Vensim macro of the same
+// name can stand in for. The reader keeps such a call as written (an
+// UnknownFunction named in upper case) rather than failing, so the .mdl
+// carries NAME(args) for the macro to supply.
+bool IsStellaOnlyFunction(const std::string &xmileName);
+
 // Resolve an XMILE function name (lowercased, possibly with underscores) to the
 // Function* registered in the namespace under its Vensim-canonical name.
 // argCount disambiguates the safediv case (2 -> ZIDZ, 3 -> XIDZ); for every

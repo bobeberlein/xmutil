@@ -40,9 +40,10 @@ direction.
 - **Guarantees** (reader): emitted XMILE re-parses into a structurally
   equivalent Model (tests in `test/xmile/`); XMILE->MDL also round-trips
   structurally on the corpus. Unsupported envelope shapes get a descriptive
-  `errs` message and the parse fails: a `<module>` in a single-`<model>`
-  document (its submodel is not there). Several `<model>` siblings are read as
-  modules, for `.mdl` output only (see Key Decisions, modules). `<macro>`s are
+  `errs` message and the parse fails: a `<module>` whose submodel is neither
+  in the document nor in a file its `url` names. Several `<model>` siblings
+  (or module files) are read as modules, for `.mdl` output only (see Key
+  Decisions, modules). `<macro>`s are
   read into Vensim macros (see Key Decisions, macros). Vendor-namespaced
   elements (any tag with `:` --
   `isee:`, `simlin:`, ...) and the documented Stella UI widgets
@@ -152,6 +153,58 @@ direction.
   both ways in `XmileCorpus_module_documents_convert_to_mdl_only`; the round
   trip, the base-model case and the suffixing in
   `test/xmile/SketchMdlXmileRoundTripTest.cpp`.
+- **Module files join the document before anything is read.** Stella can save
+  a module's model as a file of its own (`<module url="...">`, FRIDA's
+  `.itmx` files). `LoadExternalModules` runs right after the envelope pre-pass:
+  for every `<module>` whose model the document set does not hold, it loads
+  the file (once per path) and adds its `<model>`s, `<macro>`s and
+  `<dimensions>` to the lists module mode reads -- following the loaded
+  files' own module urls in turn. A url starting `r` is Stella's relative form,
+  written as if the referring file were a directory (`r../Mods/A.itmx` is
+  `Mods/A.itmx` beside it); an absolute url that does not exist is looked for
+  beside the referring file, so a model moved with its module files still
+  loads. Each file repeats the dimensions it shares, so a module file's
+  `<dim>` already defined is skipped (`ProcessDimensions(..., skipDefined)`).
+  Model names, as module names, are taken to be unique across all the files.
+  A file that cannot be opened or parsed fails the conversion naming its path.
+  The loaded files are read from disk, so `--stdio` input resolves them
+  against the working directory. Tests: `test/xmile/ExternalModuleTest.cpp`.
+- **A variable named like a builtin is renamed, not refused.** XMILE tells a
+  call from a reference by the `(`, so a model may hold a variable `initial`
+  beside `INIT()` (FRIDA's macro parm). xmutil keeps functions and variables
+  in one namespace, as Vensim does, so `RenameAwayFromBuiltin` (inside
+  `InsertVariable`, per namespace) enters it as `initial 1` -- the first free
+  suffix -- with a warning; every declaration and reference reaches the same
+  renamed variable, and `EnsureCanonicalName` leaves the new name alone.
+  Other collisions (a unit, a model) still fail, and every collision message
+  says what the name collides with (`CollisionWith`).
+- **`{comments}` in an equation are whitespace to the lexer**, nested ones
+  included (Stella keeps alternative formulations in them); an `<eqn>` that is
+  only a comment is an empty one. A macro's `<eqn>` that is a body variable's
+  displayed name (`trend in input`, which the grammar cannot read) is taken as
+  a reference to that variable. A `<connect>` end may quote its name parts
+  (`GDP."Real_GDP_in_2021c$"`); the dot that splits module from name is the
+  first one outside quotes.
+- **Stella builtins without a same-named Vensim builtin** (in
+  `xpyy_call`; tests in `test/xmile/StellaFunctionsTest.cpp`):
+  `PREVIOUS(x, init)` is read as `DELAY FIXED(x, TIME STEP, init)` (init
+  defaults to 0), and `SELF` as the variable whose equation it is
+  (`XmileReader::SelfReference`; an unsubscripted SELF takes the left-hand
+  side's subscripts in `AddEquationFor`). `MEAN(a, b, ...)` is read as
+  `(a + b + ...) / n`; `MEAN(array)` stays a `FunctionMean`, which XMILE
+  writes back as MEAN and the `.mdl` writer expands to
+  `(SUM(a[D!]) / ELMCOUNT(D))` once the wildcards are bound. The names in
+  `xmile::IsStellaOnlyFunction` (ALLOCATE, AGECOUNT, DERIVN, EXPBOUND,
+  HISTORY, INTERPOLATE, LOGISTICBOUND, MAXSOFT, MINSOFT, RUNCUM) are kept as
+  written -- an `UnknownFunction`, `NAME(args)` in the `.mdl` -- with a
+  warning, for Vensim macros of those names to supply; a `<macro>` of the
+  same name in the document wins. A parameterless macro named bare (`EPSILON`)
+  is a call to it. Vensim has no parameterless macro, so the `.mdl` writer
+  gives one an unused parameter (`unused input`) and every call passes 0.
+  Vensim macros have no defaults either: a call that leaves out trailing
+  `<parm default="...">`s gets the defaults (`XmileReader::MacroDefaults`,
+  read in the model's namespace and cloned into each call; the macro's arg
+  range is widened to admit the shorter call).
 - **Module decomposition is offered to Vensim/Dynamo input only; XMILE input is
   always emitted as sectors.** `XMILEGenerator` has two shapes.
   `generateModelAsModules` / `generateModelAsGroups` write a base `<model>` plus
@@ -396,6 +449,37 @@ direction.
   follow. The `.mdl` writer holds up the other end: `SuppressedSketchSlots`
   (`src/Mdl/CLAUDE.md`) never emits an attached valve without the variable
   record that belongs at `valve_uid + 1`.
+- **A bent pipe is one `<pts>` path in XMILE and two cornered records in
+  Vensim.** A Vensim pipe record lists its corners from the valve outward --
+  the first one twice -- and last the point where it meets its stock or
+  cloud (`VensimConnectorElement::Points`; a straight pipe or an arc has one
+  point, a handle). `BentPipePath` (XMILEGenerator.cpp) joins the two halves
+  into the source-to-sink path through the valve, replacing each saved end
+  point (which Vensim leaves stale when an element moves) with where the last
+  segment meets the element along its own axis -- a cloud's center, a stock's
+  facing edge -- so the path keeps XMILE's right angles. `XmileView::
+  ReadBentPipe` splits a path of more than two points at the valve (a point
+  of it, or on one of its segments) back into the two records. Corners
+  survive both ways and the geometry is a fixpoint after the first trip
+  (`SketchMdlXmile_bending_flow_round_trips`, `test_models/BendingFlow.mdl`).
+  Two-point paths keep the straight-pipe rule above.
+- **An arrow drawn as line segments carries `<pts>`.** A Vensim information
+  arrow with several points (shape 3, `VensimConnectorElement::kPolyline`) is
+  written as a `<connector>` with its takeoff angle (along the first segment,
+  for consumers that only draw arcs) and a `<pts>` of the source's center,
+  each bend, and the target's center; the reader takes the points between the
+  ends back as the record's point list (`SketchMdlXmile_polyline_arrow_round_
+  trips`, `test_models/PolyLine.mdl`).
+- **`NAN` is Vensim's `A FUNCTION OF`.** The writer spells `A FUNCTION OF(x)`
+  as `NAN(x)` and a bare `A FUNCTION OF()` as `NAN`. The lexer reads `NAN`
+  followed by `(` as a call (`XmileEqLex::NextNonSpaceIs`), which `xpyy_call`
+  maps to A FUNCTION OF, any number of arguments. A bare `NAN` is ambiguous,
+  so the CLD layer decides: when more than half the model's equations are A
+  FUNCTION OF, the writer saves `<isee:prefs layer="cld">` (else
+  `layer="model"`; `MostlyAFunctionOf`), and only in a document on that layer
+  is an equation of `NAN` alone read as `A FUNCTION OF()` (`ParseEqnFor`,
+  `_cldLayer`). Otherwise, and anywhere within an expression, a bare `NAN` is
+  the missing value, `:NA:`.
 - **`generateView` treats every UID off the wire as untrusted, because the
   element vector is genuinely sparse.** `VensimView::ReadView` leaves a NULL in
   every slot no record claims, so a hand-authored `.mdl` may skip UIDs freely,
@@ -620,6 +704,11 @@ direction.
   that, VECTOR SELECT's expanded form came back from a second trip iterating
   the wrong dimension. On input all three forms are accepted:
   `*`, `*:Dim` and `Dim.*` are the `sub_term` productions of `XmileEqYacc.y`.
+  Any other subscript is an `expr`: a bare name or `Dim.element` is unwrapped
+  to the plain symbol entry it always was (`xpyy_sub_expr`), anything else is
+  kept as an `EntryType_EXPRESSION` entry (`v[Dim - 1]`), written back to
+  XMILE as is and to `.mdl` as VECTOR ELM MAP (see `src/Mdl/CLAUDE.md`).
+  Regenerate with `win_bison -d -p xpyy -o XmileEqYacc.tab.cpp XmileEqYacc.y`.
   The committed tables are bison 3.8.2's output (LF line endings; `win_bison`
   writes CRLF, so convert after regenerating).
 - **The module decomposition is unreachable from XMILE input, and the

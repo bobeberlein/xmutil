@@ -37,13 +37,31 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   conversion error, not broken output. The writer emits
   post-`AdjustGroupNames` group names, so skipping that step yields `.mdl` that
   does not round-trip.
+- **Units are written the way Vensim reads them** (`mdl::VensimUnitsText`,
+  applied in `UnitsCommentTrailer`): a whole power is a product
+  (`metre^2` -> `(metre*metre)`, `year^-1` -> `1/(year)`; the base is the
+  unit name, spaces included, or the parenthesized group before `^`), and `%`
+  is `Percent`. Same meaning, so XMILE reads either back alike; a fractional
+  power is left as written.
+- **Every arrayed reference carries its subscripts.** XMILE may name an
+  arrayed variable bare (`Stock_1`); Vensim never does. `ImplicitSubscripts`
+  gives each position the equation's own left-hand-side subscript of the same
+  family -- the dimension, a subrange, or the element of a per-element
+  equation -- else the variable's dimension; inside SUM/PROD/VMIN/VMAX (and
+  MEAN's expansion) the dimension with a bang (`SUM(arr[R!])`). `_lhsSubs` is
+  set for each equation rendered. The comparator accepts a bare reference
+  against a subscripted one of the same arrayed variable.
 - **Computed subscripts**: XMILE allows a subscript to be a variable whose value
   selects the element (`a[i]`). Vensim does not, so
   `RenderComputedSubscripts` writes such a reference as
   `VECTOR ELM MAP(a[<first element of each computed dim>, ...], offset)`. The
   offset is the sum of `(idx - 1) * stride` over the computed positions, where
   the last subscript varies fastest. A lone stride-1 term is written as
-  `idx - 1`.
+  `idx - 1`. A subscript may also be an expression (`v[Dim - 1]`, the element
+  before; a `SymbolList::EntryType_EXPRESSION` entry): its index less one is
+  `IndexMinusOne`, which folds a `Dim - k` / `Dim + k` constant into the 1
+  (`Dim - 2`) and otherwise writes `(expr) - 1`. An index out of range (the
+  element before the first) is whatever Vensim's VECTOR ELM MAP gives it.
 
 ## Dependencies
 - **Uses**: `Model`, `Expression` tree node types and `EXPTYPE` tags

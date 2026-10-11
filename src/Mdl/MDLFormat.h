@@ -52,6 +52,13 @@ std::string FormatMDLIdent(const std::string &rawName);
 // double.
 std::string FormatMDLNumber(double v);
 
+// Units text in the form Vensim reads: a power is written out as a product,
+// `metre^2` -> `(metre*metre)` and `year^-1` -> `1/(year)`, its base being the
+// unit name (spaces and all, `deg C^2`) or parenthesized group before the `^`;
+// and `%` is `Percent`. Same meaning, so XMILE reads either form back alike. A
+// power that is not a whole number is left as written.
+std::string VensimUnitsText(const std::string &units);
+
 // Split an .mdl equation string into tokens at natural line-break boundaries:
 // after a comma (the trailing space stays with the comma token), around each
 // bracket/paren, and before a binary +-*/^ operator. A leading or post-operator

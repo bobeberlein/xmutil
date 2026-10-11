@@ -445,7 +445,7 @@ void MDLGenerator::EmitConnectorRecord(std::string &out, int uid, VensimConnecto
   // POL is the polarity char's ASCII code as a decimal int: 43='+', 45='-',
   // 0=none. The six ignored fields after POL match the observed Vensim defaults
   // (the empty field before the point blob is required so the blob lands in the
-  // final GetString slot). N is forced to 1 point by the reader.
+  // final GetString slot). N is 1 but for a bent pipe, which lists its corners.
   if (e->From() == 0 && e->To() == 0)
     return;
   int pol = 0;
@@ -460,7 +460,15 @@ void MDLGenerator::EmitConnectorRecord(std::string &out, int uid, VensimConnecto
   // polarity; an information arrow is thin with dtype 64, as Vensim writes them.
   const std::string head =
       "1," + std::to_string(uid) + "," + std::to_string(e->From()) + "," + std::to_string(e->To()) + ",";
-  const std::string pointList = ",-1--1--1,,1|(" + std::to_string(e->X()) + "," + std::to_string(e->Y()) + ")|\n";
+  std::string pointList = ",-1--1--1,,";
+  if (e->IsBent()) {
+    pointList += std::to_string(e->Points().size()) + "|";
+    for (const std::pair<int, int> &pt : e->Points())
+      pointList += "(" + std::to_string(pt.first) + "," + std::to_string(pt.second) + ")|";
+    pointList += "\n";
+  } else {
+    pointList += "1|(" + std::to_string(e->X()) + "," + std::to_string(e->Y()) + ")|\n";
+  }
   if (e->IsPipe()) {
     out += head + std::to_string(e->Shape()) + ",0,0,22,0,0,0" + pointList;
     return;
@@ -711,6 +719,15 @@ void MDLGenerator::GenerateMacros(std::string &out) {
       // the bare identifier (no subscripts), which is the macro arg-list spelling.
       out += RenderExpression(args->GetExp(i));
     }
+    // Vensim has no parameterless macro (an XMILE one, like FRIDA's EPSILON,
+    // has none), so it takes one it never uses and every call passes 0 (see
+    // RenderFunction).
+    if (n == 0) {
+      std::string unused = "unused input";
+      for (int k = 1; mf->NameSpace()->Find(unused); k++)
+        unused = "unused input " + std::to_string(k);
+      out += mdl::FormatMDLIdent(unused);
+    }
     out += ")\n";
 
     // Already name-ordered: Model::GetVariables sorts by SymbolNameLess, which
@@ -873,6 +890,7 @@ void MDLGenerator::EmitGroupBanner(std::string &out, const std::string &name, co
 }
 
 void MDLGenerator::GenerateControl(std::string &out) {
+  _lhsSubs = nullptr;
   // The four control variables are emitted as a dedicated .Control group so the
   // sim specs survive a round trip. Each is emitted from its actual Variable when
   // present (so SAVEPER = TIME STEP, and any real units/comments, round-trip);
@@ -906,6 +924,7 @@ void MDLGenerator::GenerateControl(std::string &out) {
 }
 
 void MDLGenerator::GenerateVariableEntry(std::string &out, Variable *v) {
+  _lhsSubs = nullptr;
   switch (v->VariableType()) {
   case XMILE_Type_AUX:
   case XMILE_Type_DELAYAUX:
@@ -918,6 +937,7 @@ void MDLGenerator::GenerateVariableEntry(std::string &out, Variable *v) {
       SymbolList *subs = eq->GetLeft()->GetSubs();
       if (subs && subs->Length() > 0)
         lhs += RenderSubscripts(subs);
+      _lhsSubs = subs;
 
       Expression *rhsExpr = eq->GetExpression();
       // A standalone graphical function (parsed from "name(<points>)") stores the
@@ -997,6 +1017,7 @@ void MDLGenerator::EmitStockEntry(std::string &out, Variable *v) {
     SymbolList *subs = eq->GetLeft()->GetSubs();
     if (subs && subs->Length() > 0)
       lhs += RenderSubscripts(subs);
+    _lhsSubs = subs;
 
     std::string net = "0";
     std::string init = "0";
@@ -1134,7 +1155,7 @@ std::string MDLGenerator::UnitsCommentTrailer(Variable *v) {
   // rather than accreting a carriage return each write, and Print's single final
   // LF->CRLF pass restores CRLF.
   std::string comment = mdl::SanitizeFreeText(v->Comment(), mdl::FreeTextLineMode::Multiline, "");
-  units = mdl::SanitizeFreeText(units, mdl::FreeTextLineMode::SingleLine, "~");
+  units = mdl::VensimUnitsText(mdl::SanitizeFreeText(units, mdl::FreeTextLineMode::SingleLine, "~"));
 
   // The Vensim lexer (VensimLex::GetComment) captures the separator whitespace
   // between the second '~' and the comment text as part of the stored comment,
@@ -1221,12 +1242,49 @@ std::string MDLGenerator::RenderFunction(ExpressionFunction *fn) {
   // none of the XMILE structural rewrites (PULSE->IF, etc.) fire.
   std::string name = mdl::FormatMDLIdent(f->GetName());
   int n = args ? args->Length() : 0;
+  // XMILE MEAN(array): Vensim sums the array and divides by its element
+  // count, one ELMCOUNT per wildcard position (bound by now). Parenthesized
+  // because it stands where a call did, which binds tighter than any operator.
+  if (dynamic_cast<FunctionMean *>(f) && n == 1) {
+    Expression *arg = args->GetExp(0);
+    std::vector<std::string> counts;
+    if (arg->GetType() == EXPTYPE_Variable && !static_cast<ExpressionVariable *>(arg)->GetSubs()) {
+      for (Symbol *d : ImplicitDims(static_cast<ExpressionVariable *>(arg)->GetVariable()))
+        counts.push_back("ELMCOUNT(" + mdl::FormatMDLIdent(d->GetName()) + ")");
+    } else if (arg->GetType() == EXPTYPE_Variable) {
+      if (SymbolList *subs = static_cast<ExpressionVariable *>(arg)->GetSubs()) {
+        for (int i = 0; i < subs->Length(); i++) {
+          const SymbolList::SymbolListEntry &e = (*subs)[i];
+          if (e.eType == SymbolList::EntryType_BANG_SYMBOL && e.u.pSymbol)
+            counts.push_back("ELMCOUNT(" + mdl::FormatMDLIdent(e.u.pSymbol->GetName()) + ")");
+        }
+      }
+    }
+    if (counts.empty())
+      return RenderExpression(arg);  // the mean of one value
+    std::string divisor = counts[0];
+    for (size_t i = 1; i < counts.size(); i++)
+      divisor += " * " + counts[i];
+    if (counts.size() > 1)
+      divisor = "(" + divisor + ")";
+    const bool outer = _bareAsBang;
+    _bareAsBang = true;
+    const std::string sum = "(SUM(" + RenderExpression(arg) + ") / " + divisor + ")";
+    _bareAsBang = outer;
+    return sum;
+  }
   // Vensim's only zero-argument production is `VPTT_function '(' ')'` (VYacc.y)
   // -- a function token followed by anything else is a syntax error, and the
   // parser discards just the offending equation, so a bare `RANDOM 0 1` dropped
   // the whole variable on re-import while the conversion still reported success.
   if (n == 0)
-    return name + "()";
+    return name + (dynamic_cast<MacroFunction *>(f) ? "(0)" : "()");
+  // An array function's bare arrayed argument is the whole array (see
+  // ImplicitSubscripts).
+  const bool outer = _bareAsBang;
+  const std::string &fname = f->GetName();
+  if (fname == "SUM" || fname == "PROD" || fname == "VMIN" || fname == "VMAX")
+    _bareAsBang = true;
   std::string out = name + "(";
   for (int i = 0; i < n; i++) {
     if (i)
@@ -1234,6 +1292,7 @@ std::string MDLGenerator::RenderFunction(ExpressionFunction *fn) {
     out += RenderExpression(args->GetExp(i));
   }
   out += ")";
+  _bareAsBang = outer;
   return out;
 }
 
@@ -1254,8 +1313,60 @@ std::string MDLGenerator::RenderVariableRef(ExpressionVariable *v) {
     if (RenderComputedSubscripts(v, out, mapped))
       return mapped;
     out += RenderSubscripts(subs);
+  } else {
+    out += ImplicitSubscripts(v->GetVariable());
   }
   return out;
+}
+
+std::vector<Symbol *> MDLGenerator::ImplicitDims(Variable *var) {
+  std::vector<Symbol *> dims;
+  if (!var || var->VariableType() == XMILE_Type_ARRAY || var->VariableType() == XMILE_Type_ARRAY_ELM)
+    return dims;
+  for (int i = 0;; i++) {
+    Symbol *d = Model::FamilyAtPosition(var, i);
+    if (!d)
+      break;
+    dims.push_back(d);
+  }
+  return dims;
+}
+
+std::string MDLGenerator::ImplicitSubscripts(Variable *var) {
+  // XMILE lets an equation name an arrayed variable without subscripts: the
+  // element matching the equation's own (or the whole array, inside an array
+  // function). Vensim always spells them out. A position takes the left-hand
+  // side's subscript of the same family -- the dimension, a subrange, or the
+  // element of a per-element equation -- else the variable's own dimension;
+  // inside SUM and the like, the dimension with a bang.
+  const std::vector<Symbol *> dims = ImplicitDims(var);
+  if (dims.empty())
+    return "";
+  auto root = [](Symbol *s) {
+    while (s && s->Owner() && s->Owner() != s)
+      s = s->Owner();
+    return s;
+  };
+  std::string out = "[";
+  for (size_t i = 0; i < dims.size(); i++) {
+    if (i)
+      out += ", ";
+    Symbol *use = dims[i];
+    if (!_bareAsBang && _lhsSubs) {
+      for (int j = 0; j < _lhsSubs->Length(); j++) {
+        const SymbolList::SymbolListEntry &e = (*_lhsSubs)[j];
+        if (e.eType == SymbolList::EntryType_SYMBOL && e.u.pSymbol && root(e.u.pSymbol) == root(dims[i])) {
+          use = e.u.pSymbol;
+          break;
+        }
+      }
+    }
+    NoteVariableNamed(use);
+    out += mdl::FormatMDLIdent(use->GetName());
+    if (_bareAsBang)
+      out += "!";
+  }
+  return out + "]";
 }
 
 bool MDLGenerator::RenderComputedSubscripts(ExpressionVariable *v, const std::string &name, std::string &out) {
@@ -1274,6 +1385,10 @@ bool MDLGenerator::RenderComputedSubscripts(ExpressionVariable *v, const std::st
     const SymbolList::SymbolListEntry &e = (*subs)[i];
     if (e.eType == SymbolList::EntryType_LIST)
       return false;
+    if (e.eType == SymbolList::EntryType_EXPRESSION) {
+      computed.push_back(i);
+      continue;
+    }
     Symbol *s = e.u.pSymbol;
     if (e.eType == SymbolList::EntryType_SYMBOL && s && s->isType() == Symtype_Variable) {
       XMILE_Type type = static_cast<Variable *>(s)->VariableType();
@@ -1318,15 +1433,42 @@ bool MDLGenerator::RenderComputedSubscripts(ExpressionVariable *v, const std::st
     size_t stride = 1;
     for (int j = i + 1; j < n; j++)
       stride *= sizes[j];
-    NoteVariableNamed(e.u.pSymbol);
-    const std::string index = mdl::FormatMDLIdent(e.u.pSymbol->GetName());
-    std::string term = (computed.size() == 1 && stride == 1) ? index + " - 1" : "(" + index + " - 1)";
+    std::string term = IndexMinusOne(e);
+    if (computed.size() != 1 || stride != 1)
+      term = "(" + term + ")";
     if (stride != 1)
       term += " * " + std::to_string(stride);
     offset += (offset.empty() ? "" : " + ") + term;
   }
   out = "VECTOR ELM MAP(" + anchor + "], " + offset + ")";
   return true;
+}
+
+std::string MDLGenerator::IndexMinusOne(const SymbolList::SymbolListEntry &e) {
+  if (e.eType != SymbolList::EntryType_EXPRESSION) {
+    NoteVariableNamed(e.u.pSymbol);
+    return mdl::FormatMDLIdent(e.u.pSymbol->GetName()) + " - 1";
+  }
+  // `Dim - 1` (the element before) is the commonest index expression; fold
+  // its constant into the 1 taken off, so the offset reads Dim - 2 rather than
+  // Dim - 1 - 1.
+  Expression *x = e.u.pExpression;
+  while (dynamic_cast<ExpressionParen *>(x))
+    x = x->GetArg(0);
+  Expression *rhs = x->GetType() == EXPTYPE_Operator ? x->GetArg(1) : nullptr;
+  if (rhs && rhs->GetType() == EXPTYPE_Number) {
+    const double k = static_cast<ExpressionNumber *>(rhs)->GetValue();
+    const std::string lhs = ParenIfNecessary(x, x->GetArg(0), false, RenderExpression(x->GetArg(0)));
+    auto num = [](double d) { return mdl::FormatMDLNumber(d); };
+    if (dynamic_cast<ExpressionSubtract *>(x))
+      return lhs + " - " + num(k + 1);
+    if (dynamic_cast<ExpressionAdd *>(x))
+      return k == 1 ? lhs : (k > 1 ? lhs + " + " + num(k - 1) : lhs + " - " + num(1 - k));
+  }
+  std::string index = RenderExpression(e.u.pExpression);
+  if (x->GetType() == EXPTYPE_Operator || x->GetType() == EXPTYPE_Logical)
+    index = "(" + index + ")";
+  return index + " - 1";
 }
 
 std::string MDLGenerator::RenderSubscripts(SymbolList *subs) {
@@ -1337,6 +1479,10 @@ std::string MDLGenerator::RenderSubscripts(SymbolList *subs) {
     const SymbolList::SymbolListEntry &e = (*subs)[i];
     if (e.eType == SymbolList::EntryType_LIST) {
       out += RenderSubscripts(e.u.pSymbolList);  // nested subscript list (rare)
+    } else if (e.eType == SymbolList::EntryType_EXPRESSION) {
+      // Not Vensim; RenderComputedSubscripts turns these into VECTOR ELM MAP
+      // whenever the target's dimensions are known.
+      out += RenderExpression(e.u.pExpression);
     } else if (e.u.pSymbol == nullptr) {
       // An unbound `*` wildcard (null bang symbol) should have been resolved by
       // XmileReader::ResolveWildcardSubscripts before reaching the writer; guard

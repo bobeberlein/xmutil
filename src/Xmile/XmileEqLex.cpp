@@ -57,6 +57,21 @@ void XmileEqLex::PushBack(unsigned char c) {
   aPushBack[iPushBackCount++] = c;
 }
 
+bool XmileEqLex::NextNonSpaceIs(char want) const {
+  // The lookahead may sit in the push-back stack (most recent first) before
+  // the unread text.
+  auto space = [](char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; };
+  for (int i = iPushBackCount - 1; i >= 0; i--) {
+    if (!space(static_cast<char>(aPushBack[i])))
+      return static_cast<char>(aPushBack[i]) == want;
+  }
+  for (size_t j = iCurPos; pText && j < iLength; j++) {
+    if (!space(pText[j]))
+      return pText[j] == want;
+  }
+  return false;
+}
+
 const char *XmileEqLex::InternToken() {
   mInterns.emplace_back(sToken);
   return mInterns.back().c_str();
@@ -153,8 +168,10 @@ int XmileEqLex::ScanIdentOrKeyword(unsigned char first) {
   }
   // Bare NaN literal lowers to the shared Vensim missing-data sentinel so the
   // value is indistinguishable from a parsed-from-MDL :NA: downstream. The
-  // :NA: form is handled separately by MaybeColonNa.
-  if (StringMatch(sToken, "nan")) {
+  // :NA: form is handled separately by MaybeColonNa. NAN followed by '(' is a
+  // call instead -- NAN(inputs), the XMILE writer's spelling of Vensim's
+  // A FUNCTION OF (xpyy_call).
+  if (StringMatch(sToken, "nan") && !NextNonSpaceIs('(')) {
     xpyylval.num = kVensimNaSentinel;
     return XPTT_number;
   }
@@ -207,10 +224,26 @@ std::string XmileEqLex::Snippet() const {
 
 int XmileEqLex::yylex() {
   unsigned char c;
-  // Skip whitespace including CR/LF/TAB so multi-line XMILE equations are OK.
-  do {
+  // Skip whitespace including CR/LF/TAB so multi-line XMILE equations are OK,
+  // and {comments}, which XMILE allows anywhere whitespace is (Stella uses them
+  // to keep alternative formulations in the equation). They nest, so a
+  // commented-out equation may carry comments of its own.
+  for (;;) {
     c = GetNextChar();
-  } while (c == ' ' || c == '\t' || c == '\r' || c == '\n');
+    if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+      continue;
+    if (c != '{')
+      break;
+    for (int depth = 1; depth > 0;) {
+      c = GetNextChar();
+      if (!c)
+        return 0;  // an unclosed comment runs to the end of the equation
+      if (c == '{')
+        depth++;
+      else if (c == '}')
+        depth--;
+    }
+  }
   if (!c)
     return 0;  // bison accept signal
 

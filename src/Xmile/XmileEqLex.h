@@ -52,6 +52,8 @@ private:
   // time, which can be one or more tokens after we set it, so we cannot use
   // sToken's storage directly (the next NextToken would overwrite it).
   const char *InternToken();
+  // Whether the next character that is not whitespace is want.
+  bool NextNonSpaceIs(char want) const;
 
   const char *pText;
   std::size_t iCurPos;

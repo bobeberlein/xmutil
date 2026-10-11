@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "../Symbol/SymbolList.h"
+
 class Model;
 class ModelGroup;
 class Expression;
@@ -129,10 +131,19 @@ private:
   std::string RenderLogical(ExpressionLogical *lg);
   std::string RenderFunction(ExpressionFunction *fn);
   std::string RenderVariableRef(ExpressionVariable *v);
+  // The subscripts Vensim needs on a reference XMILE leaves bare (`[]`-less),
+  // "" for a variable that is not arrayed. See the definition.
+  std::string ImplicitSubscripts(Variable *var);
+  // The dimension family at each position of an arrayed variable; empty for a
+  // scalar, a dimension or an element.
+  static std::vector<Symbol *> ImplicitDims(Variable *var);
   // A reference with a computed subscript (an XMILE `a[i]`, i a number) as the
   // VECTOR ELM MAP Vensim needs for it, written to out; false when there is
   // none. name is the reference's own rendered name.
   bool RenderComputedSubscripts(ExpressionVariable *v, const std::string &name, std::string &out);
+  // A computed subscript's 1-based index, less 1, as VECTOR ELM MAP's offset
+  // term: `i - 1`, or `Dim - 2` for the index expression `Dim - 1`.
+  std::string IndexMinusOne(const SymbolList::SymbolListEntry &e);
   std::string RenderSubscripts(SymbolList *subs);
   // Render a table-like expression: a Lookup (embedded WITH LOOKUP or a named
   // lookup-variable call), a bare Table body, an arrayed NumberTable constant
@@ -193,6 +204,11 @@ private:
   // True while a macro body is rendered: references to the model's own
   // variables (and the time builtins) take Vensim's `$` there.
   bool _inMacroBody = false;
+  // The left-hand side subscripts of the equation being rendered (NULL for a
+  // scalar), and whether a bare arrayed reference is the whole array (inside
+  // SUM and the like): both for ImplicitSubscripts.
+  SymbolList *_lhsSubs = nullptr;
+  bool _bareAsBang = false;
 };
 
 #endif  // __MDLGENERATOR_H

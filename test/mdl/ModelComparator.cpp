@@ -168,6 +168,8 @@ bool TablesEqual(ExpressionTable *a, ExpressionTable *b) {
 // same element names in order, and the same "bang" status per entry (a bang
 // subscript `Dim!` is a distinct vector-iteration marker, so dropping it is a
 // real difference the comparator must catch). Nested LIST entries recurse.
+bool ExpressionsEqual(Expression *a, Expression *b);
+
 bool SymbolListsEqual(SymbolList *a, SymbolList *b) {
   if (!a || !b)
     return a == b;
@@ -180,6 +182,9 @@ bool SymbolListsEqual(SymbolList *a, SymbolList *b) {
       return false;
     if (ea.eType == SymbolList::EntryType_LIST) {
       if (!SymbolListsEqual(ea.u.pSymbolList, eb.u.pSymbolList))
+        return false;
+    } else if (ea.eType == SymbolList::EntryType_EXPRESSION) {
+      if (!ExpressionsEqual(ea.u.pExpression, eb.u.pExpression))
         return false;
     } else if (NormalizeName(ea.u.pSymbol->GetName()) != NormalizeName(eb.u.pSymbol->GetName())) {
       return false;
@@ -213,6 +218,14 @@ bool ExpressionsEqual(Expression *a, Expression *b) {
     ExpressionVariable *vb = static_cast<ExpressionVariable *>(b);
     if (NormalizeName(va->GetVariable()->GetName()) != NormalizeName(vb->GetVariable()->GetName()))
       return false;
+    // XMILE may name an arrayed variable bare where the .mdl writer has to
+    // spell its subscripts out (MDLGenerator::ImplicitSubscripts); which
+    // subscripts it chose is the writer's own test's business.
+    if (!va->GetSubs() != !vb->GetSubs()) {
+      ExpressionVariable *bare = va->GetSubs() ? vb : va;
+      if (Model::FamilyAtPosition(bare->GetVariable(), 0))
+        return true;
+    }
     return SymbolListsEqual(va->GetSubs(), vb->GetSubs());
   }
 

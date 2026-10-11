@@ -1,8 +1,10 @@
 #include "MDLFormat.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 
 #include "../Symbol/Expression.h"
 #include "../Symbol/Parse.h"
@@ -370,6 +372,77 @@ std::string WriteLookupBody(ExpressionTable *table) {
   for (size_t i = 0; i < npairs; i++)
     s += ",(" + FormatMDLNumber(xs[i]) + "," + FormatMDLNumber(ys[i]) + ")";
   return s;
+}
+
+std::string VensimUnitsText(const std::string &units) {
+  std::string out;
+  out.reserve(units.size());
+  for (size_t i = 0; i < units.size(); i++) {
+    const char c = units[i];
+    if (c == '%') {
+      out += "Percent";
+      continue;
+    }
+    if (c != '^') {
+      out += c;
+      continue;
+    }
+    // The exponent: an optionally signed whole number (possibly in parens).
+    size_t j = i + 1;
+    while (j < units.size() && units[j] == ' ')
+      j++;
+    const bool paren = j < units.size() && units[j] == '(';
+    if (paren)
+      j++;
+    const size_t numStart = j;
+    if (j < units.size() && (units[j] == '-' || units[j] == '+'))
+      j++;
+    while (j < units.size() && std::isdigit(static_cast<unsigned char>(units[j])))
+      j++;
+    int n = 0;
+    bool whole = j > numStart && std::isdigit(static_cast<unsigned char>(units[j - 1])) &&
+                 (j >= units.size() || units[j] != '.');
+    if (whole)
+      n = std::atoi(units.substr(numStart, j - numStart).c_str());
+    if (paren) {
+      if (j < units.size() && units[j] == ')')
+        j++;
+      else
+        whole = false;
+    }
+    // The base: the parenthesized group, or the unit name, just written.
+    size_t end = out.size();
+    while (end > 0 && out[end - 1] == ' ')
+      end--;
+    size_t start = end;
+    if (end > 0 && out[end - 1] == ')') {
+      int depth = 0;
+      while (start > 0) {
+        const char b = out[--start];
+        if (b == ')')
+          depth++;
+        else if (b == '(' && --depth == 0)
+          break;
+      }
+    } else {
+      while (start > 0 && std::string("*/(").find(out[start - 1]) == std::string::npos)
+        start--;
+      while (start < end && out[start] == ' ')
+        start++;
+    }
+    if (!whole || n == 0 || start == end) {
+      out += c;
+      continue;
+    }
+    const std::string base = out.substr(start, end - start);
+    std::string product = base;
+    for (int k = 1; k < std::abs(n); k++)
+      product += "*" + base;
+    out.erase(start);
+    out += n < 0 ? "1/(" + product + ")" : (std::abs(n) == 1 ? product : "(" + product + ")");
+    i = j - 1;
+  }
+  return out;
 }
 
 }  // namespace mdl

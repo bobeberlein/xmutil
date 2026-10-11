@@ -232,14 +232,32 @@ public:
     _hasAngle = true;
     _angle = angle;
   }
+  // Every point of the record's point list, in order (X/Y is the first). A
+  // straight pipe or an arc has one, a handle; a bent pipe lists its corners
+  // from the valve outward -- the first one twice, as Vensim writes it -- and
+  // last the point where it meets what it connects to.
+  const std::vector<std::pair<int, int>> &Points() const {
+    return _points;
+  }
+  void SetPoints(const std::vector<std::pair<int, int>> &points) {
+    _points = points;
+    if (!_points.empty()) {
+      _x = _points[0].first;
+      _y = _points[0].second;
+    }
+  }
+  bool IsBent() const {
+    return _points.size() > 1;
+  }
   static const int kArc = 1;
+  static const int kPolyline = 3;  // an arrow drawn as line segments
   static const int kPipeDownstream = 4;
   static const int kPipeUpstream = 100;
 
 private:
   int _from;
   int _to;
-  int _npoints;
+  std::vector<std::pair<int, int>> _points;
   char _polarity;
   int _shape = kArc;
   bool _hasAngle = false;

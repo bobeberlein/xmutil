@@ -344,3 +344,63 @@ TEST(VectorElmMap_computed_subscript_stride) {
   // A computed last subscript steps one element at a time.
   CHECK(Contains(mdl, "col[r] = VECTOR ELM MAP(m[r, c1], i - 1)"));
 }
+// The fixture's conveyor-like chain: each stage takes from the one before,
+// `progress[Dimension_1-1]`, which is the index expression's element.
+TEST(VectorElmMap_subscript_expression_from_xmile) {
+  const std::string stmx = ReadFile(std::string(XMUTIL_SRC_ROOT) + "/test_models/NeedsVectorElmMap.stmx");
+  CHECK(!stmx.empty());
+  if (stmx.empty())
+    return;
+  char *out = convert_xmile_to_mdl(stmx.c_str(), static_cast<uint32_t>(stmx.size()), "n.stmx", -1);
+  std::string mdl(out ? out : "");
+  free(out);
+  // Undo the writer's 80-column wrapping: a backslash, the line break, tabs.
+  for (size_t at; (at = mdl.find('\\')) != std::string::npos;) {
+    size_t end = at + 1;
+    while (end < mdl.size() && (mdl[end] == '\r' || mdl[end] == '\n' || mdl[end] == '\t'))
+      end++;
+    mdl.erase(at, end - at);
+  }
+  CHECK(Contains(mdl, "VECTOR ELM MAP(progress[Element_1], Dimension_1 - 2)"));
+}
+
+TEST(VectorElmMap_subscript_expressions) {
+  const char *kXmile = R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>1</stop><dt>1</dt></sim_specs>
+  <dimensions>
+    <dim name="r"><elem name="r1"/><elem name="r2"/><elem name="r3"/></dim>
+    <dim name="c"><elem name="c1"/><elem name="c2"/></dim>
+  </dimensions>
+  <model>
+    <variables>
+      <aux name="v"><dimensions><dim name="r"/></dimensions><eqn>r</eqn></aux>
+      <aux name="m"><dimensions><dim name="r"/><dim name="c"/></dimensions><eqn>r * 10 + c</eqn></aux>
+      <aux name="i"><eqn>1</eqn></aux>
+      <aux name="next"><dimensions><dim name="r"/></dimensions><eqn>v[r + 1]</eqn></aux>
+      <aux name="same"><dimensions><dim name="r"/></dimensions><eqn>v[(r + 1) - 1]</eqn></aux>
+      <aux name="twice"><dimensions><dim name="r"/></dimensions><eqn>v[i * 2]</eqn></aux>
+      <aux name="up"><dimensions><dim name="r"/><dim name="c"/></dimensions><eqn>m[r - 1, c]</eqn></aux>
+    </variables>
+  </model>
+</xmile>
+)";
+  const std::string text(kXmile);
+  char *out = convert_xmile_to_mdl(kXmile, static_cast<uint32_t>(text.size()), "s.xmile", -1);
+  const std::string mdl(out ? out : "");
+  free(out);
+  // The constant of `Dim + k` / `Dim - k` folds into the 1 taken off.
+  CHECK(Contains(mdl, "next[r] = VECTOR ELM MAP(v[r1], r)"));
+  CHECK(Contains(mdl, "same[r] = VECTOR ELM MAP(v[r1], r + 1 - 2)"));
+  // Any other expression is the index, less one.
+  CHECK(Contains(mdl, "twice[r] = VECTOR ELM MAP(v[r1], (i * 2) - 1)"));
+  // In a leading position the offset steps whole rows.
+  CHECK(Contains(mdl, "up[r, c] = VECTOR ELM MAP(m[r1, c], (r - 2) * 2)"));
+
+  // XMILE writes the expression back where it was.
+  char *again = convert_xmile_to_xmile(kXmile, static_cast<uint32_t>(text.size()), "s.xmile", -1, false);
+  const std::string xmile(again ? again : "");
+  free(again);
+  CHECK(Contains(xmile, "v[r+1]"));
+  CHECK(Contains(xmile, "m[r-1, c]"));
+}

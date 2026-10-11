@@ -8,6 +8,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <set>
 #include <stdexcept>
 
@@ -206,6 +209,13 @@ XmileReader::~XmileReader() {
 
 bool XmileReader::ProcessFile(const std::string &filename, const char *contents, size_t len,
                               std::vector<std::string> &errs) {
+  struct DocErrs {
+    XmileReader *reader;
+    ~DocErrs() {
+      reader->_docErrs = nullptr;
+    }
+  } docErrs{this};
+  _docErrs = &errs;
   tinyxml2::XMLDocument doc;
   // tinyxml2::XMLDocument::Parse accepts a length, so the buffer need not be
   // NUL-terminated -- the extern-C path passes a uint32_t length.
@@ -241,9 +251,14 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
     const char *name = child->Name();
     if (!name)
       continue;
+    std::string tag(name);
+    if (tag == "isee:prefs") {
+      const char *layer = child->Attribute("layer");
+      _cldLayer = layer && StringMatch(layer, "cld");
+      continue;
+    }
     if (IsForeignNamespace(name))
       continue;
-    std::string tag(name);
     if (tag == "macro") {
       macroEls.push_back(child);
       continue;
@@ -255,6 +270,14 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
       simSpecsEls.push_back(child);
     }
   }
+  // Modules saved in files of their own join the document's models here, so
+  // everything below sees one document set.
+  std::vector<std::unique_ptr<tinyxml2::XMLDocument>> externalDocs;
+  std::vector<tinyxml2::XMLElement *> externalDims;
+  const size_t ownModels = modelEls.size();
+  if (!LoadExternalModules(filename, modelEls, macroEls, externalDims, externalDocs, errs))
+    return false;
+  modelCount = static_cast<int>(modelEls.size());
   // Several <model> elements are a base model and its modules. They are read
   // in module mode (see ScopedName): flattened into one namespace under
   // module-qualified names, with each module's <connect> inputs read as shadows
@@ -325,6 +348,14 @@ bool XmileReader::ProcessFile(const std::string &filename, const char *contents,
       continue;
     }
   }
+  // The models loaded from module files, after this document's own dimensions
+  // (which take precedence over a module file's copy of the same one).
+  for (tinyxml2::XMLElement *dims : externalDims) {
+    if (ok)
+      ok = ProcessDimensions(dims, errs, /*skipDefined=*/true);
+  }
+  for (size_t i = ownModels; ok && i < modelEls.size(); i++)
+    ok = ProcessModel(modelEls[i], errs);
   // Whole-document epilogue. Every step needs the full document in hand: a
   // group's owner="..." may name a group declared later, a control value
   // <sim_specs> left unstated may have been supplied by a <variables>
@@ -1071,7 +1102,7 @@ bool XmileReader::ProcessViews(tinyxml2::XMLElement *views, std::vector<std::str
   return true;
 }
 
-bool XmileReader::ProcessDimensions(tinyxml2::XMLElement *dimsEl, std::vector<std::string> &errs) {
+bool XmileReader::ProcessDimensions(tinyxml2::XMLElement *dimsEl, std::vector<std::string> &errs, bool skipDefined) {
   // Parity target: Vensim's `Dim: a, b, c` (VYacc.y:117) produces an Equation
   // with iEqType=':' whose RHS is an ExpressionSymbolList wrapping the element
   // SymbolList. MarkTypes (Variable.cpp:134-149) keys off the Symlist shape to
@@ -1099,9 +1130,14 @@ bool XmileReader::ProcessDimensions(tinyxml2::XMLElement *dimsEl, std::vector<st
                      kControlNames[controlIdx] + " and cannot also name a dimension; the dimension is dropped");
       continue;
     }
+    if (skipDefined) {
+      Symbol *sym = pSymbolNameSpace->Find(normName);
+      if (sym && sym->isType() == Symtype_Variable && !static_cast<Variable *>(sym)->GetAllEquations().empty())
+        continue;
+    }
     Variable *dimVar = InsertVariable(normName);
     if (!dimVar) {
-      errs.push_back(std::string("<dim name=\"") + dimName + "\">: name collides with a non-variable symbol");
+      errs.push_back(std::string("<dim name=\"") + dimName + "\">: " + CollisionWith(normName));
       return false;
     }
     EnsureCanonicalName(dimVar, normName);
@@ -1143,7 +1179,7 @@ SymbolList *XmileReader::BuildElementList(tinyxml2::XMLElement *dimEl, std::vect
     std::string normName = NormalizeName(elemName);
     Variable *elemVar = InsertVariable(normName);
     if (!elemVar) {
-      errs.push_back(std::string("<elem name=\"") + elemName + "\">: name collides with a non-variable symbol");
+      errs.push_back(std::string("<elem name=\"") + elemName + "\">: " + CollisionWith(normName));
       return nullptr;
     }
     EnsureCanonicalName(elemVar, normName);
@@ -1185,7 +1221,7 @@ SymbolList *XmileReader::BuildIndexedElementList(int n, std::vector<std::string>
       // wrong size, which every consumer downstream would then trust. Report it
       // the way BuildElementList reports the same collision and give up.
       errs.push_back(std::string("<dim size=\"") + std::to_string(n) + "\">: element name \"" + name +
-                     "\" collides with a non-variable symbol");
+                     "\": " + CollisionWith(name));
       return nullptr;
     }
     if (!list)
@@ -1210,7 +1246,7 @@ Variable *XmileReader::DeclareVariable(tinyxml2::XMLElement *el, std::vector<std
   std::string normName = NormalizeName(name);
   Variable *v = InsertVariable(normName);
   if (!v) {
-    errs.push_back(std::string("<") + el->Name() + " name=\"" + name + "\">: name collides with a non-variable symbol");
+    errs.push_back(std::string("<") + el->Name() + " name=\"" + name + "\">: " + CollisionWith(normName));
     return nullptr;
   }
   // The declared spelling, under the name the variable is entered as (module-
@@ -1220,19 +1256,47 @@ Variable *XmileReader::DeclareVariable(tinyxml2::XMLElement *el, std::vector<std
   const std::string scoped = ScopedName(normName, &isAlias);
   if (!isAlias)
     EnsureCanonicalName(v, scoped);
+  _selfVar = v;
+  _selfRefs.clear();
   return v;
 }
 
 Expression *XmileReader::ParseEqnFor(tinyxml2::XMLElement *ctxEl, const char *eqnText, std::vector<std::string> &errs) {
   std::vector<std::string> eqnErrs;
-  Expression *rhs = ParseEquation(eqnText ? eqnText : "", eqnErrs);
+  // In a model saved on the causal loop diagram layer (<isee:prefs
+  // layer="cld">), an equation that is NAN alone is still to be written:
+  // Vensim's A FUNCTION OF(), as NAN(inputs) always is A FUNCTION OF(inputs).
+  // Anywhere else NAN is the missing value.
+  std::string text = eqnText ? eqnText : "";
+  const size_t first = text.find_first_not_of(" \t\r\n");
+  const size_t last = text.find_last_not_of(" \t\r\n");
+  if (_cldLayer && first != std::string::npos && StringMatch(text.substr(first, last - first + 1), "nan"))
+    text = "NAN()";
+  Expression *rhs = ParseEquation(text, eqnErrs);
   const bool hardErr = ForwardEqnDiagnostics(ElementContext(ctxEl), eqnErrs, errs);
   if (!rhs || hardErr)
     return nullptr;
   return rhs;
 }
 
+ExpressionVariable *XmileReader::SelfReference(SymbolList *subs) {
+  if (!_selfVar)
+    return nullptr;
+  Symbol *declared = pSymbolNameSpace->Find(ScopedName("self"));
+  if (declared && declared->isType() == Symtype_Variable)
+    return nullptr;
+  ExpressionVariable *ev = new ExpressionVariable(pSymbolNameSpace, _selfVar, subs);
+  if (!subs)
+    _selfRefs.push_back(ev);
+  return ev;
+}
+
 void XmileReader::AddEquationFor(Variable *v, SymbolList *lhsSubs, Expression *rhs, int token) {
+  if (v == _selfVar && lhsSubs) {
+    for (ExpressionVariable *ev : _selfRefs)
+      ev->SetSubs(lhsSubs->Clone());
+  }
+  _selfRefs.clear();
   ExpressionVariable *lhsVar = new ExpressionVariable(pSymbolNameSpace, v, lhsSubs);
   LeftHandSide *lhs = new LeftHandSide(pSymbolNameSpace, lhsVar, NULL, NULL, 0);
   Equation *eq = new Equation(pSymbolNameSpace, lhs, rhs, token);
@@ -1301,8 +1365,18 @@ bool XmileReader::ProcessAppliesToAllEquation(tinyxml2::XMLElement *varEl, Varia
   // Human - but we treat 0+0 as "" - basically this is an XMUTIL convention that helps in round tripping
   if (strcmp(eqnText, "0+0") == 0)
     eqnText = "";
-  const bool hasEqn =
-      std::any_of(eqnText, eqnText + std::strlen(eqnText), [](unsigned char c) { return !std::isspace(c); });
+  // Anything but whitespace and {comments}: Stella leaves an unconnected
+  // module input as `{Enter equation for use when not hooked up...}`.
+  bool hasEqn = false;
+  for (int depth = 0, i = 0; eqnText[i] && !hasEqn; i++) {
+    const unsigned char c = static_cast<unsigned char>(eqnText[i]);
+    if (c == '{')
+      depth++;
+    else if (c == '}' && depth > 0)
+      depth--;
+    else if (depth == 0 && !std::isspace(c))
+      hasEqn = true;
+  }
 
   // Four combinations of <eqn> / <gf>:
   //   (1) eqn + no gf    -> regular aux/flow equation (scalar or a2a)
@@ -1626,8 +1700,7 @@ Expression *XmileReader::BuildNetFlowSubscripted(const std::vector<std::string> 
   auto makeRef = [&](const std::string &name, const char *role) -> Expression * {
     Variable *v = InsertVariable(name);
     if (!v) {
-      errs.push_back(std::string("<") + role + ">" + name + "</" + role +
-                     ">: name collides with a non-variable symbol");
+      errs.push_back(std::string("<") + role + ">" + name + "</" + role + ">: " + CollisionWith(name));
       return nullptr;
     }
     SymbolList *subsCopy = lhsSubs ? lhsSubs->Clone() : nullptr;
@@ -2240,7 +2313,30 @@ Expression *XmileReader::ParseEquation(const std::string &text, std::vector<std:
   return result;
 }
 
-Variable *XmileReader::InsertVariable(const std::string &bareName) {
+std::string XmileReader::RenameAwayFromBuiltin(const std::string &bareName) {
+  Symbol *sym = pSymbolNameSpace->Find(bareName);
+  if (!sym || sym->isType() != Symtype_Function)
+    return bareName;
+  std::unordered_map<std::string, std::string> &renames = _builtinRenames[pSymbolNameSpace];
+  const std::string key = FoldNameKey(bareName);
+  auto it = renames.find(key);
+  if (it != renames.end())
+    return it->second;
+  std::string renamed;
+  for (int n = 1;; n++) {
+    renamed = bareName + " " + std::to_string(n);
+    if (!pSymbolNameSpace->Find(ScopedName(renamed)))
+      break;
+  }
+  renames.emplace(key, renamed);
+  if (_docErrs)
+    _docErrs->push_back("warning: \"" + bareName + "\" is the name of the built-in function " + sym->GetName() +
+                        "; the variable is renamed \"" + renamed + "\"");
+  return renamed;
+}
+
+Variable *XmileReader::InsertVariable(const std::string &requestedName) {
+  const std::string bareName = RenameAwayFromBuiltin(requestedName);
   const std::string name = ScopedName(bareName);
   Symbol *sym = pSymbolNameSpace->Find(name);
   Variable *v = nullptr;
@@ -2263,6 +2359,22 @@ Variable *XmileReader::InsertVariable(const std::string &bareName) {
   if (!_inModelScope)
     _globalVars.insert(v);
   return v;
+}
+
+std::string XmileReader::CollisionWith(const std::string &bareName) {
+  Symbol *sym = pSymbolNameSpace->Find(ScopedName(bareName));
+  if (!sym)
+    return "name collides with a non-variable symbol";
+  switch (sym->isType()) {
+  case Symtype_Function:
+    return "name collides with the built-in function " + sym->GetName();
+  case Symtype_Units:
+    return "name collides with the unit " + sym->GetName();
+  case Symtype_Model:
+    return "name collides with the model " + sym->GetName();
+  default:
+    return "name collides with the non-variable symbol " + sym->GetName();
+  }
 }
 
 bool XmileReader::ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::string> &errs) {
@@ -2292,9 +2404,10 @@ bool XmileReader::ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::str
 
   ExpressionList *margs = new ExpressionList(local);
   for (tinyxml2::XMLElement *parm = macro->FirstChildElement("parm"); parm; parm = parm->NextSiblingElement("parm")) {
-    Variable *v = InsertVariable(NormalizeName(parm->GetText()));
+    const std::string parmName = NormalizeName(parm->GetText());
+    Variable *v = InsertVariable(parmName);
     if (!v) {
-      errs.push_back("<macro name=\"" + name + "\">: <parm> names a non-variable symbol");
+      errs.push_back("<macro name=\"" + name + "\">: <parm>" + parmName + "</parm>: " + CollisionWith(parmName));
       return false;
     }
     margs->Append(new ExpressionVariable(local, v, nullptr));
@@ -2326,7 +2439,13 @@ bool XmileReader::ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::str
   if (eqnText && FoldNameKey(NormalizeName(eqnText)) != FoldNameKey(name)) {
     Variable *out = InsertVariable(name);
     if (out && out->GetAllEquations().empty()) {
-      if (Expression *rhs = ParseEqnFor(eqnEl, eqnText, errs))
+      // Stella writes the output variable's name here as it is displayed,
+      // spaces and all ("trend in input"), which is no equation the grammar
+      // reads; take a body variable's name as a reference to it.
+      Symbol *named = pSymbolNameSpace->Find(NormalizeName(eqnText));
+      if (named && named->isType() == Symtype_Variable && named != out)
+        AddEquationFor(out, nullptr, new ExpressionVariable(local, static_cast<Variable *>(named), nullptr), '=');
+      else if (Expression *rhs = ParseEqnFor(eqnEl, eqnText, errs))
         AddEquationFor(out, nullptr, rhs, '=');
       else
         return false;
@@ -2334,13 +2453,129 @@ bool XmileReader::ProcessMacro(tinyxml2::XMLElement *macro, std::vector<std::str
   }
   local->ConfirmAllAllocations();
   // Registers the macro under its name in the model's namespace.
-  _macros.push_back(new MacroFunction(main, local, name, margs));
+  MacroFunction *mf = new MacroFunction(main, local, name, margs);
+  _macros.push_back(mf);
+
+  // <parm default="..."> may be left out of a call. Vensim has no defaults, so
+  // the call is completed with them (xpyy_call, via MacroDefaults). They are
+  // read in the model's namespace, where the call is.
+  pSymbolNameSpace = main;
+  std::vector<Expression *> defaults;
+  int required = 0;
+  for (tinyxml2::XMLElement *parm = macro->FirstChildElement("parm"); parm; parm = parm->NextSiblingElement("parm")) {
+    const char *dflt = parm->Attribute("default");
+    Expression *e = nullptr;
+    if (dflt && *dflt) {
+      e = ParseEqnFor(parm, dflt, errs);
+      if (!e)
+        return false;
+    } else {
+      required = static_cast<int>(defaults.size()) + 1;  // a parm without one ends any omissible tail
+    }
+    defaults.push_back(e);
+  }
+  if (required < static_cast<int>(defaults.size())) {
+    mf->SetArgRange(required, static_cast<int>(defaults.size()));
+    _macroDefaults[mf] = defaults;
+  }
   return true;
 }
 
 std::string XmileReader::ModelScopePrefix(tinyxml2::XMLElement *model) {
   const char *name = model->Attribute("name");
   return name ? NormalizeName(name) + "." : std::string(".");
+}
+
+namespace {
+
+// Where a <module url> points, read from the file that holds it. Stella marks
+// a relative url with a leading 'r' and writes it as if the referring file were
+// a directory ("r../Modules/Energy.itmx" sits beside the referring file). An
+// absolute url that does not exist is looked for beside the referring file,
+// so a model moved together with its module files still loads.
+std::filesystem::path ResolveModuleUrl(const std::string &referrer, const std::string &url) {
+  namespace fs = std::filesystem;
+  std::string u = url;
+  std::replace(u.begin(), u.end(), '\\', '/');
+  const fs::path from = fs::u8path(referrer);
+  if (u.size() > 1 && u[0] == 'r' && (u[1] == '.' || u[1] == '/'))
+    return (from / fs::u8path(u.substr(1))).lexically_normal();
+  const fs::path p = fs::u8path(u);
+  std::error_code ec;
+  if (p.is_relative())
+    return (from.parent_path() / p).lexically_normal();
+  if (fs::exists(p, ec))
+    return p;
+  return (from.parent_path() / p.filename()).lexically_normal();
+}
+
+}  // namespace
+
+bool XmileReader::LoadExternalModules(const std::string &filename, std::vector<tinyxml2::XMLElement *> &modelEls,
+                                      std::vector<tinyxml2::XMLElement *> &macroEls,
+                                      std::vector<tinyxml2::XMLElement *> &dimsEls,
+                                      std::vector<std::unique_ptr<tinyxml2::XMLDocument>> &docs,
+                                      std::vector<std::string> &errs) {
+  std::unordered_set<std::string> models;  // folded scope prefixes held
+  for (tinyxml2::XMLElement *model : modelEls)
+    models.insert(FoldNameKey(ModelScopePrefix(model)));
+  std::unordered_set<std::string> macros;
+  for (tinyxml2::XMLElement *macro : macroEls) {
+    if (const char *n = macro->Attribute("name"))
+      macros.insert(FoldNameKey(NormalizeName(n)));
+  }
+  std::set<std::filesystem::path> loaded;
+  // The file each model came from, which its module urls are relative to.
+  std::vector<std::string> source(modelEls.size(), filename);
+  for (size_t i = 0; i < modelEls.size(); i++) {
+    tinyxml2::XMLElement *variables = modelEls[i]->FirstChildElement("variables");
+    if (!variables)
+      continue;
+    for (tinyxml2::XMLElement *module = variables->FirstChildElement("module"); module;
+         module = module->NextSiblingElement("module")) {
+      const char *name = module->Attribute("name");
+      const char *url = module->Attribute("url");
+      if (!name || !url || !*url || models.count(FoldNameKey(NormalizeName(name) + ".")))
+        continue;
+      const std::filesystem::path path = ResolveModuleUrl(source[i], url);
+      if (!loaded.insert(path).second)
+        continue;  // its models are already in; a missing one is reported later
+      std::ifstream in(path, std::ios::binary);
+      if (!in) {
+        errs.push_back(std::string("<module name=\"") + name + "\" url=\"" + url + "\">: cannot open " +
+                       path.u8string());
+        return false;
+      }
+      const std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+      docs.push_back(std::make_unique<tinyxml2::XMLDocument>());
+      tinyxml2::XMLDocument &doc = *docs.back();
+      tinyxml2::XMLElement *root = nullptr;
+      if (doc.Parse(contents.data(), contents.size()) == tinyxml2::XML_SUCCESS)
+        root = doc.RootElement();
+      if (!root || std::string(root->Name()) != "xmile") {
+        errs.push_back(path.u8string() + ": not a readable XMILE document" +
+                       (doc.ErrorStr() ? std::string(" (") + doc.ErrorStr() + ")" : std::string()));
+        return false;
+      }
+      const std::string file = path.u8string();
+      for (tinyxml2::XMLElement *child = root->FirstChildElement(); child; child = child->NextSiblingElement()) {
+        const std::string tag = child->Name();
+        if (tag == "model") {
+          if (models.insert(FoldNameKey(ModelScopePrefix(child))).second) {
+            modelEls.push_back(child);
+            source.push_back(file);
+          }
+        } else if (tag == "macro") {
+          const char *n = child->Attribute("name");
+          if (n && macros.insert(FoldNameKey(NormalizeName(n))).second)
+            macroEls.push_back(child);
+        } else if (tag == "dimensions") {
+          dimsEls.push_back(child);
+        }
+      }
+    }
+  }
+  return true;
 }
 
 void XmileReader::CollectConnects(tinyxml2::XMLElement *model, std::vector<std::string> &errs) {
@@ -2362,14 +2597,29 @@ void XmileReader::CollectConnects(tinyxml2::XMLElement *model, std::vector<std::
     // spaces. The variable may be entered under this spelling before its own
     // declaration renames it, and in the meantime it is what a shadow is sized
     // by, so it is turned back into the display form here.
-    auto qualify = [](const char *ref, const std::string &defaultPrefix) {
+    // Stella quotes a name that is not a plain identifier, part by part
+    // (`GDP."Real_GDP_in_2021c$"`).
+    auto unquote = [](std::string part) {
+      if (part.size() >= 2 && part.front() == '"' && part.back() == '"')
+        part = part.substr(1, part.size() - 2);
+      return NormalizeName(part.c_str());
+    };
+    auto qualify = [&unquote](const char *ref, const std::string &defaultPrefix) {
       std::string r = NormalizeName(ref);
       std::replace(r.begin(), r.end(), '_', ' ');
-      size_t dot = r.find('.');
+      // The module/name dot is the first one outside quotes.
+      size_t dot = std::string::npos;
+      bool quoted = false;
+      for (size_t i = 0; i < r.size() && dot == std::string::npos; i++) {
+        if (r[i] == '"')
+          quoted = !quoted;
+        else if (r[i] == '.' && !quoted)
+          dot = i;
+      }
       if (dot == std::string::npos)
-        return defaultPrefix + r;
-      std::string mod = r.substr(0, dot);
-      return (mod.empty() ? std::string(".") : NormalizeName(mod.c_str()) + ".") + NormalizeName(r.c_str() + dot + 1);
+        return defaultPrefix + unquote(r);
+      std::string mod = unquote(r.substr(0, dot));
+      return (mod.empty() ? std::string(".") : mod + ".") + unquote(r.substr(dot + 1));
     };
     for (tinyxml2::XMLElement *connect = module->FirstChildElement("connect"); connect;
          connect = connect->NextSiblingElement("connect")) {
@@ -2414,6 +2664,10 @@ bool XmileReader::ProcessModuleView(tinyxml2::XMLElement *views, const std::stri
 
 void XmileReader::EnsureCanonicalName(Variable *v, const std::string &declaredName) {
   if (!v || v->GetName() == declaredName)
+    return;
+  // A variable renamed away from a builtin (RenameAwayFromBuiltin) keeps the
+  // new name; the declared one is the function's.
+  if (FoldNameKey(v->GetName()) != FoldNameKey(declaredName))
     return;
   // The hashtable key uses ToLowerSpace, which folds `_` and ` ` together; the
   // pre- and post-rename keys are therefore the same entry, so a direct SetName
