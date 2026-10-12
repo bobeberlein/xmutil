@@ -2601,7 +2601,11 @@ std::filesystem::path ResolveModuleUrl(const std::string &referrer, const std::s
     return (from / fs::u8path(u.substr(1))).lexically_normal();
   const fs::path p = fs::u8path(u);
   std::error_code ec;
-  if (p.is_relative())
+  // The url is absolute on the machine that saved it, which need not be this
+  // one: POSIX calls "C:/..." relative and Windows calls "/Users/..." relative,
+  // and either must still fall back to the file beside the referrer.
+  const bool drive_path = u.size() > 2 && std::isalpha(static_cast<unsigned char>(u[0])) && u[1] == ':' && u[2] == '/';
+  if (!drive_path && !p.has_root_directory())
     return (from.parent_path() / p).lexically_normal();
   if (fs::exists(p, ec))
     return p;

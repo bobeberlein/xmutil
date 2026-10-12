@@ -1,3 +1,13 @@
+# Quick start: release builds
+
+From the repository root:
+
+- **macOS:** `./build.bash` builds and tests both release programs, `out/mac-arm/XMUtil` (Apple silicon, macOS 11.0+) and `out/mac-intel/XMUtil` (Intel, macOS 10.15+). The first run downloads and builds the static ICU and tinyxml2 they link into `third_party/mac/lib-arm64` and `third_party/mac/lib-x86_64`, which takes several minutes. Needs Xcode's command line tools, `cmake` and `ninja` (`brew install cmake ninja`). The Intel tests run under Rosetta on Apple silicon.
+- **Linux:** `./build.bash` builds and tests `out/Release/XMUtil` for the native architecture against the system ICU and tinyxml2. If the development packages are missing it names the command that installs them.
+- **Windows:** `build.bat` downloads ICU and tinyxml2 into `third_party` if they are missing, then builds and tests `out\msvs\Release\XMUtil.exe`. Needs Visual Studio 2022 or later with the Desktop development with C++ workload.
+
+Pass `--skip-tests` to either script to only build.
+
 # Building the XMUtil XMILE utilities on OS X
 
 ## Download and install Qt 5.11.0
@@ -34,7 +44,7 @@ cmake --preset mac-intel
 cmake --build --preset mac-intel   # out/mac-intel/XMUtil
 ~~~
 
-This links whatever is in `third_party/mac/lib`, which must then hold x86_64 libraries built with `-mmacosx-version-min=10.15` or lower (the default `OSX_VERSION` in `third_party/build/icu_mac.bash`). To cross-build on Apple silicon without replacing the arm64 libraries, keep the x86_64 ones in a separate directory and add `-DXMUTIL_MAC_LIB_DIR=/path/to/x86_64/lib` to the configure step. The tests run under Rosetta (`arch -x86_64 out/mac-intel/xmutil_test`).
+`cmake --preset mac-arm` builds the Apple silicon release into `out/mac-arm` the same way. Each Mac build links the static libraries in `third_party/mac/lib-<arch>` (`lib-arm64` or `lib-x86_64`, as `build.bash` creates them) and falls back to `third_party/mac/lib` (from `third_party/all_mac.sh`) when that folder does not exist. To use libraries from elsewhere, add `-DXMUTIL_MAC_LIB_DIR=/path/to/lib` to the configure step. The libraries must be built for the same macOS minimum or lower: 10.15 for x86_64, 11.0 for arm64. `ctest --preset mac-intel` runs the Intel tests, under Rosetta on Apple silicon.
 
 To build the Qt UI, enable `XMUTIL_WITH_UI` and point CMake at the Qt install:
 

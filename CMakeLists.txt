@@ -181,10 +181,19 @@ if(WIN32)
   # ICU's DLL names carry its major version, so glob rather than pin one.
   file(GLOB xmutil_runtime_dlls "${xmutil_win_lib}/dlls/*.dll")
 elseif(APPLE)
-  # Static ICU and tinyxml2 built by third_party/all_mac.sh, for the single
-  # architecture being built. Override the directory to cross-build (e.g. an
-  # Intel build on Apple silicon against separately built x86_64 libs).
-  set(XMUTIL_MAC_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mac/lib"
+  # Static ICU and tinyxml2 for the single architecture being built:
+  # third_party/mac/lib-<arch> (what build.bash produces) when it exists, else
+  # third_party/mac/lib (third_party/all_mac.sh). Override to use others.
+  if(CMAKE_OSX_ARCHITECTURES)
+    set(xmutil_mac_arch "${CMAKE_OSX_ARCHITECTURES}")
+  else()
+    set(xmutil_mac_arch "${CMAKE_HOST_SYSTEM_PROCESSOR}")
+  endif()
+  set(xmutil_mac_lib_default "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mac/lib-${xmutil_mac_arch}")
+  if(NOT IS_DIRECTORY "${xmutil_mac_lib_default}")
+    set(xmutil_mac_lib_default "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mac/lib")
+  endif()
+  set(XMUTIL_MAC_LIB_DIR "${xmutil_mac_lib_default}"
     CACHE PATH "Directory holding the static ICU and tinyxml2 libraries")
   set(xmutil_mac_lib "${XMUTIL_MAC_LIB_DIR}")
   target_include_directories(xmutil_platform INTERFACE third_party/include)

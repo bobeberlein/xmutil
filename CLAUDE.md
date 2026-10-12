@@ -14,18 +14,27 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
 - Build: CMake (3.21+ for `CMakePresets.json`) + Ninja. `CMakeLists.txt` at
   the repo root defines `XMUtil`, `xmutil_test`, and (under emcmake)
   `XMUtil_wasm`. macOS builds link the static ICU/tinyxml2 in
-  `third_party/mac/lib` (override with `-DXMUTIL_MAC_LIB_DIR=...`).
+  `third_party/mac/lib-<arch>` when it exists, else `third_party/mac/lib`
+  (override with `-DXMUTIL_MAC_LIB_DIR=...`). Those folders and
+  `third_party/include` are gitignored, local-only build products.
 - macOS deployment target is 10.15, matching the ICU build (an Intel build
   for 10.15+ is required; arm64 is clamped to 11.0). Do not use libc++
   features newer than that: floating-point `std::to_chars` is 13.3+
   (ShortestDouble in XMUtil.cpp reimplements it;
   `test/ShortestDoubleTest.cpp` pins it).
-  The `mac-intel` preset builds x86_64 into `out/mac-intel`.
+  The `mac-arm` / `mac-intel` presets build arm64 / x86_64 releases into
+  `out/mac-arm` / `out/mac-intel`.
 - Parsers: bison/flex grammars under `src/Vensim/` and `src/Dynamo/`
   (generated `*.tab.*` are committed; the `.y` sources are the source of truth
   for operator precedence).
 
 ## Commands
+- Release builds + tests in one step: `./build.bash` (macOS: both Mac presets,
+  building any missing `third_party/mac/lib-<arch>` and `third_party/include`
+  from ICU 54.2 / tinyxml2 8.0.0 sources under `out/third_party`; Linux:
+  native `release` preset against system packages). Windows: `build.bat`
+  (prebuilt ICU 78.3 Win64 + tinyxml2 sources into `third_party`, then
+  `out/msvs` Release). Both take `--skip-tests`.
 - Configure: `cmake --preset debug` (or `release`; build dirs are
   `out/Debug` / `out/Release`). Re-run after adding source files.
 - Build everything: `cmake --build --preset debug`
@@ -43,6 +52,8 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
 - Binary is at `out/Debug/XMUtil`; `out/Release/` mirrors it.
 
 ### Windows / Visual Studio
+- `build.bat` is the one-step release build (see Commands). It is CRLF via
+  `.gitattributes` (`*.bat eol=crlf`): cmd misparses LF-only batch files.
 - Generate the solution: `cmake --preset msvs` -> `out/msvs/XMUtil.sln`
   (VS 2022, x64). Visual Studio can also open the repo folder directly and
   pick up `CMakePresets.json`.

@@ -17,6 +17,18 @@
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
     {
+      "name": "mac-arm",
+      "displayName": "Apple silicon Mac Release (arm64, macOS 11.0+)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/mac-arm",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" }
+    },
+    {
       "name": "mac-intel",
       "displayName": "Intel Mac Release (x86_64, macOS 10.15+)",
       "generator": "Ninja",
@@ -54,11 +66,14 @@
   "buildPresets": [
     { "name": "debug", "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
+    { "name": "mac-arm", "configurePreset": "mac-arm" },
     { "name": "mac-intel", "configurePreset": "mac-intel" },
     { "name": "wasm", "configurePreset": "wasm" }
   ],
   "testPresets": [
     { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },
-    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } }
+    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } },
+    { "name": "mac-arm", "configurePreset": "mac-arm", "output": { "outputOnFailure": true } },
+    { "name": "mac-intel", "configurePreset": "mac-intel", "output": { "outputOnFailure": true } }
   ]
 }
