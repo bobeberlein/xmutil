@@ -180,6 +180,7 @@ VensimValveElement::VensimValveElement(char *curpos, char *buf, VensimParse *par
     _attached = true;
   else
     _attached = false;
+  _vertical = (shape & 1) != 0;
   // bits, hid, hasf, then tpos (see VensimVariableElement).
   int ignore;
   for (int i = 0; i < 3 && *curpos; i++)

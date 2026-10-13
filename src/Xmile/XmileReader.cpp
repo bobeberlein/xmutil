@@ -1359,8 +1359,10 @@ bool XmileReader::ProcessAppliesToAllEquation(tinyxml2::XMLElement *varEl, Varia
   // A flow of a conveyor is defined by the conveyor (TranslateConveyors).
   if (vname) {
     auto conveyed = _conveyorFlowEqns.find(FoldNameKey(NormalizeName(vname)));
-    if (conveyed != _conveyorFlowEqns.end())
+    if (conveyed != _conveyorFlowEqns.end()) {
       eqnText = conveyed->second.c_str();
+      _conveyorFlows.push_back(v);
+    }
   }
   // A whitespace-only or newline-only <eqn> body (e.g. `<eqn>\n</eqn>`) must
   // not be treated as a real equation: it would route to the WITH LOOKUP branch

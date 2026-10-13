@@ -103,6 +103,13 @@ private:
   // synthesize a cloud (VensimCommentElement) at the position and return its
   // UID.
   int ResolveFlowEndpoint(double x, double y, const std::vector<std::string> *anchorStocks);
+  // Whether a flow's <pts> path runs vertically where the valve (vx, vy, in
+  // the document's coordinates) sits on it, so the Vensim valve is turned.
+  static bool PipeIsVerticalAtValve(tinyxml2::XMLElement *pts, double vx, double vy);
+  // A conveyor's flows are given equations its diagram has no arrows for (see
+  // XmileReader::TranslateConveyors): draw a straight one from each input
+  // placed in this view that is not already linked to the flow.
+  void AddConveyorArrows();
 
   // Resolve a <from> or <to> child of a <connector>: either text content (the
   // referenced variable's name) or a nested <alias uid="N"/> (the XMILE per-

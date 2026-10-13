@@ -157,9 +157,21 @@ public:
   void SetTextPos(int tpos) {
     _textPos = tpos;
   }
+  // A valve on a vertical pipe is turned to sit across it: Vensim records it
+  // with shape bit0 set (33 attached) where a horizontal pipe's has bit1 (34),
+  // and draws it 8 wide by 6 high rather than 6 by 8.
+  bool Vertical() const {
+    return _vertical;
+  }
+  void SetVertical(bool vertical) {
+    _vertical = vertical;
+    _width = vertical ? 8 : 6;
+    _height = vertical ? 6 : 8;
+  }
 
 private:
   bool _attached;
+  bool _vertical = false;
   int _textPos = 1;
 };
 class VensimCommentElement : public VensimViewElement {

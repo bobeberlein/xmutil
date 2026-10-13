@@ -136,6 +136,11 @@ public:
   // AddEquationFor. NULL when no variable is being read, or the document
   // declares a variable named self.
   ExpressionVariable *SelfReference(SymbolList *subs);
+  // The flows given equations by TranslateConveyors, whose inputs the sketch
+  // has no arrows for (XmileView::AddConveyorArrows).
+  const std::vector<Variable *> &ConveyorFlows() const {
+    return _conveyorFlows;
+  }
   // The default of each of a macro's parms (NULL where it has none), when some
   // trailing ones have one; NULL for any other function.
   const std::vector<Expression *> *MacroDefaults(Function *f) const {
@@ -559,6 +564,7 @@ private:
   // Equations standing in for a conveyor's flows in the <model> being read,
   // keyed by the flow's folded name; see TranslateConveyors.
   std::unordered_map<std::string, std::string> _conveyorFlowEqns;
+  std::vector<Variable *> _conveyorFlows;
   std::unordered_map<Function *, std::vector<Expression *>> _macroDefaults;
   std::vector<ExpressionVariable *> _selfRefs;
   // The scope prefix of every model read in module mode, in document order.

@@ -1,5 +1,6 @@
 #include "ModelComparator.h"
 
+#include <cctype>
 #include <cmath>
 #include <map>
 #include <set>
@@ -88,6 +89,37 @@ std::string UnitsText(Variable *var) {
   if (un)
     return un->GetEquationString();
   return var->GetUnitsString();
+}
+
+// Folded names of the units either model defines by an equation.
+// The .mdl writer replaces those by their equations in a variable's units
+// (MDLGenerator::SubstituteUnitEquations), so units naming one are expected to
+// differ across an XMILE -> .mdl trip; the writer's own tests pin the text.
+std::set<std::string> gEquationUnits;
+
+std::string FoldUnitName(const std::string &name) {
+  std::string key;
+  for (char c : name) {
+    const char k = c == '_' ? ' ' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    if (k == ' ' && (key.empty() || key.back() == ' '))
+      continue;
+    key += k;
+  }
+  while (!key.empty() && key.back() == ' ')
+    key.pop_back();
+  return key;
+}
+
+bool NamesEquationUnit(const std::string &units) {
+  size_t start = 0;
+  for (size_t i = 0; i <= units.size(); i++) {
+    if (i < units.size() && std::string("*/()^").find(units[i]) == std::string::npos)
+      continue;
+    if (gEquationUnits.count(FoldUnitName(units.substr(start, i - start))))
+      return true;
+    start = i + 1;
+  }
+  return false;
 }
 
 // The ordered element names of an array/subrange definition, expanded the same
@@ -553,7 +585,7 @@ void CompareVariableSets(const std::map<std::string, Variable *> &av, const std:
     if (va->VariableType() != vb->VariableType())
       diffs.push_back("variable type differs for " + name);
 
-    if (UnitsText(va) != UnitsText(vb))
+    if (UnitsText(va) != UnitsText(vb) && !NamesEquationUnit(UnitsText(va)) && !NamesEquationUnit(UnitsText(vb)))
       diffs.push_back("units differ for " + name);
 
     if (NormalizeComment(va->Comment()) != NormalizeComment(vb->Comment()))
@@ -628,6 +660,14 @@ void CompareVariableSets(const std::map<std::string, Variable *> &av, const std:
 // variables are dropped (compared as sim specs instead, see IndexVariables) and
 // diffs carry no context prefix.
 void CompareVariables(Model *a, Model *b, std::vector<std::string> &diffs) {
+  gEquationUnits.clear();
+  for (Model *m : {a, b}) {
+    for (const UnitEquiv &equiv : m->UnitEquivs()) {
+      if (equiv.eqn.empty())
+        continue;
+      gEquationUnits.insert(FoldUnitName(equiv.name));
+    }
+  }
   std::map<std::string, Variable *> av = IndexVariables(a->GetVariables(nullptr), /*drop_controls=*/true);
   std::map<std::string, Variable *> bv = IndexVariables(b->GetVariables(nullptr), /*drop_controls=*/true);
   CompareVariableSets(av, bv, "", diffs);

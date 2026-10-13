@@ -299,3 +299,91 @@ TEST(StellaFunctions_conveyor_without_and_with_fractional_leak) {
   CHECK(Rhs(mdl, "drain") == "DELAY FIXED(feed * (1 - 0.1), 4, pipe / 4 * (1 - 0.1) / (1 - 0.1 / 2))");
   CHECK(Rhs(mdl, "seep") == "pipe * 0.1 / (4 * (1 - 0.1 / 2))");
 }
+
+// Stella writes each inflow ahead of the stock it fills; the pipe still ends on
+// the stock, not on a cloud beside it.
+TEST(StellaFunctions_flow_drawn_before_its_stock_still_fills_it) {
+  std::ifstream in(std::string(XMUTIL_SRC_ROOT) + "/test_models/ConveyorTranslation.stmx", std::ios::binary);
+  const std::string stmx((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  CHECK(!stmx.empty());
+  if (stmx.empty())
+    return;
+  const std::string mdl = ToMdl(stmx);
+  // uid of a variable record, by name.
+  auto uidOf = [&mdl](const std::string &name) {
+    const size_t at = mdl.find("," + name + ",");
+    if (at == std::string::npos)
+      return std::string();
+    const size_t start = mdl.rfind('\n', at) + 1;
+    const size_t comma = mdl.find(',', start);
+    return mdl.substr(comma + 1, at - comma - 1);
+  };
+  for (const char *n : {"1", "2"}) {
+    const std::string flow = uidOf(std::string("inflow ") + n);
+    const std::string stock = uidOf(std::string("Conveyor ") + n);
+    CHECK(!flow.empty() && !stock.empty());
+    if (flow.empty() || stock.empty())
+      continue;
+    const std::string valve = std::to_string(std::atoi(flow.c_str()) - 1);
+    // The downstream pipe (shape 4) runs from the valve to the stock.
+    const std::string pipe = "," + valve + "," + stock + ",4,0,0,22,";
+    CHECK(Contains(mdl, pipe));
+  }
+}
+
+// The conveyor's translated flows depend on inputs its diagram had no arrows
+// for; they are drawn, as structure 2 draws them by hand.
+TEST(StellaFunctions_conveyor_inputs_get_arrows) {
+  std::ifstream in(std::string(XMUTIL_SRC_ROOT) + "/test_models/ConveyorTranslation.stmx", std::ios::binary);
+  const std::string stmx((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  CHECK(!stmx.empty());
+  if (stmx.empty())
+    return;
+  const std::string mdl = ToMdl(stmx);
+  auto uidOf = [&mdl](const std::string &name) {
+    const size_t at = mdl.find("," + name + ",");
+    if (at == std::string::npos)
+      return -1;
+    const size_t start = mdl.rfind('\n', at) + 1;
+    return std::atoi(mdl.c_str() + mdl.find(',', start) + 1);
+  };
+  // An information arrow from one element to another (a flow by its valve,
+  // the record before its name).
+  auto arrow = [&](const std::string &from, bool fromFlow, const std::string &to) {
+    const int f = uidOf(from) - (fromFlow ? 1 : 0);
+    const int t = uidOf(to) - 1;
+    return Contains(mdl, "," + std::to_string(f) + "," + std::to_string(t) + ",1,0,0,0,0,64,");
+  };
+  for (const char *n : {"1", "2"}) {
+    const std::string k(n);
+    CHECK(arrow("inflow " + k, true, "outflow " + k));
+    CHECK(arrow("Conveyor " + k, false, "outflow " + k));
+    CHECK(arrow("transit time " + k, false, "outflow " + k));
+    CHECK(arrow("Conveyor " + k, false, "leakage " + k));
+    CHECK(arrow("leak rate " + k, false, "leakage " + k));
+  }
+}
+
+// A valve on a vertical pipe is turned across it (8 wide, 6 high, shape 33); on
+// a horizontal one it stays as it was (6 by 8, shape 34).
+TEST(StellaFunctions_valve_turns_with_its_pipe) {
+  const std::string withView = ToMdl(R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>10</stop><dt>1</dt></sim_specs>
+  <model>
+    <variables>
+      <stock name="s"><eqn>10</eqn><outflow>down</outflow><outflow>across</outflow></stock>
+      <flow name="down"><eqn>1</eqn></flow>
+      <flow name="across"><eqn>1</eqn></flow>
+    </variables>
+    <views><view>
+      <stock name="s" x="100" y="100"/>
+      <flow name="down" x="100" y="180"><pts><pt x="100" y="122"/><pt x="100" y="240"/></pts></flow>
+      <flow name="across" x="180" y="100"><pts><pt x="130" y="100"/><pt x="240" y="100"/></pts></flow>
+    </view></views>
+  </model>
+</xmile>
+)");
+  CHECK(Contains(withView, ",100,180,8,6,33,"));
+  CHECK(Contains(withView, ",180,100,6,8,34,"));
+}

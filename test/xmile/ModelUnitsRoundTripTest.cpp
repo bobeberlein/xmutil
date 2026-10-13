@@ -13,6 +13,9 @@
 // through XMILE, the "$" spelling survives in BOTH directions, and the ".mdl"
 // side still gets one flat, sanitized, byte-stable 22: line.
 
+#include <algorithm>
+#include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -205,38 +208,20 @@ TEST(ModelUnits_derived_unit_formula_survives) {
   if (!Contains(units, "<eqn>kg*m/s^2</eqn>"))
     printf("  emitted units: %s\n", units.c_str());
 
-  // Vensim has no derived-unit concept, so the formula flattens into the flat
-  // name list. That is lossy by construction, but it must at least be STABLE:
-  // re-importing the .mdl and writing it again must not move the field around.
+  // Vensim has no derived-unit concept: the .mdl writer puts the formula in
+  // place of the name wherever a variable's units use it, so a unit with a
+  // formula and no aliases needs no "22:" line.
   const std::string mdl = XmileToMdl(xmile);
   CHECK(!mdl.empty());
   if (mdl.empty())
     return;
-  const std::vector<std::string> first = UnitEquivLines(mdl);
-  CHECK(first.size() == 1);
-  if (first.size() != 1)
-    return;
-  CHECK_EQ_STR(first[0].c_str(), "Newton,kg*m/s^2");
-
-  Model *m = ParseMdl(mdl);
-  CHECK(m != nullptr);
-  if (!m)
-    return;
-  std::vector<std::string> reErrs;
-  const std::string mdl2 = m->PrintMDL(reErrs);
-  delete m;
-  CHECK(reErrs.empty());
-  const std::vector<std::string> second = UnitEquivLines(mdl2);
-  CHECK(second.size() == 1);
-  if (second.size() != 1)
-    return;
-  CHECK_EQ_STR(second[0].c_str(), first[0].c_str());
+  CHECK(UnitEquivLines(mdl).empty());
 }
 
 // The "$" currency spelling, coming FROM XMILE: <unit name="Dollar"><eqn>$</eqn>
-// keeps its shape through XMILE, and flattens to Vensim's own spelling, which
-// puts the "$" first ("22:$,Dollar,Dollars,$s" -- the literal byte sequence real
-// Vensim files in test/fixtures use).
+// keeps its shape through XMILE. In the .mdl the equation is substituted for
+// the name where variables use it, and the "22:" line lists the name and its
+// aliases.
 TEST(ModelUnits_dollar_eqn_from_xmile) {
   const std::string xmile = XmileWithUnits(R"(    <unit name="Dollar">
       <eqn>$</eqn>
@@ -267,12 +252,12 @@ TEST(ModelUnits_dollar_eqn_from_xmile) {
   CHECK(lines.size() == 1);
   if (lines.size() != 1)
     return;
-  CHECK_EQ_STR(lines[0].c_str(), "$,Dollar,Dollars,$s");
+  CHECK_EQ_STR(lines[0].c_str(), "Dollar,Dollars,$s");
 }
 
-// The same spelling coming FROM VENSIM: a "22:$,..." line still yields
-// <eqn>$</eqn> on the readable name, and the full .mdl -> XMILE -> .mdl loop
-// returns the original line unchanged.
+// The same spelling coming FROM VENSIM: a "22:" line states no formula, so the
+// XMILE unit is its first field with the rest as aliases and never an <eqn>,
+// and the full .mdl -> XMILE -> .mdl loop returns the original line unchanged.
 TEST(ModelUnits_dollar_line_from_vensim) {
   const std::string mdl = MdlWithSettings("22:$,Dollar,Dollars,$s\r\n");
 
@@ -282,8 +267,9 @@ TEST(ModelUnits_dollar_line_from_vensim) {
     return;
   const std::string units = ModelUnitsBlock(xmile);
   CHECK(!units.empty());
-  CHECK(Contains(units, "<unit name=\"Dollar\">"));
-  CHECK(Contains(units, "<eqn>$</eqn>"));
+  CHECK(Contains(units, "<unit name=\"$\">"));
+  CHECK(!Contains(units, "<eqn>"));
+  CHECK(Contains(units, "<alias>Dollar</alias>"));
   CHECK(Contains(units, "<alias>Dollars</alias>"));
   CHECK(Contains(units, "<alias>$s</alias>"));
 
@@ -370,12 +356,13 @@ TEST(ModelUnits_eqn_only_and_aliases_only) {
   CHECK(!mdl.empty());
   if (mdl.empty())
     return;
+  // The equation-only unit is substituted where it is used, so only the
+  // aliases make a "22:" line.
   const std::vector<std::string> lines = UnitEquivLines(mdl);
-  CHECK(lines.size() == 2);
-  if (lines.size() != 2)
+  CHECK(lines.size() == 1);
+  if (lines.size() != 1)
     return;
   CHECK_EQ_STR(lines[0].c_str(), "Hour,Hours");
-  CHECK_EQ_STR(lines[1].c_str(), "Dimensionless,1");
 }
 
 // Every 22: payload shape the vendored Vensim corpus contains must survive a
@@ -524,4 +511,63 @@ TEST(ModelUnits_hazardous_char_from_vensim_is_neutralized_too) {
   if (again.size() != 1)
     return;
   CHECK_EQ_STR(again[0].c_str(), "a/b,c");
+}
+
+// A unit with an equation is replaced by it, parenthesized, in every variable's
+// units by its name; its aliases, and other units, are left alone. A unit whose
+// equation is 1 is Vensim's Dmnl.
+TEST(ModelUnits_unit_equation_substituted_in_variable_units) {
+  const std::string xmile = R"(<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+  <sim_specs method="euler"><start>0</start><stop>1</stop><dt>1</dt></sim_specs>
+  <model_units>
+    <unit name="Newton"><eqn>kg*m/s^2</eqn><alias>N</alias></unit>
+    <unit name="Hour"><alias>Hours</alias></unit>
+    <unit name="Dimensionless"><eqn>1</eqn><alias>dmnl</alias><alias>fraction</alias></unit>
+  </model_units>
+  <model>
+    <variables>
+      <aux name="force"><eqn>1</eqn><units>Newton</units></aux>
+      <aux name="work rate"><eqn>1</eqn><units>Newton*m/Hour</units></aux>
+      <aux name="pull"><eqn>1</eqn><units>N</units></aux>
+      <aux name="share"><eqn>1</eqn><units>Dimensionless</units></aux>
+      <aux name="part"><eqn>1</eqn><units>fraction</units></aux>
+    </variables>
+  </model>
+</xmile>
+)";
+  const std::string mdl = XmileToMdl(xmile);
+  CHECK(Contains(mdl, "\t~\t(kg*m/(s*s))"));
+  CHECK(Contains(mdl, "\t~\t(kg*m/(s*s))*m/Hour"));
+  CHECK(Contains(mdl, "\t~\tN\n") || Contains(mdl, "\t~\tN\r\n"));
+  CHECK(Contains(mdl, "\t~\tDmnl\n") || Contains(mdl, "\t~\tDmnl\r\n"));
+  CHECK(Contains(mdl, "\t~\tfraction\n") || Contains(mdl, "\t~\tfraction\r\n"));
+  CHECK(!Contains(mdl, "(1)"));
+  const std::vector<std::string> lines = UnitEquivLines(mdl);
+  CHECK(lines.size() == 3);
+  if (lines.size() == 3) {
+    CHECK_EQ_STR(lines[0].c_str(), "Newton,N");
+    CHECK_EQ_STR(lines[1].c_str(), "Hour,Hours");
+    CHECK_EQ_STR(lines[2].c_str(), "Dimensionless,dmnl,fraction");
+  }
+}
+
+// test_models/UnitSynonyms.mdl: Apples and Oranges are both Fruit. The 22:
+// line becomes a unit named by its first field with the rest as aliases and no
+// equation, and comes back as the same line.
+TEST(ModelUnits_unit_synonyms_round_trip) {
+  std::ifstream in(std::string(XMUTIL_SRC_ROOT) + "/test_models/UnitSynonyms.mdl", std::ios::binary);
+  const std::string mdl((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  CHECK(!mdl.empty());
+  if (mdl.empty())
+    return;
+  const std::string xmile = MdlToXmile(mdl);
+  const std::string units = ModelUnitsBlock(xmile);
+  CHECK(Contains(units, "<unit name=\"Fruit\">"));
+  CHECK(Contains(units, "<alias>Apples</alias>"));
+  CHECK(Contains(units, "<alias>Oranges</alias>"));
+  CHECK(!Contains(units, "<eqn>"));
+  const std::vector<std::string> lines = UnitEquivLines(XmileToMdl(xmile));
+  CHECK(std::find(lines.begin(), lines.end(), "Fruit,Apples,Oranges") != lines.end());
+  CHECK(std::find(lines.begin(), lines.end(), "$,Dollar,Dollars,$s") != lines.end());
 }

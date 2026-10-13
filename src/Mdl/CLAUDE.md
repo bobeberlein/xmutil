@@ -97,15 +97,20 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   read from a `.mdl` re-emits byte for byte unless it carries a character
   `SanitizeFreeText` neutralizes
   (`ModelUnits_vensim_settings_lines_round_trip_byte_identically`)
-  -- which is what the leading-`$` rule is for. `$,Dollar,Dollars,$s` is Vensim's
-  own spelling of the currency unit XMILE writes as
-  `<unit name="Dollar"><eqn>$</eqn>`, so a LEADING bare `$` parses as the
-  equation and re-emits back in front. Recognizing it only in the leading
-  position (upstream recognized it anywhere) is what keeps the inverse exact: a
-  `$` anywhere else is just another spelling in Vensim's flat list, and hoisting
-  it would rewrite the canonical name. A derived-unit formula has no Vensim
-  representation and flattens into the name list rather than being dropped --
-  lossy, but stable across a re-import, and never a silent loss of the text.
+  . A `22:` line states no formula, so its first field is the unit's name and
+  the rest its aliases, a leading `$` included (`$,Dollar,Dollars,$s` is the
+  XMILE `<unit name="$">` with aliases Dollar, Dollars, $s and no `<eqn>`).
+- **A unit with an equation is written out where it is used.** Vensim cannot
+  define one unit in terms of others, so for an XMILE `<unit>` with a
+  non-empty `<eqn>` the `.mdl` writer substitutes `(eqn)` for the unit's own
+  name in every variable's units (`SubstituteUnitEquations`, before the
+  power/percent rewrite). Aliases are left as written -- the `22:` line keeps
+  them aliases -- so the two formats differ as little as possible. Dmnl is
+  Vensim's dimensionless unit: a unit named Dmnl is never replaced, and one
+  whose equation is `1` becomes `Dmnl`, never `(1)`. The `22:` line lists only
+  the name and aliases -- none at all when there are no aliases
+  (`UnitEquiv::HasMdlLine`). The comparator skips the units of a variable
+  naming such a unit, since they differ across the trip by design.
 - **Field sanitizing for `22:` happens when the line is BUILT, not when the
   declaration is read.** `,` is the field separator and a `|` or line break would
   end the line early (#849), but all three are legal inside an XMILE `<unit>`;

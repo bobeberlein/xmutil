@@ -218,6 +218,7 @@ bool XmileView::ProcessView(tinyxml2::XMLElement *viewEl, std::vector<std::strin
     return false;
   AllocateElements(viewEl, errs);
   ResolveConnectors(viewEl, errs);
+  AddConveyorArrows();
   if (!_ignoreGroups)
     ProcessViewGroups(viewEl, errs);
   return true;
@@ -290,6 +291,63 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       recordUid(child, d.var, uid);
   };
 
+  // Place a <stock> or <aux>.
+  auto placeVariable = [&](tinyxml2::XMLElement *child, bool isStock) {
+    Decl d;
+    if (!readDecl(child, d))
+      return;
+    // Control variables (Time, DT, SAVEPER, INITIAL/FINAL TIME) are never
+    // drawn in the sketch: Vensim keeps them in the .Control section and both
+    // xmutil writers skip them (XMILEGenerator's Unwanted() filter). A few
+    // producers nonetheless place them as <aux> elements; skip those here so
+    // the reader's view matches what the writers round-trip to.
+    if (IsControlVariableKey(XmileReader::FoldNameKey(d.norm)))
+      return;
+    if (d.isAlias) {
+      allocateAliasShadow(child, d);
+      return;
+    }
+    int uid = AllocateVariableElement(d.var, d.x, d.y);
+    if (uid < 0)
+      return;
+    VensimVariableElement *ve = static_cast<VensimVariableElement *>(_view->Elements()[uid]);
+    if (isStock) {
+      // A stock is a box with its name inside unless label_side says
+      // otherwise.
+      ve->SetWidth(d.hasSize ? d.halfWidth : kStockHalfWidth);
+      ve->SetHeight(d.hasSize ? d.halfHeight : kStockHalfHeight);
+      ve->SetTextPos(LabelSideToTextPos(child->Attribute("label_side"), 0));
+    } else {
+      // A Vensim aux is just its name, so its size is the text's.
+      int hw, hh;
+      EstimateNameSize(d.var->GetName(), hw, hh);
+      ve->SetWidth(hw);
+      ve->SetHeight(hh);
+      ve->SetTextPos(0);
+      ve->SetSizedByName(true);
+    }
+    recordUid(child, d.var, uid);
+  };
+  // A flow's pipe ends are matched against the stocks it fills and drains,
+  // which Stella may write after the flow; such a stock is placed when the
+  // flow needs it, rather than its end becoming a cloud beside it.
+  std::unordered_map<std::string, tinyxml2::XMLElement *> stockEls;
+  for (tinyxml2::XMLElement *el = viewEl->FirstChildElement("stock"); el; el = el->NextSiblingElement("stock")) {
+    if (const char *n = el->Attribute("name"))
+      stockEls.emplace(XmileReader::FoldNameKey(XmileReader::NormalizeName(n)), el);
+  }
+  std::set<tinyxml2::XMLElement *> placedEarly;
+  auto placeAnchorsFirst = [&](const std::vector<std::string> *anchorStocks) {
+    if (!anchorStocks)
+      return;
+    for (const std::string &key : *anchorStocks) {
+      auto el = stockEls.find(key);
+      if (_nameToUid.count(key) || el == stockEls.end() || placedEarly.count(el->second))
+        continue;
+      placedEarly.insert(el->second);
+      placeVariable(el->second, true);
+    }
+  };
   for (tinyxml2::XMLElement *child = viewEl->FirstChildElement(); child; child = child->NextSiblingElement()) {
     if (XmileReader::IsForeignNamespace(child->Name()))
       continue;
@@ -303,40 +361,8 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       continue;
     }
     if (tag == "stock" || tag == "aux") {
-      Decl d;
-      if (!readDecl(child, d))
-        continue;
-      // Control variables (Time, DT, SAVEPER, INITIAL/FINAL TIME) are never
-      // drawn in the sketch: Vensim keeps them in the .Control section and both
-      // xmutil writers skip them (XMILEGenerator's Unwanted() filter). A few
-      // producers nonetheless place them as <aux> elements; skip those here so
-      // the reader's view matches what the writers round-trip to.
-      if (IsControlVariableKey(XmileReader::FoldNameKey(d.norm)))
-        continue;
-      if (d.isAlias) {
-        allocateAliasShadow(child, d);
-        continue;
-      }
-      int uid = AllocateVariableElement(d.var, d.x, d.y);
-      if (uid < 0)
-        continue;
-      VensimVariableElement *ve = static_cast<VensimVariableElement *>(_view->Elements()[uid]);
-      if (tag == "stock") {
-        // A stock is a box with its name inside unless label_side says
-        // otherwise.
-        ve->SetWidth(d.hasSize ? d.halfWidth : kStockHalfWidth);
-        ve->SetHeight(d.hasSize ? d.halfHeight : kStockHalfHeight);
-        ve->SetTextPos(LabelSideToTextPos(child->Attribute("label_side"), 0));
-      } else {
-        // A Vensim aux is just its name, so its size is the text's.
-        int hw, hh;
-        EstimateNameSize(d.var->GetName(), hw, hh);
-        ve->SetWidth(hw);
-        ve->SetHeight(hh);
-        ve->SetTextPos(0);
-        ve->SetSizedByName(true);
-      }
-      recordUid(child, d.var, uid);
+      if (!placedEarly.count(child))
+        placeVariable(child, tag == "stock");
     } else if (tag == "flow") {
       Decl d;
       if (!readDecl(child, d))
@@ -358,6 +384,8 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       {
         VensimValveElement *valve = static_cast<VensimValveElement *>(_view->Elements()[varUid - 1]);
         VensimVariableElement *label = static_cast<VensimVariableElement *>(_view->Elements()[varUid]);
+        // Turned across a vertical pipe, before the name is placed against it.
+        valve->SetVertical(PipeIsVerticalAtValve(child->FirstChildElement("pts"), d.x + _offX, d.y + _offY));
         int tpos = LabelSideToTextPos(child->Attribute("label_side"), 1);
         if (tpos == 0)
           tpos = 1;  // a name cannot sit inside a valve
@@ -378,6 +406,7 @@ void XmileView::AllocateElements(tinyxml2::XMLElement *viewEl, std::vector<std::
       tinyxml2::XMLElement *pts = child->FirstChildElement("pts");
       if (!pts)
         continue;
+      placeAnchorsFirst(_reader->StocksForFlow(XmileReader::FoldNameKey(d.var->GetName())));
       std::vector<std::pair<int, int>> endpoints;
       for (tinyxml2::XMLElement *pt = pts->FirstChildElement("pt"); pt; pt = pt->NextSiblingElement("pt")) {
         endpoints.emplace_back(static_cast<int>(std::lround(pt->DoubleAttribute("x", 0.0) - _offX)),
@@ -635,6 +664,37 @@ void XmileView::ReadBentPipe(int valveUid, int vx, int vy, std::vector<std::pair
   }
 }
 
+bool XmileView::PipeIsVerticalAtValve(tinyxml2::XMLElement *pts, double vx, double vy) {
+  if (!pts)
+    return false;
+  std::vector<std::pair<double, double>> path;
+  for (tinyxml2::XMLElement *pt = pts->FirstChildElement("pt"); pt; pt = pt->NextSiblingElement("pt"))
+    path.emplace_back(pt->DoubleAttribute("x", 0.0), pt->DoubleAttribute("y", 0.0));
+  if (path.size() < 2)
+    return false;
+  auto vertical = [](const std::pair<double, double> &a, const std::pair<double, double> &b) {
+    return std::fabs(b.second - a.second) > std::fabs(b.first - a.first);
+  };
+  // A valve at a corner lies along the segment leaving it toward the sink (the
+  // path runs source to sink), as Vensim draws it.
+  for (size_t i = 0; i + 1 < path.size(); i++) {
+    if (std::fabs(path[i].first - vx) <= 2 && std::fabs(path[i].second - vy) <= 2)
+      return vertical(path[i], path[i + 1]);
+  }
+  // Otherwise the segment the valve sits on; else the first one.
+  for (size_t i = 0; i + 1 < path.size(); i++) {
+    const std::pair<double, double> &a = path[i];
+    const std::pair<double, double> &b = path[i + 1];
+    const bool on = vertical(a, b) ? std::fabs(a.first - vx) <= 2 && vy >= std::min(a.second, b.second) - 2 &&
+                                         vy <= std::max(a.second, b.second) + 2
+                                   : std::fabs(a.second - vy) <= 2 && vx >= std::min(a.first, b.first) - 2 &&
+                                         vx <= std::max(a.first, b.first) + 2;
+    if (on)
+      return vertical(a, b);
+  }
+  return vertical(path[0], path[1]);
+}
+
 int XmileView::ResolveFlowEndpoint(double x, double y, const std::vector<std::string> *anchorStocks) {
   // A flow's pipe <pt> is the position of the stock that anchors that end of
   // the pipe, but it is drawn at the element's BOUNDARY rather than its
@@ -803,6 +863,63 @@ const XmileView::RemoteElement *XmileView::RemoteSource(tinyxml2::XMLElement *fr
   }
   auto it = _remoteByName.find(EndpointKey(fromEl));
   return it == _remoteByName.end() ? nullptr : &it->second;
+}
+
+void XmileView::AddConveyorArrows() {
+  VensimViewElements &els = _view->Elements();
+  // Whether an arrow already runs from one element to the other, either end
+  // possibly a flow's valve or its name.
+  auto linked = [&](int from, int to, int toName) {
+    for (VensimViewElement *e : els) {
+      if (!e || e->Type() != VensimViewElement::ElementTypeCONNECTOR)
+        continue;
+      VensimConnectorElement *c = static_cast<VensimConnectorElement *>(e);
+      if (!c->IsPipe() && (c->From() == from || ValveFor(c->From()) == from) && (c->To() == to || c->To() == toName))
+        return true;
+    }
+    return false;
+  };
+  for (Variable *flow : _reader->ConveyorFlows()) {
+    auto at = _nameToUid.find(XmileReader::FoldNameKey(flow->GetName()));
+    if (at == _nameToUid.end())
+      continue;  // not drawn in this view
+    const int toName = at->second;
+    const int to = ValveFor(toName);
+    std::vector<Variable *> used;
+    for (Equation *eq : flow->GetAllEquations())
+      eq->GetVarsUsed(used);
+    std::set<int> done;
+    for (Variable *input : used) {
+      if (input == flow)
+        continue;
+      auto src = _nameToUid.find(XmileReader::FoldNameKey(input->GetName()));
+      if (src == _nameToUid.end())
+        continue;  // not drawn here (or a control variable, never drawn)
+      const int from = ValveFor(src->second);
+      if (!done.insert(from).second || linked(from, to, toName))
+        continue;
+      // A gentle arc, so arrows sharing a valve stay apart: its point is the
+      // chord's midpoint pushed sideways by half the chord times tan(15
+      // degrees), which leaves each end at 30 degrees to the chord -- on the
+      // side above the chord, or to its left when the chord is vertical.
+      const double sx = els[from]->X(), sy = els[from]->Y();
+      const double ex = els[to]->X(), ey = els[to]->Y();
+      const double dx = ex - sx, dy = ey - sy;
+      const double len = std::hypot(dx, dy);
+      double nx = 0, ny = 0;
+      if (len > 0) {
+        nx = -dy / len;
+        ny = dx / len;
+        if (ny > 0 || (ny == 0 && nx > 0)) {
+          nx = -nx;
+          ny = -ny;
+        }
+      }
+      const double h = len / 2 * std::tan(15.0 * 3.14159265358979 / 180);
+      AllocateConnector(from, to, static_cast<int>(std::lround((sx + ex) / 2 + nx * h)),
+                        static_cast<int>(std::lround((sy + ey) / 2 + ny * h)), 0);
+    }
+  }
 }
 
 int XmileView::AllocateCrossingSource(const RemoteElement &source, int toUid) {

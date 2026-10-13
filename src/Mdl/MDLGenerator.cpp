@@ -415,9 +415,10 @@ void MDLGenerator::WarnIfLineTooLong(const std::string &line, const char *kind, 
 void MDLGenerator::EmitValveRecord(std::string &out, int uid, VensimValveElement *e) {
   // 11,uid,name,x,y,w,h,shape,bits,hid,hasf,tpos,bw,nav1,nav2 (the variable
   // record's layout). The name token is read and discarded; shape bit5 is
-  // "attached" (34 = 32|2), and tpos is the side of the valve the flow's name
-  // is drawn on.
-  int shape = e->Attached() ? 34 : 2;
+  // "attached" (34 = 32|2), bit0 in place of bit1 a valve turned for a
+  // vertical pipe, and tpos is the side of the valve the flow's name is drawn
+  // on.
+  int shape = (e->Attached() ? 32 : 0) | (e->Vertical() ? 1 : 2);
   out += "11," + std::to_string(uid) + ",0," + std::to_string(e->X()) + "," + std::to_string(e->Y()) + "," +
          std::to_string(e->Width()) + "," + std::to_string(e->Height()) + "," + std::to_string(shape) + ",3,0,0," +
          std::to_string(e->TextPos()) + ",0,0,0\n";
@@ -674,6 +675,8 @@ void MDLGenerator::GenerateSettings(std::string &out) {
   // of the 22: parse in VensimParse, so a line read from a .mdl re-emits
   // unchanged.
   for (const UnitEquiv &equiv : _model->UnitEquivs()) {
+    if (!equiv.HasMdlLine())
+      continue;
     const std::string payload = equiv.MdlPayload();
     const std::string line = "22:" + payload;
     WarnIfLineTooLong(line, "unit equivalence settings line", payload);
@@ -1135,6 +1138,65 @@ std::string MDLGenerator::RenderDimensionMap(SymbolList *map) {
   return out;
 }
 
+namespace {
+
+// A unit name compared the way XMILE names are: case, '_' versus ' ', and
+// runs of spaces do not matter.
+std::string UnitKey(const std::string &name) {
+  std::string key;
+  for (char c : name) {
+    const char k = c == '_' ? ' ' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    if (k == ' ' && (key.empty() || key.back() == ' '))
+      continue;
+    key += k;
+  }
+  while (!key.empty() && key.back() == ' ')
+    key.pop_back();
+  return key;
+}
+
+}  // namespace
+
+std::string MDLGenerator::SubstituteUnitEquations(const std::string &units) {
+  if (_unitEquations.empty()) {
+    // Only the unit's own name is replaced: an alias is left as written, and
+    // the "22:" line keeps it an alias, which is the smallest change between
+    // the two formats. Dmnl is Vensim's own dimensionless unit, so it is
+    // never replaced, and a unit whose equation is 1 becomes Dmnl.
+    for (const UnitEquiv &equiv : _model->UnitEquivs()) {
+      if (equiv.eqn.empty() || UnitKey(equiv.name) == "dmnl")
+        continue;
+      std::string eqn = equiv.eqn;
+      eqn.erase(0, eqn.find_first_not_of(" \t"));
+      eqn.erase(eqn.find_last_not_of(" \t") + 1);
+      _unitEquations[UnitKey(equiv.name)] = eqn == "1" ? std::string("Dmnl") : "(" + equiv.eqn + ")";
+    }
+    if (_unitEquations.empty())
+      _unitEquations[""] = "";  // looked, found none
+  }
+  // Each unit name -- the text between operators and parentheses -- that has
+  // an equation is replaced by it.
+  std::string out;
+  size_t start = 0;
+  for (size_t i = 0; i <= units.size(); i++) {
+    if (i < units.size() && std::string("*/()^").find(units[i]) == std::string::npos)
+      continue;
+    const std::string token = units.substr(start, i - start);
+    auto it = _unitEquations.find(UnitKey(token));
+    if (it != _unitEquations.end() && !it->first.empty()) {
+      const size_t lead = token.find_first_not_of(' ');
+      const size_t trail = token.find_last_not_of(' ');
+      out += token.substr(0, lead) + it->second + token.substr(trail + 1);
+    } else {
+      out += token;
+    }
+    if (i < units.size())
+      out += units[i];
+    start = i + 1;
+  }
+  return out;
+}
+
 std::string MDLGenerator::UnitsCommentTrailer(Variable *v) {
   // Units come from the parsed UnitExpression when available (it normalizes the
   // numerator/denominator spelling) and fall back to the raw units string
@@ -1155,7 +1217,8 @@ std::string MDLGenerator::UnitsCommentTrailer(Variable *v) {
   // rather than accreting a carriage return each write, and Print's single final
   // LF->CRLF pass restores CRLF.
   std::string comment = mdl::SanitizeFreeText(v->Comment(), mdl::FreeTextLineMode::Multiline, "");
-  units = mdl::VensimUnitsText(mdl::SanitizeFreeText(units, mdl::FreeTextLineMode::SingleLine, "~"));
+  units = mdl::VensimUnitsText(
+      mdl::SanitizeFreeText(SubstituteUnitEquations(units), mdl::FreeTextLineMode::SingleLine, "~"));
 
   // The Vensim lexer (VensimLex::GetComment) captures the separator whitespace
   // between the second '~' and the comment text as part of the stored comment,

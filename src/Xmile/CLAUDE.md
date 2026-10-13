@@ -449,6 +449,21 @@ direction.
   follow. The `.mdl` writer holds up the other end: `SuppressedSketchSlots`
   (`src/Mdl/CLAUDE.md`) never emits an attached valve without the variable
   record that belongs at `valve_uid + 1`.
+- **A flow's anchor stocks are placed before its pipe is resolved.** Pipe
+  ends are matched only against placed elements, and Stella may write a flow
+  ahead of the stock it fills (ConveyorTranslation.stmx does), which left that
+  end a cloud beside the stock. `AllocateElements` pre-scans the view's
+  `<stock>`s and, just before a flow's ends are resolved, places any of its
+  `StocksForFlow` not yet placed (`placeAnchorsFirst`); the stock's own element
+  is then skipped. Views already in stock-before-flow order are unchanged,
+  UIDs included.
+- **A valve is turned across a vertical pipe.** Vensim records a valve on a
+  vertical pipe with shape bit0 (33 attached) instead of bit1 (34) and draws it
+  8x6 instead of 6x8; `VensimValveElement::Vertical` keeps the bit through a
+  `.mdl` round trip, and the XMILE reader sets it from the `<pts>` segment the
+  valve sits on -- at a corner, the one leaving it toward the sink, as Vensim
+  draws it (`XmileView::PipeIsVerticalAtValve`) -- before the flow's name is
+  placed against the valve.
 - **A bent pipe is one `<pts>` path in XMILE and two cornered records in
   Vensim.** A Vensim pipe record lists its corners from the valve outward --
   the first one twice -- and last the point where it meets its stock or
@@ -484,7 +499,13 @@ direction.
   Capacity, inflow limit, sampling, arrest and leak zones have no Vensim
   counterpart and are warned about and ignored; each translated conveyor gets
   a warning. Since the translation happens on reading, XMILE -> XMILE writes
-  the stock-and-DELAY form too.
+  the stock-and-DELAY form too. The new equations use inputs the conveyor's
+  diagram has no arrows for (the stock, `<len>`, the inflows, the leak
+  fractions), so `XmileView::AddConveyorArrows` draws an arrow to the flow's
+  valve from each one placed in the view and not already linked -- a gentle
+  arc leaving each end at 30 degrees to the chord, bowed above it (left of a
+  vertical one), so arrows sharing a valve stay apart
+  (`XmileReader::ConveyorFlows` lists the flows).
 - **`NAN` is Vensim's `A FUNCTION OF`.** The writer spells `A FUNCTION OF(x)`
   as `NAN(x)` and a bare `A FUNCTION OF()` as `NAN`. The lexer reads `NAN`
   followed by `(` as a call (`XmileEqLex::NextNonSpaceIs`), which `xpyy_call`

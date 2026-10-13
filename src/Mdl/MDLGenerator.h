@@ -3,6 +3,7 @@
 #define __MDLGENERATOR_H
 
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -153,6 +154,11 @@ private:
   // The "~\t<units>\n\t~\t<comment>\n\t|" trailer for a variable, with units
   // taken from the UnitExpression if present else the raw units string.
   std::string UnitsCommentTrailer(Variable *v);
+  // A variable's units with each unit that has an equation (an XMILE
+  // <model_units> <unit> with a non-empty <eqn>, by its name; aliases are left
+  // as written) replaced by that equation in parentheses -- Dmnl for an
+  // equation of 1: Vensim's units cannot define one unit in terms of others.
+  std::string SubstituteUnitEquations(const std::string &units);
   // Emit one already-composed entry ("<lhs> = <rhs>" for an equation,
   // "<lhs>(<body>)" for a standalone graphical function), wrapped at 80
   // columns, followed by the units/comment trailer and a trailing newline.
@@ -208,6 +214,9 @@ private:
   // scalar), and whether a bare arrayed reference is the whole array (inside
   // SUM and the like): both for ImplicitSubscripts.
   SymbolList *_lhsSubs = nullptr;
+  // Folded unit name -> its replacement text, for SubstituteUnitEquations
+  // (built on first use; a lone "" entry records that there are none).
+  std::unordered_map<std::string, std::string> _unitEquations;
   bool _bareAsBang = false;
 };
 

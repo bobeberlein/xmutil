@@ -23,12 +23,9 @@ struct UnitEquiv {
   std::string eqn;
   std::vector<std::string> aliases;
 
-  // Split a "22:" payload into this shape. The first field is Vensim's
-  // canonical name and the rest are aliases, with one exception: a leading bare
-  // "$" is Vensim's spelling of the currency unit whose readable name follows
-  // it, which XMILE writes as <unit name="Dollar"><eqn>$</eqn>. Recognizing it
-  // only in the leading position (and only when a name follows) is what makes
-  // MdlPayload an exact inverse -- see the ordering note there.
+  // Split a "22:" payload into this shape: the first field is Vensim's
+  // canonical name and the rest are aliases. A "22:" line states no formula,
+  // so the equation stays empty (a leading "$" is a name like any other).
   static UnitEquiv ParseMdlPayload(const std::string &payload) {
     std::vector<std::string> fields;
     for (size_t start = 0;;) {
@@ -41,20 +38,17 @@ struct UnitEquiv {
       start = comma + 1;
     }
     UnitEquiv equiv;
-    size_t next = 0;
-    if (fields.size() >= 2 && fields[0] == "$")
-      equiv.eqn = fields[next++];
-    equiv.name = fields[next++];
-    equiv.aliases.assign(fields.begin() + next, fields.end());
+    equiv.name = fields[0];
+    equiv.aliases.assign(fields.begin() + 1, fields.end());
     return equiv;
   }
 
-  // Flatten back to a "22:" payload. A "$" equation leads, reproducing Vensim's
-  // own spelling and inverting ParseMdlPayload exactly, so every "22:" line
-  // read from a .mdl re-emits byte for byte. Any other equation is a formula
-  // Vensim cannot express; it is emitted as a trailing-name field rather than
-  // dropped, which is the closest available Vensim reading ("another spelling
-  // of this unit") and keeps the text recoverable by a human or a later pass.
+  // Flatten back to a "22:" payload: the name, then the aliases, inverting
+  // ParseMdlPayload exactly, so every "22:" line read from a .mdl re-emits byte
+  // for byte. An equation is not part of it: Vensim cannot state one, so the
+  // .mdl writer substitutes it for the unit's name wherever a variable's units
+  // use it (MDLGenerator::UnitsCommentTrailer), and a unit with an equation and
+  // no aliases needs no "22:" line at all (HasMdlLine).
   //
   // Sanitizing happens HERE, at the point the .mdl field is built, not when the
   // declaration is read: a ',' would mis-split this line and a '|' or newline
@@ -63,12 +57,7 @@ struct UnitEquiv {
   // XMILE -> XMILE path for a hazard only the .mdl path has.
   std::string MdlPayload() const {
     std::vector<std::string> fields;
-    const bool eqnLeads = eqn == "$";
-    if (eqnLeads)
-      fields.push_back(eqn);
     fields.push_back(name);
-    if (!eqn.empty() && !eqnLeads)
-      fields.push_back(eqn);
     fields.insert(fields.end(), aliases.begin(), aliases.end());
 
     std::string payload;
@@ -78,6 +67,9 @@ struct UnitEquiv {
       payload += mdl::SanitizeFreeText(fields[i], mdl::FreeTextLineMode::SingleLine, ",");
     }
     return payload;
+  }
+  bool HasMdlLine() const {
+    return eqn.empty() || !aliases.empty();
   }
 };
 

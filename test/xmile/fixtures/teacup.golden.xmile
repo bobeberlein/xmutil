@@ -11,8 +11,8 @@
         <dt>0.125</dt>
     </sim_specs>
     <model_units>
-        <unit name="Dollar">
-            <eqn>$</eqn>
+        <unit name="$">
+            <alias>Dollar</alias>
             <alias>Dollars</alias>
             <alias>$s</alias>
         </unit>
