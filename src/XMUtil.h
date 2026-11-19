@@ -88,6 +88,13 @@ XMUTIL_EXPORT char *convert_xmile_to_xmile(const char *source, uint32_t len, con
 // returns NULL on error or a string containing Vensim .mdl that the caller now
 // owns. isLongName is accepted for API symmetry; see convert_xmile_to_xmile.
 XMUTIL_EXPORT char *convert_xmile_to_mdl(const char *source, uint32_t len, const char *fileName, int isLongName);
+
+// Powersim Studio .sip (a binary compound file) in. The project is lowered to
+// XMILE and then read exactly like XMILE input, so both behave as
+// convert_xmile_to_xmile / convert_xmile_to_mdl afterwards. Returns NULL on
+// error (reasons go to the log), else a string the caller now owns.
+XMUTIL_EXPORT char *convert_sip_to_xmile(const char *source, uint32_t len, const char *fileName);
+XMUTIL_EXPORT char *convert_sip_to_mdl(const char *source, uint32_t len, const char *fileName);
 }
 
 // utility functions

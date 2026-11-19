@@ -12,6 +12,7 @@
 #include "ConsoleAsserts.h"
 #include "Model.h"
 #include "OutputPath.h"
+#include "PowerSim/SipReader.h"
 #include "Unicode.h"
 #include "Vensim/VensimParse.h"
 #include "XMUtil.h"
@@ -63,9 +64,10 @@ static bool extensionMatchesInsensitive(const char *path, const char *ext) {
 // for (--help), EXIT_FAILURE when it follows a command-line error.
 [[noreturn]] void cliUsage(int status) {
   log("Usage: %s [OPTION...] PATH [OUTPUT]\n"
-      "Convert Vensim .mdl, Dynamo .dyn, or XMILE .xmile/.stmx files to XMILE or .mdl.\n"
-      "The input format is chosen by extension (case-insensitive); anything other than\n"
-      ".dyn, .xmile or .stmx is read as Vensim. The output goes to OUTPUT when given,\n"
+      "Convert Vensim .mdl, Dynamo .dyn, XMILE .xmile/.stmx, or Powersim .sip files to\n"
+      "XMILE or .mdl. The input format is chosen by extension (case-insensitive);\n"
+      "anything other than .dyn, .xmile, .stmx or .sip is read as Vensim. The output\n"
+      "goes to OUTPUT when given,\n"
       "whose extension also picks the format (.mdl for Vensim, .xmile or .stmx for\n"
       "XMILE); otherwise it is written next to the input as <base>.xmile or <base>.mdl,\n"
       "with .regen inserted when that would overwrite the input.\n\n"
@@ -165,6 +167,9 @@ int cliMain(int argc, char *argv[], Model *m) {
   }
 
   char *output;
+  // Powersim .sip is binary; --stdio recognizes it by its compound-file magic.
+  const bool sipInput =
+      useStdio ? powersim::LooksLikeSip(contents.data(), contents.size()) : extensionMatchesInsensitive(path, "sip");
   // File inputs dispatch on extension; --stdio has no extension (path is the
   // "STDIN" placeholder), so sniff the buffer's first non-whitespace byte
   // instead. Dynamo via --stdio is not sniffable ('<'-vs-not only separates
@@ -174,7 +179,10 @@ int cliMain(int argc, char *argv[], Model *m) {
   const bool xmileInput =
       useStdio ? contentLooksLikeXmile(contents)
                : (extensionMatchesInsensitive(path, "xmile") || extensionMatchesInsensitive(path, "stmx"));
-  if (xmileInput) {
+  if (sipInput) {
+    output = toMdl ? convert_sip_to_mdl(contents.c_str(), contents.size(), path)
+                   : convert_sip_to_xmile(contents.c_str(), contents.size(), path);
+  } else if (xmileInput) {
     if (toMdl) {
       output = convert_xmile_to_mdl(contents.c_str(), contents.size(), path, longNames);
     } else {

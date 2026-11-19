@@ -10,6 +10,7 @@
 
 #include "Dynamo/DynamoParse.h"
 #include "Model.h"
+#include "PowerSim/SipReader.h"
 #include "Unicode.h"
 #include "Vensim/VensimParse.h"
 
@@ -491,6 +492,16 @@ char *FinishXmile(Model &m, bool isCompact, double xscale, double yscale) {
   return strdup(xmile.c_str());
 }
 
+// Lower a Powersim .sip to XMILE text and read that into m. Advisory notes
+// from the lowering are logged either way.
+bool ParseSipInput(Model &m, const char *source, uint32_t len, const char *fileName) {
+  std::vector<std::string> errs;
+  std::string xmile;
+  bool ok = powersim::SipToXmile(source, len, xmile, errs);
+  LogAll(errs);
+  return ok && ParseXmileInput(m, xmile.c_str(), static_cast<uint32_t>(xmile.size()), fileName);
+}
+
 char *FinishMdl(Model &m) {
   std::vector<std::string> errs;
   std::string mdl = m.PrintMDL(errs);
@@ -585,6 +596,34 @@ char *convert_xmile_to_mdl(const char *source, uint32_t len, const char *fileNam
 
   m.RunPostParsePipeline();
 
+  return FinishMdl(m);
+} catch (...) {
+  return LogConversionFailure();
+}
+
+char *convert_sip_to_xmile(const char *source, uint32_t len, const char *fileName) try {
+  Model m{};
+  if (fileName == nullptr) {
+    fileName = "<in memory>";
+  }
+  if (!ParseSipInput(m, source, len, fileName)) {
+    return nullptr;
+  }
+  m.RunPostParsePipeline();
+  return FinishXmile(m, /*isCompact=*/false, /*xscale=*/1.0, /*yscale=*/1.0);
+} catch (...) {
+  return LogConversionFailure();
+}
+
+char *convert_sip_to_mdl(const char *source, uint32_t len, const char *fileName) try {
+  Model m{};
+  if (fileName == nullptr) {
+    fileName = "<in memory>";
+  }
+  if (!ParseSipInput(m, source, len, fileName)) {
+    return nullptr;
+  }
+  m.RunPostParsePipeline();
   return FinishMdl(m);
 } catch (...) {
   return LogConversionFailure();

@@ -3,7 +3,8 @@
 Last verified: 2026-10-08
 
 C++ tool that converts system-dynamics models between formats: Vensim `.mdl`,
-Dynamo `.dyn`, and XMILE (`.xmile` / `.stmx`) in; XMILE or Vensim `.mdl` out.
+Dynamo `.dyn`, XMILE (`.xmile` / `.stmx`) and Powersim Studio `.sip` in; XMILE
+or Vensim `.mdl` out.
 CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
 
 ## Tech Stack
@@ -80,19 +81,32 @@ CLI binary `XMUtil`, plus a WASM build and (optionally) a Qt UI.
   path still applies.
 - `--stdio` reads stdin / writes stdout; `--sectors`, `--names`/`--no-names`
   as before. Input format is chosen by file extension (case-insensitive):
-  `.dyn` -> Dynamo, `.xmile` or `.stmx` -> XMILE, else Vensim.
+  `.dyn` -> Dynamo, `.xmile` or `.stmx` -> XMILE, `.sip` -> Powersim, else
+  Vensim. Under `--stdio` XMILE and `.sip` are sniffed from the content.
 
 ## Project Structure
 - `src/` - engine + tools. `Main.cpp` is the CLI entry; `XMUtil.{h,cpp}` holds
   the `extern "C"` conversion entry points: `convert_mdl_to_xmile`,
   `convert_to_mdl` (Vensim/Dynamo in), and `convert_xmile_to_xmile`,
-  `convert_xmile_to_mdl` (XMILE in). All four return a strdup'd heap buffer
+  `convert_xmile_to_mdl` (XMILE in), `convert_sip_to_xmile`,
+  `convert_sip_to_mdl` (Powersim in). All return a strdup'd heap buffer
   the caller must `free`, or NULL on failure.
 - `src/Vensim/`, `src/Dynamo/` - input parsers (the readers).
 - `src/Symbol/`, `src/Function/` - the in-memory model: `Expression` trees,
   `Variable`, `Symbol`, namespaces.
 - `src/Xmile/` - XMILE reader AND writer (see its CLAUDE.md).
 - `src/Mdl/` - the Vensim `.mdl` writer (see its CLAUDE.md).
+- `src/PowerSim/` - Powersim Studio `.sip` reader: `CompoundFile` (minimal
+  read-only OLE/CFB container reader) and `SipReader`, which lowers a project
+  to XMILE text that then goes through the XMILE reader as usual. The format is
+  reverse-engineered; the notes at the top of `SipReader.cpp` record what is
+  known. Model plus diagrams (one XMILE view per Powersim diagram; an
+  undecodable diagram is dropped with a note, never fatal). Powersim stores no
+  variable units (all AUTO), so `InferUnits` re-derives them from the literals'
+  `<<unit>>` annotations and the stock/flow time relation. Arrays, submodels,
+  several components, unknown operators, and unit annotations that Powersim
+  would rescale (`<<da>>` in a model run in years) are rejected with a message
+  rather than guessed at.
 - `src/Model.{h,cpp}` - the `Model` container. `Model::ParseXMILE` is the
   convenience entry that constructs an `XmileReader` and drives one parse;
   `Model::RunPostParsePipeline` is the shared post-parse sequence

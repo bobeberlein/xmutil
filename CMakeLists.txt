@@ -110,6 +110,11 @@ set(xmutil_common_sources
   src/Function/State.cpp
   src/Function/TableFunction.h
   src/Function/TableFunction.cpp
+
+  src/PowerSim/CompoundFile.h
+  src/PowerSim/CompoundFile.cpp
+  src/PowerSim/SipReader.h
+  src/PowerSim/SipReader.cpp
 )
 
 # ---------------------------------------------------------------------------
@@ -342,6 +347,7 @@ if(XMUTIL_BUILD_TESTS)
     test/xmile/VectorSelectXmileTest.cpp
     test/xmile/ExternalModuleTest.cpp
     test/xmile/StellaFunctionsTest.cpp
+    test/powersim/SipReaderTest.cpp
   )
   target_link_libraries(xmutil_test PRIVATE xmutil_platform)
   # The corpus tests join the repo root with relative fixture paths so they

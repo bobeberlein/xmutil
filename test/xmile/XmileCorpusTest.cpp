@@ -197,6 +197,16 @@ const char *const kAllowList[] = {
     "test/fixtures/simlin-test/circular-dep-1/model.stmx",
     "test/fixtures/simlin-test/decoupled_stocks/decoupled.stmx",
     "test/fixtures/simlin-test/logistic_growth_ltm/logistic_growth.stmx",
+    // Hand-made Stella versions of the Powersim archetype fixtures, kept as
+    // the reference the .sip reader's expected equations were checked against.
+    "test/fixtures/powersim/reference/Eroding Goals.stmx",
+    "test/fixtures/powersim/reference/Escalation.stmx",
+    "test/fixtures/powersim/reference/Fixes that Faill.stmx",
+    "test/fixtures/powersim/reference/Growth and Underinvestment.stmx",
+    "test/fixtures/powersim/reference/Limits to Growth.stmx",
+    "test/fixtures/powersim/reference/Shifting the Burden.stmx",
+    "test/fixtures/powersim/reference/Success to the Successful.stmx",
+    "test/fixtures/powersim/reference/Tragedy of the Commons.stmx",
     // Dotted Dim.element references (`Location.Boston`) parse as of the grammar's
     // `Dim.element` productions.
     "test/fixtures/simlin-test/subscript_index_name_values/model.stmx",

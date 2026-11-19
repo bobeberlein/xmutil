@@ -29,6 +29,19 @@ C++ tests, and directly in the shell scripts).
   `land_model`, `previous`, `step_into_smth1`, `subscript_index_name_values`).
   License: see `simlin-test/LICENSE`.
 
+- `powersim/` -- Powersim Studio 10 `.sip` projects: eight small system-archetype
+  models (Eroding Goals, Escalation, Fixes that Fail, Growth & Underinvestment,
+  Limits to Growth, Shifting the Burden, Success to the Successful, Tragedy of
+  the Commons) by Bill Braun, converted to Studio 10 by Len Malczynski and
+  shared through the powersimtools group (groups.io/g/powersimtools). They drive
+  `test/powersim/SipReaderTest.cpp`, whose expected equations were checked
+  against hand-made Stella `.stmx` versions of the same models, kept in
+  `powersim/reference/` (names as received, including `Fixes that Faill.stmx`;
+  their equations and names were edited by hand, so they are a semantic
+  reference, not an exact one). The `.stmx` files are in the XMILE corpus
+  allow-list in `test/xmile/XmileCorpusTest.cpp`.
+  License: not stated by the authors; confirm before redistributing.
+
 The large `C-LEARN v77 for Vensim` model (a 1.4 MB real-world climate policy
 export with macros, arrays, lookups and a full sketch) was used throughout
 development and testing of the writers, and `CorpusRoundTrip_large_model_stress`
