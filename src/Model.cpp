@@ -585,6 +585,10 @@ void Model::AdjustGroupNames() {
   // every group name must be unique and can't be in the global name space
   int n = vGroups.size();
   for (int i = 0; i < n; i++) {
+    if (vGroups[i]->bSector && vGroups[i]->pOwner) {
+      AdjustSectorName(i);
+      continue;
+    }
     std::string name = vGroups[i]->sName;
     // test it
     bool good;
@@ -605,6 +609,34 @@ void Model::AdjustGroupNames() {
     } while (!good);
     vGroups[i]->sName = name;
   }
+}
+
+// A sector lives inside its owner's model (XMILEGenerator::generateModelAsGroups),
+// so it needs a name distinct only from the other sectors of the same owner --
+// "MONEY" may be section 1.18 and 2.17 alike -- and from the variables, which
+// share an XMILE model's name space (a variable from any module can appear in
+// the owner's model as a cross-level input). A clash with a variable reads
+// better as "Inventory sector" than as "Inventory 1".
+void Model::AdjustSectorName(int index) {
+  ModelGroup *group = vGroups[index];
+  const std::string base = group->sName;
+  std::string name = base;
+  for (int attempt = 1;; attempt++) {
+    bool good = mSymbolNameSpace.Find(name) == NULL;
+    std::string *lname = SymbolNameSpace::ToLowerSpace(name);
+    for (int j = 0; good && j < index; j++) {
+      if (!vGroups[j]->bSector || vGroups[j]->pOwner != group->pOwner)
+        continue;
+      std::string *tlname = SymbolNameSpace::ToLowerSpace(vGroups[j]->sName);
+      good = *tlname != *lname;
+      delete tlname;
+    }
+    delete lname;
+    if (good)
+      break;
+    name = base + " sector" + (attempt > 1 ? " " + std::to_string(attempt) : "");
+  }
+  group->sName = name;
 }
 
 void Model::CheckGhostOwners() {

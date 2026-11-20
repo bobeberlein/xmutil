@@ -81,6 +81,10 @@ static bool extensionMatchesInsensitive(const char *path, const char *ext) {
       "  --shortnames     keep the variable names as written (the default for Vensim)\n"
       "  --sectors        write a multi-view Vensim/Dynamo model as sectors of one XMILE\n"
       "                   model instead of one module per view (XMILE input always is)\n"
+      "  --no-views       ignore the sketch views of a Vensim model (groups then decide\n"
+      "                   the XMILE modules)\n"
+      "  --dynamo-sections  read numbered banners ({*** 3.10 TITLE }) in a Vensim model\n"
+      "                   as module 3, sector TITLE\n"
       "  --want-complete  accepted for compatibility; has no effect\n",
       argv0);
 
@@ -96,6 +100,8 @@ int cliMain(int argc, char *argv[], Model *m) {
   int longNames = -1;
   bool sectors = false;
   bool toMdl = false;
+  bool ignoreViews = false;
+  bool dynamoSections = false;
 
   for (argv0 = argv[0], argv++, argc--; argc > 0; argv++, argc--) {
     char const *arg = argv[0];
@@ -111,6 +117,10 @@ int cliMain(int argc, char *argv[], Model *m) {
       longNames = 0;
     } else if (strcmp("--sectors", arg) == 0) {
       sectors = true;
+    } else if (strcmp("--no-views", arg) == 0) {
+      ignoreViews = true;
+    } else if (strcmp("--dynamo-sections", arg) == 0) {
+      dynamoSections = true;
     } else if (strcmp("--to-mdl", arg) == 0) {
       toMdl = true;
     } else if (arg[0] == '-') {
@@ -167,6 +177,7 @@ int cliMain(int argc, char *argv[], Model *m) {
   }
 
   char *output;
+  SetVensimReadOptions(ignoreViews, dynamoSections);
   // Powersim .sip is binary; --stdio recognizes it by its compound-file magic.
   const bool sipInput =
       useStdio ? powersim::LooksLikeSip(contents.data(), contents.size()) : extensionMatchesInsensitive(path, "sip");

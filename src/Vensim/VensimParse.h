@@ -76,6 +76,17 @@ public:
   void SetLongName(bool set) {
     bLongName = set;
   }
+  // Skip the sketch section entirely: no views are read. For models whose
+  // views hold only graphs and controls, so the groups alone shape the output.
+  void SetIgnoreViews(bool set) {
+    bIgnoreViews = set;
+  }
+  // Read Forrester's numbered section banners ({**** 3.10 TITLE }, or a Vensim
+  // banner whose comment is numbered) as module N, sector TITLE. See
+  // ApplySectionBanner.
+  void SetDynamoSections(bool set) {
+    bDynamoSections = set;
+  }
   bool LongName() const {
     return bLongName;
   }
@@ -85,6 +96,8 @@ public:
 
 private:
   bool FindNextEq(bool want_comment);
+  bool ApplySectionBanner(bool dynamoBanner);
+  ModelGroup *ModuleGroup(const std::string &number);
   Model *_model;
   std::string sFilename;
   VensimLex mVensimLex;
@@ -96,6 +109,11 @@ private:
   double _yratio;
   bool mInMacro;
   bool bLongName;
+  bool bIgnoreViews = false;
+  bool bDynamoSections = false;
+  // The group the next equations join: the last banner's, or a module or
+  // sector chosen by ApplySectionBanner (which may be an earlier group).
+  ModelGroup *pActiveGroup = nullptr;
   std::vector<MacroFunction *> mMacroFunctions;
 };
 

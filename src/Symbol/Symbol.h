@@ -28,6 +28,9 @@ public:
   // The group's documentation: the text between `~` and `|` under a Vensim
   // banner, or an XMILE <group>'s <doc>. Line breaks are '\n'.
   std::string sComment;
+  // A sector of its owner rather than a group of its own: the XMILE module
+  // writer folds its variables into the owner's model as a Stella sector.
+  bool bSector = false;
   ModelGroup *pOwner;
   tinyxml2::XMLElement *pModule;     // this groups module element in the owning module
   tinyxml2::XMLElement *pModel;      // this groups model elemen in the main document

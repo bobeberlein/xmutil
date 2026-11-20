@@ -167,6 +167,7 @@ int VensimLex::NextToken()  // also sets token type
       // |
       sToken.clear();
       sGroupComment.clear();
+      bDynamoBanner = false;
       while ((c = GetNextChar(false)) == '*')
         ;
       while (c == '\r' || c == '\n' || c == ' ' || c == '\t')
@@ -343,6 +344,8 @@ int VensimLex::NextToken()  // also sets token type
             return NextToken();  // no useful group name
           sToken.clear();
           sGroupComment.clear();
+          sDynamoBannerText.clear();
+          bDynamoBanner = true;
           do {
             this->sToken.push_back(c);
             if (c == '.') {
@@ -350,12 +353,30 @@ int VensimLex::NextToken()  // also sets token type
               if (!sToken.empty())
                 sToken.push_back('-');  // can't use . in a module name
             }
+            sDynamoBannerText.push_back(c);
             c = GetNextChar(false);
-          } while (c != '\r' && c != '\n' && c != '*' && c != '}');
+          } while (c && c != '\r' && c != '\n' && c != '*' && c != '}');
           while (!sToken.empty() && sToken.back() == ' ')
             sToken.pop_back();
-          while (c && c != '}')
+          // The rest of the banner is kept for numbered-section reading: a
+          // module heading and its first section share one banner across
+          // lines ("2. HOUSEHOLD SECTOR" / "2.1 UTILITY").
+          while (c && c != '}') {
+            sDynamoBannerText.push_back(c);
             c = GetNextChar(false);
+          }
+          std::string collapsed;
+          for (char t : sDynamoBannerText) {
+            if (t == ' ' || t == '\t' || t == '\r' || t == '\n' || t == '*') {
+              if (!collapsed.empty() && collapsed.back() != ' ')
+                collapsed.push_back(' ');
+            } else {
+              collapsed.push_back(t);
+            }
+          }
+          while (!collapsed.empty() && collapsed.back() == ' ')
+            collapsed.pop_back();
+          sDynamoBannerText = collapsed;
           return VPTT_groupstar;
         } else
           PushBack(c, false);

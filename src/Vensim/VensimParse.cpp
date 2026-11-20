@@ -5,6 +5,7 @@
 
 #include "VensimParse.h"
 
+#include <cctype>
 #include <cstring>
 #include <stdexcept>
 
@@ -238,9 +239,9 @@ void VensimParse::AddFullEq(Equation *eq, UnitExpression *un) {
   // The equation just read was defined with `==`.
   if (mVensimLex.TakeUnchangeable() && pActiveVar)
     pActiveVar->MarkUnchangeable();
-  if (!_model->Groups().empty() && pActiveVar->GetAllEquations().empty() && !mInMacro) {
-    _model->Groups().back()->vVariables.push_back(pActiveVar);
-    pActiveVar->SetGroup(_model->Groups().back());
+  if (pActiveGroup && pActiveVar->GetAllEquations().empty() && !mInMacro) {
+    pActiveGroup->vVariables.push_back(pActiveVar);
+    pActiveVar->SetGroup(pActiveGroup);
   }
   pActiveVar->AddEq(eq);
   if (un) {
@@ -297,6 +298,8 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
           if (!FindNextEq(true))
             break;
         } else if (rval == '|') {
+        } else if (rval == VPTT_groupstar && bDynamoSections && ApplySectionBanner(mVensimLex.GroupWasDynamoBanner())) {
+          // handled as a numbered module/sector, or an unnumbered subheading
         } else if (rval == VPTT_groupstar) {
           // The banner names the group by its whole path; the level above it is
           // the only thing that can own it. Owning each new banner by the
@@ -323,6 +326,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
           // is not emitted by either writer.
           _model->Groups().push_back(new ModelGroup(FlattenGroupPath(path), group_owner));
           _model->Groups().back()->sComment = mVensimLex.GroupComment();
+          pActiveGroup = _model->Groups().back();
         } else if (rval != endtok) {
           log("Unknown terminal token %d\n", rval);
           if (!FindNextEq(false))
@@ -351,7 +355,17 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
     char buf[BUFLEN];  // plenty big for sketch info
     if (rval == endtok)
       this->mVensimLex.BufferReadLine(buf, BUFLEN);  // get the marker line
-    while (true) {                                   // read in the sketch information
+    if (bIgnoreViews && strncmp(buf, "\\\\\\---///", 9) == 0) {
+      // Pass over every view unread, up to the settings marker that follows
+      // the last one, so the settings (integration method) are still read.
+      while (strncmp(buf, "///---\\\\\\", 9) != 0) {
+        if (!this->mVensimLex.ReadLine(buf, BUFLEN)) {
+          buf[0] = 0;
+          break;
+        }
+      }
+    }
+    while (true) {  // read in the sketch information
       if (strncmp(buf, "\\\\\\---///", 9) != 0)
         break;
       this->mVensimLex.ReadLine(buf, BUFLEN);  // version line
@@ -777,4 +791,101 @@ bool VensimParse::LetterPolarity() const {
 }
 void VensimParse::SetLetterPolarity(bool set) {
   _model->SetLetterPolarity(set);
+}
+
+namespace {
+
+std::string CollapseSpace(const std::string &s) {
+  std::string out;
+  for (char c : s) {
+    if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+      if (!out.empty() && out.back() != ' ')
+        out.push_back(' ');
+    } else {
+      out.push_back(c);
+    }
+  }
+  while (!out.empty() && out.back() == ' ')
+    out.pop_back();
+  return out;
+}
+
+// "N.M rest" or "N. rest" at the start of text: module N, section M (empty
+// for a module heading), and what follows. False when text is not numbered.
+bool ParseSectionNumber(const std::string &text, std::string &module, std::string &section, std::string &rest) {
+  size_t i = 0;
+  while (i < text.size() && isdigit(static_cast<unsigned char>(text[i])))
+    i++;
+  if (i == 0 || i >= text.size() || text[i] != '.')
+    return false;
+  module = text.substr(0, i);
+  size_t j = ++i;
+  while (j < text.size() && isdigit(static_cast<unsigned char>(text[j])))
+    j++;
+  section = text.substr(i, j - i);
+  // "1.17ADEQUACY" is not a section number; "1.17 ADEQUACY" and "9." are.
+  if (j < text.size() && text[j] != ' ')
+    return false;
+  rest = CollapseSpace(text.substr(j));
+  if (!rest.empty() && rest[0] == ' ')
+    rest.erase(0, 1);
+  return true;
+}
+
+}  // namespace
+
+// Forrester's EconDyn models number their sections the way the DYNAMO
+// listings did: "N.M TITLE" is section M of module N, and "N. HEADING" opens
+// module N -- often with its first section in the same banner ("2. HOUSEHOLD
+// SECTOR 2.1 UTILITY"). Module N becomes a root group named "N" (the heading
+// kept as its documentation) and each section a sector group named by its
+// title, owned by the module (ModelGroup::bSector), documented with its
+// number. Unnumbered Dynamo banners are subheadings within a section and leave
+// the active group alone. Returns false to hand the banner to the ordinary
+// Vensim group path (an unnumbered Vensim banner).
+bool VensimParse::ApplySectionBanner(bool dynamoBanner) {
+  const std::string text = CollapseSpace(dynamoBanner ? mVensimLex.DynamoBannerText() : mVensimLex.GroupComment());
+  std::string module, section, rest;
+  if (!ParseSectionNumber(text, module, section, rest))
+    return dynamoBanner;
+  ModelGroup *owner = ModuleGroup(module);
+  if (section.empty()) {
+    // A module heading, possibly followed by its first section: find
+    // " N.<digits> " (same N) inside the heading.
+    std::string heading = rest;
+    std::string tail;
+    const std::string mark = module + ".";
+    for (size_t p = 0; (p = rest.find(mark, p)) != std::string::npos; p++) {
+      if ((p == 0 || rest[p - 1] == ' ') && p + mark.size() < rest.size() &&
+          isdigit(static_cast<unsigned char>(rest[p + mark.size()]))) {
+        heading = CollapseSpace(rest.substr(0, p));
+        tail = rest.substr(p);
+        break;
+      }
+    }
+    if (owner->sComment.empty())
+      owner->sComment = heading;
+    std::string tailModule;
+    if (tail.empty() || !ParseSectionNumber(tail, tailModule, section, rest) || section.empty()) {
+      pActiveGroup = owner;
+      return true;
+    }
+  }
+  ModelGroup *sector = new ModelGroup(rest.empty() ? module + "." + section : rest, owner);
+  sector->bSector = true;
+  sector->sComment = module + "." + section;
+  _model->Groups().push_back(sector);
+  pActiveGroup = sector;
+  return true;
+}
+
+// The root group standing for module N, created on first use.
+ModelGroup *VensimParse::ModuleGroup(const std::string &number) {
+  for (ModelGroup *g : _model->Groups()) {
+    if (!g->pOwner && !g->bSector && g->sName == number)
+      return g;
+  }
+  ModelGroup *g = new ModelGroup(number, nullptr);
+  _model->Groups().push_back(g);
+  return g;
 }

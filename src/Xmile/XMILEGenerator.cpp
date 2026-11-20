@@ -892,6 +892,24 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
   if (used_groups < 2)
     return false;
 
+  // A sector (ModelGroup::bSector) is not a model of its own: its variables
+  // are written in its owner's model, which lists the sector as a Stella
+  // <group> of <entity> members. Fold each one into its owner here and keep
+  // the membership for that list.
+  std::map<ModelGroup *, std::vector<ModelGroup *>> sectors_of;
+  std::map<ModelGroup *, std::vector<Variable *>> sector_members;
+  for (ModelGroup *group : groups) {
+    if (!group->bSector || !group->pOwner)
+      continue;
+    sectors_of[group->pOwner].push_back(group);
+    sector_members[group] = group->vVariables;
+    for (Variable *var : group->vVariables) {
+      group->pOwner->vVariables.push_back(var);
+      var->SetGroup(group->pOwner);
+    }
+    group->vVariables.clear();
+  }
+
   groups.push_back(new ModelGroup("Other not Grouped", NULL));
   // we use addess of group for simplicity
   std::vector<Variable *> vars = _model->GetVariables(ns);  // all symbols that are variables
@@ -1034,6 +1052,24 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
       source->pModule->InsertEndChild(connect);  // receiving module
     }
     generateEquations(included, doc, group->pVariables);
+    for (ModelGroup *sector : sectors_of[group]) {
+      bool populated = false;
+      for (Variable *var : sector_members[sector])
+        populated = populated || !var->Unwanted();
+      if (!populated)
+        continue;  // a section heading with no equations under it
+      tinyxml2::XMLElement *xsector = doc->NewElement("group");
+      xsector->SetAttribute("name", sector->sName.c_str());
+      AppendGroupDoc(xsector, sector);
+      for (Variable *var : sector_members[sector]) {
+        if (var->Unwanted())
+          continue;
+        tinyxml2::XMLElement *entity = doc->NewElement("entity");
+        entity->SetAttribute("name", SpaceToUnderBar(var->GetAlternateName()).c_str());
+        xsector->InsertEndChild(entity);
+      }
+      group->pVariables->InsertEndChild(xsector);
+    }
     // for the incomming cross levels they get no equations but need to be included as variables
     for (Variable *var : needed) {
       tinyxml2::XMLElement *xvar;

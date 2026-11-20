@@ -401,6 +401,14 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
   return 33;
 }
 
+static bool g_ignoreViews = false;
+static bool g_dynamoSections = false;
+
+void SetVensimReadOptions(bool ignoreViews, bool dynamoSections) {
+  g_ignoreViews = ignoreViews;
+  g_dynamoSections = dynamoSections;
+}
+
 namespace {
 
 // File-extension dispatch for the C entry points: case-insensitive match
@@ -456,6 +464,8 @@ bool ParseNativeInput(Model &m, const char *source, uint32_t len, const char *fi
   } else {
     VensimParse vp{&m};
     vp.SetLongName(isLongName == 1);
+    vp.SetIgnoreViews(g_ignoreViews);
+    vp.SetDynamoSections(g_dynamoSections);
     m.SetAsSectors(isAsSectors);
     if (!vp.ProcessFile(fileName, source, len)) {
       return false;

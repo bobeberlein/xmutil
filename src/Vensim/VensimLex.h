@@ -29,6 +29,14 @@ public:
   const std::string &GroupComment() const {
     return sGroupComment;
   }
+  // Whether that banner was the Dynamo-style {**** ... } form, and its whole
+  // text (all lines, stars dropped, whitespace runs collapsed to one space).
+  bool GroupWasDynamoBanner() const {
+    return bDynamoBanner;
+  }
+  const std::string &DynamoBannerText() const {
+    return sDynamoBannerText;
+  }
   bool FindToken(const char *tok);
   bool EndOfFile(void);
   bool BufferReadLine(char *buf, size_t buflen);  // start with buffer then read the line
@@ -49,6 +57,8 @@ private:
   bool TestTokenMatch(const char *tok, bool update);
   std::string sToken;
   std::string sGroupComment;
+  std::string sDynamoBannerText;
+  bool bDynamoBanner = false;
   std::string sBuffer;
   const char *ucContent;
   off_t iCurPos, iHoldPos;

@@ -97,6 +97,12 @@ XMUTIL_EXPORT char *convert_sip_to_xmile(const char *source, uint32_t len, const
 XMUTIL_EXPORT char *convert_sip_to_mdl(const char *source, uint32_t len, const char *fileName);
 }
 
+// Reading options for Vensim input that the C entry points do not take as
+// arguments (set once per process, e.g. from the CLI): skip the sketch views,
+// and read numbered DYNAMO-style section banners as modules and sectors (see
+// VensimParse::ApplySectionBanner).
+void SetVensimReadOptions(bool ignoreViews, bool dynamoSections);
+
 // utility functions
 std::string StringFromDouble(double val);
 // The shortest decimal string that parses back to exactly `val`

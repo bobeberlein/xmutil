@@ -115,6 +115,7 @@ public:
   void RunPostParsePipeline();
   bool MarkVariableTypes(SymbolNameSpace *ns);
   void AdjustGroupNames();
+  void AdjustSectorName(int index);
   void CheckGhostOwners();
   void AttachStragglers();  // try to get diagramatic stuff right
   void MakeViewNamesUnique();
