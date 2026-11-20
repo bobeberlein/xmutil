@@ -199,6 +199,14 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   `Outer-Inner`. That rename is the format's rather than a choice -- a Vensim
   group has no identity apart from where it sits. Regression tests:
   `test/mdl/GroupNestingTest.cpp`.
+- **The banner name is the whole line, and the text between `~` and `|` is the
+  group's documentation** (`ModelGroup::sComment`). `VensimLex` used to stop the
+  name at the first space and discard the documentation; both are now kept and
+  re-emitted (the doc through `SanitizeFreeText`, multi-line), and travel to
+  XMILE as `<doc>` on the `<group>` (sector form) or `<module>` (module form).
+  The XMILE reader takes a `<group>`'s `<doc>` back; a module's is not read,
+  since module documents flatten their groups away. Regression tests:
+  `test/mdl/GroupDocTest.cpp`.
 - Stocks: when `Variable::MarkStockFlows` synthesized a net-flow carrier
   variable, its expression is inlined back into `INTEG(...)` so output matches
   user input and the carrier is not duplicated (`EmitStockEntry`). The carrier is

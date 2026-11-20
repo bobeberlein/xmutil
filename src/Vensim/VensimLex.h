@@ -25,6 +25,10 @@ public:
     return iCurPos - iLineStart;
   }
   std::string GetComment(const char *tok);
+  // The documentation of the group banner just returned as VPTT_groupstar.
+  const std::string &GroupComment() const {
+    return sGroupComment;
+  }
   bool FindToken(const char *tok);
   bool EndOfFile(void);
   bool BufferReadLine(char *buf, size_t buflen);  // start with buffer then read the line
@@ -44,6 +48,7 @@ private:
   void SyncBuffers(void);
   bool TestTokenMatch(const char *tok, bool update);
   std::string sToken;
+  std::string sGroupComment;
   std::string sBuffer;
   const char *ucContent;
   off_t iCurPos, iHoldPos;

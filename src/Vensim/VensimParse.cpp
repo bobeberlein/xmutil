@@ -322,6 +322,7 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
           // invented group holds no variables, and a group with no variables
           // is not emitted by either writer.
           _model->Groups().push_back(new ModelGroup(FlattenGroupPath(path), group_owner));
+          _model->Groups().back()->sComment = mVensimLex.GroupComment();
         } else if (rval != endtok) {
           log("Unknown terminal token %d\n", rval);
           if (!FindNextEq(false))

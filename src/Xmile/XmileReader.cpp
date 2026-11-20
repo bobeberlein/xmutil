@@ -864,6 +864,12 @@ ModelGroup *XmileReader::ProcessGroup(tinyxml2::XMLElement *groupEl, std::vector
   }
   std::string normName = NormalizeName(name);
   ModelGroup *group = RegisterGroup(normName, groupEl->Attribute("owner"), errs);
+  // A group repeated under several views carries the same <doc>; the first
+  // one stated is kept, as for every other doubly-stated fact.
+  if (tinyxml2::XMLElement *docEl = groupEl->FirstChildElement("doc")) {
+    if (group->sComment.empty() && docEl->GetText())
+      group->sComment = docEl->GetText();
+  }
 
   for (tinyxml2::XMLElement *vEl = groupEl->FirstChildElement("var"); vEl; vEl = vEl->NextSiblingElement("var")) {
     const char *vname = vEl->GetText();

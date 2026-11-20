@@ -25,6 +25,9 @@ public:
   }
   std::vector<Variable *> vVariables;
   std::string sName;
+  // The group's documentation: the text between `~` and `|` under a Vensim
+  // banner, or an XMILE <group>'s <doc>. Line breaks are '\n'.
+  std::string sComment;
   ModelGroup *pOwner;
   tinyxml2::XMLElement *pModule;     // this groups module element in the owning module
   tinyxml2::XMLElement *pModel;      // this groups model elemen in the main document

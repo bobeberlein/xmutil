@@ -158,13 +158,15 @@ int VensimLex::NextToken()  // also sets token type
 
   toktype = c;  // default for many tokens
   switch (c) {
-  case '*':  // check for *** which names groups - we are dropping group info for now
+  case '*':  // check for *** which names groups
     if (TestTokenMatch("**", false)) {
-      // look for
       // ****
       // groupname.nested.with.d
-      // ****
+      // ****~
+      // documentation
+      // |
       sToken.clear();
+      sGroupComment.clear();
       while ((c = GetNextChar(false)) == '*')
         ;
       while (c == '\r' || c == '\n' || c == ' ' || c == '\t')
@@ -174,12 +176,30 @@ int VensimLex::NextToken()  // also sets token type
       // needs the unfolded path to resolve the parent group before it can name
       // the child (a '.' and a '-' inside a name are indistinguishable once
       // folded, and real names carry both -- "C-ROADS", ".Physics.Forcing").
-      do {
+      // The name is the whole line: group names may hold spaces
+      // ("Financial Results"), which used to cut it at the first one.
+      while (c && c != '\r' && c != '\n' && c != '*') {
         this->sToken.push_back(c);
         c = GetNextChar(false);
-      } while (c != '\r' && c != '\n' && c != ' ' && c != '\t');
-      while ((c = GetNextChar(false)) != '*' && c != '|')
-        ;
+      }
+      while (!sToken.empty() && (sToken.back() == ' ' || sToken.back() == '\t'))
+        sToken.pop_back();
+      while (c && c != '*' && c != '|')
+        c = GetNextChar(false);
+      while (c == '*')
+        c = GetNextChar(false);
+      // What sits between the closing bar's '~' and the '|' is the group's
+      // documentation.
+      if (c == '~') {
+        while ((c = GetNextChar(false)) && c != '|') {
+          if (c == '\r')
+            continue;
+          sGroupComment.push_back(c);
+        }
+        size_t first = sGroupComment.find_first_not_of(" \t\n");
+        size_t last = sGroupComment.find_last_not_of(" \t\n");
+        sGroupComment = first == std::string::npos ? std::string() : sGroupComment.substr(first, last - first + 1);
+      }
       while (c && c != '|')
         c = GetNextChar(false);
       return VPTT_groupstar;
@@ -322,6 +342,7 @@ int VensimLex::NextToken()  // also sets token type
           if (c == '}')
             return NextToken();  // no useful group name
           sToken.clear();
+          sGroupComment.clear();
           do {
             this->sToken.push_back(c);
             if (c == '.') {

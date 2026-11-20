@@ -828,7 +828,7 @@ void MDLGenerator::GenerateEquations(std::string &out) {
       continue;  // a banner that held only control vars contributes no entries
     std::sort(members.begin(), members.end(), [](Variable *a, Variable *b) { return a->GetName() < b->GetName(); });
 
-    EmitGroupBanner(out, GroupBannerPath(group), "");
+    EmitGroupBanner(out, GroupBannerPath(group), group->sComment);
     for (Variable *v : members)
       GenerateVariableEntry(out, v);
   }
@@ -884,12 +884,13 @@ void MDLGenerator::EmitGroupBanner(std::string &out, const std::string &name, co
   //
   // The group name is modeler-authored free text on a single banner line, so a
   // raw '|' or line break in it would corrupt the banner; sanitize it (#849).
-  // The doc is only ever "" or a fixed safe literal at the two call sites
-  // (GenerateEquations passes "", GenerateControl the control-group caption), so
-  // it carries no modeler text and needs no sanitizing.
+  // The doc is the group's own documentation (ModelGroup::sComment), also
+  // modeler text: a raw '|' in it would end the banner early, so it gets the
+  // same treatment, keeping its line breaks.
   const std::string bar(56, '*');
   std::string safeName = mdl::SanitizeFreeText(name, mdl::FreeTextLineMode::SingleLine, "");
-  out += "\n" + bar + "\n\t" + safeName + "\n" + bar + "~\n\t\t" + doc + "\n\t|\n";
+  std::string safeDoc = mdl::SanitizeFreeText(doc, mdl::FreeTextLineMode::Multiline, "");
+  out += "\n" + bar + "\n\t" + safeName + "\n" + bar + "~\n\t\t" + safeDoc + "\n\t|\n";
 }
 
 void MDLGenerator::GenerateControl(std::string &out) {

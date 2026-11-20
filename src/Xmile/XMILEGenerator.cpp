@@ -30,6 +30,16 @@ bool IsBlankName(const std::string &name) {
   return true;
 }
 
+// A group's documentation travels as <doc> on the element standing for the
+// group: its <group> in the sector form, its <module> in the module form.
+void AppendGroupDoc(tinyxml2::XMLElement *element, const ModelGroup *group) {
+  if (group->sComment.empty())
+    return;
+  tinyxml2::XMLElement *xdoc = element->GetDocument()->NewElement("doc");
+  xdoc->SetText(group->sComment.c_str());
+  element->InsertEndChild(xdoc);
+}
+
 bool GroupNameIsTaken(Model *model, const std::string &name) {
   // A group name becomes a module name in the emitted document, which shares
   // one XMILE name space with the variables -- the same two-sided test
@@ -941,6 +951,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
     if (GroupIsEmitted(group) && effective_owner[group] == NULL) {
       group->pModule = doc->NewElement("module");
       group->pModule->SetAttribute("name", group->sName.c_str());
+      AppendGroupDoc(group->pModule, group);
       mainvariables->InsertEndChild(group->pModule);
     }
   }
@@ -962,6 +973,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
       if (GroupIsEmitted(sgroup) && effective_owner[sgroup] == group) {
         sgroup->pModule = doc->NewElement("module");
         sgroup->pModule->SetAttribute("name", sgroup->sName.c_str());
+        AppendGroupDoc(sgroup->pModule, sgroup);
         group->pVariables->InsertEndChild(sgroup->pModule);
       }
     }
@@ -1052,6 +1064,7 @@ void XMILEGenerator::generateSectorViews(tinyxml2::XMLElement *element, tinyxml2
         if (group->pOwner)
           xgroup->SetAttribute("owner", group->pOwner->sName.c_str());
         element->InsertEndChild(xgroup);
+        AppendGroupDoc(xgroup, group);
         for (Variable *var : group->vVariables) {
           tinyxml2::XMLElement *xvar = doc->NewElement("var");
           xvar->SetText(SpaceToUnderBar(var->GetAlternateName()).c_str());
