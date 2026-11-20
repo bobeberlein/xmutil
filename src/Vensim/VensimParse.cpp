@@ -837,7 +837,7 @@ bool ParseSectionNumber(const std::string &text, std::string &module, std::strin
 // Forrester's EconDyn models number their sections the way the DYNAMO
 // listings did: "N.M TITLE" is section M of module N, and "N. HEADING" opens
 // module N -- often with its first section in the same banner ("2. HOUSEHOLD
-// SECTOR 2.1 UTILITY"). Module N becomes a root group named "N" (the heading
+// SECTOR 2.1 UTILITY"). Module N becomes a root group named "Module N" (the heading
 // kept as its documentation) and each section a sector group named by its
 // title, owned by the module (ModelGroup::bSector), documented with its
 // number. Unnumbered Dynamo banners are subheadings within a section and leave
@@ -881,11 +881,12 @@ bool VensimParse::ApplySectionBanner(bool dynamoBanner) {
 
 // The root group standing for module N, created on first use.
 ModelGroup *VensimParse::ModuleGroup(const std::string &number) {
+  const std::string name = "Module " + number;
   for (ModelGroup *g : _model->Groups()) {
-    if (!g->pOwner && !g->bSector && g->sName == number)
+    if (!g->pOwner && !g->bSector && g->sName == name)
       return g;
   }
-  ModelGroup *g = new ModelGroup(number, nullptr);
+  ModelGroup *g = new ModelGroup(name, nullptr);
   _model->Groups().push_back(g);
   return g;
 }
