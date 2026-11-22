@@ -31,6 +31,10 @@ public:
   // A sector of its owner rather than a group of its own: the XMILE module
   // writer folds its variables into the owner's model as a Stella sector.
   bool bSector = false;
+  // Written as a module even with no variables of its own, as the parent of
+  // its groups' modules (a numbered DYNAMO module); an ordinary empty group
+  // is skipped and its children re-pointed at the nearest written ancestor.
+  bool bContainer = false;
   ModelGroup *pOwner;
   tinyxml2::XMLElement *pModule;     // this groups module element in the owning module
   tinyxml2::XMLElement *pModel;      // this groups model elemen in the main document

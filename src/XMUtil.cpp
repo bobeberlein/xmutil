@@ -403,10 +403,12 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 
 static bool g_ignoreViews = false;
 static bool g_dynamoSections = false;
+static bool g_ignoreGroups = false;
 
-void SetVensimReadOptions(bool ignoreViews, bool dynamoSections) {
+void SetVensimReadOptions(bool ignoreViews, bool dynamoSections, bool ignoreGroups) {
   g_ignoreViews = ignoreViews;
   g_dynamoSections = dynamoSections;
+  g_ignoreGroups = ignoreGroups;
 }
 
 namespace {
@@ -472,6 +474,15 @@ bool ParseNativeInput(Model &m, const char *source, uint32_t len, const char *fi
     }
     xscale = vp.Xratio();
     yscale = vp.Yratio();
+  }
+  if (g_ignoreGroups) {
+    // Flat output: with no groups (and no views) the XMILE writer puts every
+    // equation in the one root model.
+    for (Variable *var : m.GetVariables(nullptr))
+      var->SetGroup(nullptr);
+    for (ModelGroup *group : m.Groups())
+      delete group;
+    m.Groups().clear();
   }
   return true;
 }

@@ -898,6 +898,7 @@ TEST(Group_vensim_chain_of_empty_banner_owners_resolves_to_the_nearest_emitted_a
   for (const std::string &name : dangling)
     printf("  dangling module: %s\n", name.c_str());
   CHECK(dangling.empty());
+  // A connect names each end by its owning module only, however deep it sits.
   CHECK(doc.find(std::string("<connect to=\"G2.a\" from=\"") + kKid + ".a\"/>") != std::string::npos);
   // "Top" is the nearest ancestor that holds a variable, so Kid's module lands
   // inside Top's model rather than at the root.

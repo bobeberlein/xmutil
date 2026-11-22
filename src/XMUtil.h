@@ -99,9 +99,10 @@ XMUTIL_EXPORT char *convert_sip_to_mdl(const char *source, uint32_t len, const c
 
 // Reading options for Vensim input that the C entry points do not take as
 // arguments (set once per process, e.g. from the CLI): skip the sketch views,
-// and read numbered DYNAMO-style section banners as modules and sectors (see
-// VensimParse::ApplySectionBanner).
-void SetVensimReadOptions(bool ignoreViews, bool dynamoSections);
+// read numbered DYNAMO-style section banners as modules and sectors (see
+// VensimParse::ApplySectionBanner), and drop every group so the XMILE output
+// is one flat model.
+void SetVensimReadOptions(bool ignoreViews, bool dynamoSections, bool ignoreGroups = false);
 
 // utility functions
 std::string StringFromDouble(double val);

@@ -78,9 +78,13 @@ void SanitizeGroupNames(Model *model) {
 // vVariables.empty() let a `.Control` banner count as populated, so it earned a
 // <module> reference and a <model> carrying an empty <variables/> -- a level of
 // structure the source never had, which the re-import then reads back as real.
+// Subscript ranges and their elements are likewise written in <dimensions>,
+// not in any <model>, so a group of nothing else (a Vensim "For var" banner
+// over `f : F CAP, F LABR`) would be an empty module and is dropped.
 bool GroupIsEmitted(const ModelGroup *group) {
   for (Variable *var : group->vVariables) {
-    if (var && !var->Unwanted())
+    if (var && !var->Unwanted() && var->VariableType() != XMILE_Type_ARRAY &&
+        var->VariableType() != XMILE_Type_ARRAY_ELM && var->VariableType() != XMILE_Type_UNKNOWN)
       return true;
   }
   return false;
@@ -942,11 +946,27 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
   // but a future producer might -- would otherwise spin forever instead of
   // saying so. A simple chain visits each group at most once, so passing that
   // count means the chain closed on itself.
+  //
+  // A container group (ModelGroup::bContainer) with no variables of its own
+  // is still written when a group it owns is, so its <model> can hold their
+  // <module>s.
+  std::set<ModelGroup *> emitted_set;
+  for (ModelGroup *group : groups) {
+    if (!GroupIsEmitted(group))
+      continue;
+    emitted_set.insert(group);
+    ModelGroup *g = group->pOwner;
+    for (size_t hops = 0; g && hops <= groups.size(); hops++, g = g->pOwner) {
+      if (g->bContainer)
+        emitted_set.insert(g);
+    }
+  }
+  auto emitted = [&](ModelGroup *g) { return emitted_set.count(g) != 0; };
   std::map<ModelGroup *, ModelGroup *> effective_owner;
   for (ModelGroup *group : groups) {
     ModelGroup *owner = group->pOwner;
     bool cycles = false;
-    for (size_t hops = 0; owner && (owner == group || !GroupIsEmitted(owner)); hops++) {
+    for (size_t hops = 0; owner && (owner == group || !emitted(owner)); hops++) {
       if (hops >= groups.size()) {
         cycles = true;
         break;
@@ -966,7 +986,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
   tinyxml2::XMLElement *mainvariables = doc->NewElement("variables");
   mainmodel->InsertEndChild(mainvariables);
   for (ModelGroup *group : groups) {
-    if (GroupIsEmitted(group) && effective_owner[group] == NULL) {
+    if (emitted(group) && effective_owner[group] == NULL) {
       group->pModule = doc->NewElement("module");
       group->pModule->SetAttribute("name", group->sName.c_str());
       AppendGroupDoc(group->pModule, group);
@@ -976,7 +996,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
 
   // set up the module constucts - these need to be filled in before any cross levels are created
   for (ModelGroup *group : groups) {
-    if (!GroupIsEmitted(group))
+    if (!emitted(group))
       continue;
     group->pModel = doc->NewElement("model");
     group->pModel->SetAttribute("name", group->sName.c_str());
@@ -988,7 +1008,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
       // Emptiness is tested here and not only in the loop above because a
       // <module> whose <model name="..."> is never written is a reference to
       // nothing -- the same reason an empty group gets no top-level module.
-      if (GroupIsEmitted(sgroup) && effective_owner[sgroup] == group) {
+      if (emitted(sgroup) && effective_owner[sgroup] == group) {
         sgroup->pModule = doc->NewElement("module");
         sgroup->pModule->SetAttribute("name", sgroup->sName.c_str());
         AppendGroupDoc(sgroup->pModule, sgroup);
@@ -996,61 +1016,69 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
       }
     }
   }
-  // now output cross levels and actual variables
+  // Each group's own variables, and the variables its equations use that live
+  // in another group.
+  std::map<ModelGroup *, std::set<Variable *, SymbolNameLess>> included_of, needed_of;
   for (ModelGroup *group : groups) {
-    if (!GroupIsEmitted(group))
+    if (!emitted(group))
       continue;
-    // first we get a list of variables included in the view and all of their inputs - if an
-    // input is not in the view we need to make a ghost to hold its place
-    std::set<Variable *, SymbolNameLess> included;
+    std::set<Variable *, SymbolNameLess> &included = included_of[group];
     for (Variable *var : group->vVariables) {
       if (var->Unwanted())
         continue;
       included.insert(var);
     }
-    std::set<Variable *, SymbolNameLess> needed;
+    std::set<Variable *, SymbolNameLess> &needed = needed_of[group];
     for (Variable *var : included) {
-      std::vector<Variable *> inputs = var->GetInputVars();
-      for (Variable *input : inputs) {
-        if (included.find(input) == included.end() && input->VariableType() != XMILE_Type_ARRAY &&
-            input->VariableType() != XMILE_Type_ARRAY_ELM && input->VariableType() != XMILE_Type_UNKNOWN &&
-            !StringMatch(input->GetName(), "Time") && !input->Unwanted()) {
-          needed.insert(input);
-        }
-      }
-      inputs = var->GetInitInputVars();
-      for (Variable *input : inputs) {
-        if (included.find(input) == included.end() && input->VariableType() != XMILE_Type_ARRAY &&
-            input->VariableType() != XMILE_Type_ARRAY_ELM && input->VariableType() != XMILE_Type_UNKNOWN &&
-            !StringMatch(input->GetName(), "Time") && !input->Unwanted()) {
-          needed.insert(input);
+      for (int pass = 0; pass < 2; pass++) {
+        std::vector<Variable *> inputs = pass == 0 ? var->GetInputVars() : var->GetInitInputVars();
+        for (Variable *input : inputs) {
+          if (included.find(input) == included.end() && input->VariableType() != XMILE_Type_ARRAY &&
+              input->VariableType() != XMILE_Type_ARRAY_ELM && input->VariableType() != XMILE_Type_UNKNOWN &&
+              !StringMatch(input->GetName(), "Time") && !input->Unwanted()) {
+            needed.insert(input);
+          }
         }
       }
     }
+  }
 
-    // needed will be cross level
-
-    // and mark the cross levels
-    for (Variable *var : needed) {
+  // A <connect> names each end by its owning module and the variable only
+  // ("MONEY.x", never "Module_2.MONEY.x": nested qualification is not
+  // supported, and model names are unique in the document; ".x" would be the
+  // root model's own x). So every cross level is one connect straight from the
+  // defining group to the using group, however deep either sits, and only the
+  // using group declares the variable access="input". The connect goes in the
+  // source's <module> element.
+  std::map<ModelGroup *, std::set<Variable *, SymbolNameLess>> inputs_of;
+  for (ModelGroup *group : groups) {
+    if (!emitted(group))
+      continue;
+    for (Variable *var : needed_of[group]) {
       // Every variable that reaches here was put in a group above, and every
-      // group that holds a variable was given a pModule above -- a cross level
-      // names the module it comes FROM, so neither can be missing without the
-      // reference being unwritable. Say so and drop the one connect rather than
-      // dereferencing NULL, in case a later change breaks either invariant.
+      // emitted group was given a pModule above. Say so and drop the one
+      // connect rather than dereferencing NULL, in case a later change breaks
+      // either invariant.
       ModelGroup *source = var->GetGroup();
       if (!source || !source->pModule) {
         log("warning: '%s' is used by group '%s' but belongs to no emitted module; dropping the cross level\n",
             var->GetName().c_str(), group->sName.c_str());
         continue;
       }
+      const std::string name = "." + var->GetAlternateName();
       tinyxml2::XMLElement *connect = doc->NewElement("connect");
-      std::string to = group->sName + "." + var->GetAlternateName();
-      connect->SetAttribute("to", SpaceToUnderBar(to).c_str());
-      std::string from = source->sName;
-      from += "." + var->GetAlternateName();
-      connect->SetAttribute("from", SpaceToUnderBar(from).c_str());
-      source->pModule->InsertEndChild(connect);  // receiving module
+      connect->SetAttribute("to", SpaceToUnderBar(group->sName + name).c_str());
+      connect->SetAttribute("from", SpaceToUnderBar(source->sName + name).c_str());
+      source->pModule->InsertEndChild(connect);
+      inputs_of[group].insert(var);
     }
+  }
+
+  // now output the actual variables
+  for (ModelGroup *group : groups) {
+    if (!emitted(group))
+      continue;
+    std::set<Variable *, SymbolNameLess> &included = included_of[group];
     generateEquations(included, doc, group->pVariables);
     for (ModelGroup *sector : sectors_of[group]) {
       bool populated = false;
@@ -1071,7 +1099,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
       group->pVariables->InsertEndChild(xsector);
     }
     // for the incomming cross levels they get no equations but need to be included as variables
-    for (Variable *var : needed) {
+    for (Variable *var : inputs_of[group]) {
       tinyxml2::XMLElement *xvar;
       if (var->VariableType() == XMILE_Type_STOCK)
         xvar = doc->NewElement("stock");
