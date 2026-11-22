@@ -589,9 +589,11 @@ void Model::AdjustGroupNames() {
       AdjustSectorName(i);
       continue;
     }
-    std::string name = vGroups[i]->sName;
-    // test it
+    const std::string base = vGroups[i]->sName;
+    std::string name = base;
+    // test it; a taken name is numbered ("Mod1 1", "Mod1 2", ...)
     bool good;
+    int suffix = 0;
     do {
       good = mSymbolNameSpace.Find(name) == NULL;
       if (good) {
@@ -604,12 +606,8 @@ void Model::AdjustGroupNames() {
         }
         delete lname;
       }
-      // A nested group's title is often repeated under another owner ("MONEY"
-      // is a section of two numbered modules); naming the owner reads better
-      // than a number.
       if (!good)
-        name =
-            name == vGroups[i]->sName && vGroups[i]->pOwner ? name + " in " + vGroups[i]->pOwner->sName : name + " 1";
+        name = base + " " + std::to_string(++suffix);
     } while (!good);
     vGroups[i]->sName = name;
   }

@@ -26,8 +26,8 @@ const char *kModel =
     "FRAC=0.1\r\n\t~\t1/Year\r\n\t~\tFraction Invested\r\n\t|\r\n"
     "GTCIT=1\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
     "INITIAL TIME=0\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
-    "FINAL TIME=10\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
-    "TIME STEP=1\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
+    "FINAL TIME=10\r\n\t~\tYear\r\n\t~\tEnd of simulation run\r\n\t|\r\n"
+    "TIME STEP=0.25\r\n\t~\tYear\r\n\t~\tSolution interval\r\n\t|\r\n"
     "SAVEPER=TIME STEP\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
     "\\\\\\---/// Sketch information - do not modify anything except names\r\n";
 
@@ -48,4 +48,9 @@ TEST(LongNameCase_stock_words_capitalized_rest_lower) {
   CHECK(xmile.find("<flow name=\"outstanding_debt net flow\">") != std::string::npos);
   // No documentation: the name stays as written.
   CHECK(xmile.find("<aux name=\"GTCIT\">") != std::string::npos);
+  // The control variables keep their names even when documented, so they
+  // still set the run instead of becoming ordinary variables.
+  CHECK(xmile.find("<stop>10</stop>") != std::string::npos);
+  CHECK(xmile.find("<dt>0.25</dt>") != std::string::npos);
+  CHECK(xmile.find("end_of_simulation_run") == std::string::npos);
 }

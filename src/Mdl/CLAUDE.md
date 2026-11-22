@@ -180,8 +180,11 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   carry the whole path.** A nested group is written `<owner path>.<leaf>`, with a
   leading `.` on the outermost level -- `.Physics`, `.Physics.Forcing`,
   `.Physics.Forcing.Aerosols+CO+BC` are all real `C-LEARN v77` banners.
-  `ModelGroup::sName` is that path with the separators folded to `-`, because the
-  name also becomes an XMILE `<module name=...>`, which cannot carry a `.`.
+  `ModelGroup::sName` of a nested group is the last level only
+  (`.Physics.Forcing` is `Forcing`; the reader finds the owner by the folded
+  path, kept in `VensimParse::mGroupsByPath`), and `Model::AdjustGroupNames`
+  numbers a name that is taken (`Money`, `Money 1`). A path whose parent is no
+  group keeps its whole name with `.` folded to `-` (`jf28-mdl,...`).
   `EmitGroupBanner` used to write `sName` alone, discarding every `pOwner` link,
   and `VensimParse` used to answer an unresolvable banner with "the previous
   banner owns me" -- so the forest was not merely lost on the way out, a
@@ -192,12 +195,9 @@ the inverse of `src/Vensim/` reading; it is a sibling to the XMILE writer in
   the group at the root when no such group exists (C-LEARN declares
   `.Input.Policy1` without ever declaring `.Input`, and synthesizing the missing
   level would only produce a group with no variables, which neither writer
-  emits). Two consequences worth knowing: a `.` inside a group's own name is
-  folded to `-` before emission, since it would otherwise read back as another
-  level of nesting; and a model whose nesting did NOT come from a `.mdl` (an
-  XMILE `<group name="Inner" owner="Outer">`) is re-read under its path,
-  `Outer-Inner`. That rename is the format's rather than a choice -- a Vensim
-  group has no identity apart from where it sits. Regression tests:
+  emits). A `.` inside a group's own name is folded to `-` before emission,
+  since it would otherwise read back as another level of nesting. Regression
+  tests:
   `test/mdl/GroupNestingTest.cpp`.
 - **The banner name is the whole line, and the text between `~` and `|` is the
   group's documentation** (`ModelGroup::sComment`). `VensimLex` used to stop the

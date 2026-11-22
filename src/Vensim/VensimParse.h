@@ -1,5 +1,6 @@
 #ifndef _XMUTIL_VENSIM_VENSIMPARSE_H
 #define _XMUTIL_VENSIM_VENSIMPARSE_H
+#include <map>
 #include <string>
 
 #include "../Function/Function.h"
@@ -84,6 +85,11 @@ public:
   // Read Forrester's numbered section banners ({**** 3.10 TITLE }, or a Vensim
   // banner whose comment is numbered) as module N, sector TITLE. See
   // ApplySectionBanner.
+  // With dynamo sections, make each section a module nested in its numbered
+  // module rather than a sector of it.
+  void SetSectionModules(bool set) {
+    bSectionModules = set;
+  }
   void SetDynamoSections(bool set) {
     bDynamoSections = set;
   }
@@ -113,9 +119,13 @@ private:
   bool bLongName;
   bool bIgnoreViews = false;
   bool bDynamoSections = false;
+  bool bSectionModules = false;
   // The group the next equations join: the last banner's, or a module or
   // sector chosen by ApplySectionBanner (which may be an earlier group).
   ModelGroup *pActiveGroup = nullptr;
+  // Banner groups by their folded path ("Top-Mod1"): a group is named by the
+  // last level only, so its owner is found by path, not by name.
+  std::map<std::string, ModelGroup *> mGroupsByPath;
   std::vector<MacroFunction *> mMacroFunctions;
 };
 

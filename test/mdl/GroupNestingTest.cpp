@@ -1,8 +1,8 @@
 // Vensim states group nesting in the banner NAME: a nested group's banner
 // carries its whole path, '.'-separated, with a leading '.' on the outermost
-// level (`.Physics`, `.Physics.Forcing`, `.Physics.Forcing.Aerosols`). xmutil
-// folds those separators to '-' for the ModelGroup name, because that name also
-// becomes an XMILE <module name=...>, which cannot carry a '.'.
+// level (`.Physics`, `.Physics.Forcing`, `.Physics.Forcing.Aerosols`). The
+// ModelGroup is named by the last level only (`Forcing`), numbered when that
+// name is taken.
 //
 // Two halves used to be missing. The reader ignored the path and owned each new
 // banner by the PREVIOUS one, so every model came out as one linear chain --
@@ -57,7 +57,7 @@ TEST(GroupNesting_banner_path_sets_the_owner) {
   if (!m)
     return;
   CHECK_EQ_STR(OwnerOf(m, "Outer"), "<none>");
-  CHECK_EQ_STR(OwnerOf(m, "Outer-Inner"), "Outer");
+  CHECK_EQ_STR(OwnerOf(m, "Inner"), "Outer");
   CHECK_EQ_STR(OwnerOf(m, "Third"), "<none>");
   delete m;
 }
@@ -112,7 +112,7 @@ TEST(GroupNesting_survives_a_round_trip) {
   if (!m2)
     return;
   CHECK_EQ_STR(OwnerOf(m2, "Outer"), "<none>");
-  CHECK_EQ_STR(OwnerOf(m2, "Outer-Inner"), "Outer");
+  CHECK_EQ_STR(OwnerOf(m2, "Inner"), "Outer");
   CHECK_EQ_STR(OwnerOf(m2, "Third"), "<none>");
   delete m2;
 }
@@ -139,5 +139,31 @@ TEST(GroupNesting_dot_inside_a_group_name_is_not_a_separator) {
   if (!m2)
     return;
   CHECK_EQ_STR(OwnerOf(m2, "has-a-dot"), "<none>");
+  delete m2;
+}
+
+// A nested group is named by its own level only; two of the same name under
+// different owners are numbered, and both keep their owners through a write.
+TEST(GroupNesting_repeated_leaf_names_are_numbered) {
+  const std::string mdl = "{UTF-8}\r\n" + Banner(".Alpha") + "a = 1\r\n\t~~|\r\n" + Banner(".Alpha.Money") +
+                          "b = 2\r\n\t~~|\r\n" + Banner(".Beta") + "c = 3\r\n\t~~|\r\n" + Banner(".Beta.Money") +
+                          "d = 4\r\n\t~~|\r\n";
+  Model *m = roundtrip::ParseVensim(mdl);
+  CHECK(m != nullptr);
+  if (!m)
+    return;
+  CHECK_EQ_STR(OwnerOf(m, "Money"), "Alpha");
+  CHECK_EQ_STR(OwnerOf(m, "Money 1"), "Beta");
+  std::vector<std::string> errs;
+  const std::string out = m->PrintMDL(errs);
+  delete m;
+  CHECK(out.find("\tBeta.Money 1\r\n") != std::string::npos);
+
+  Model *m2 = roundtrip::ParseVensim(out);
+  CHECK(m2 != nullptr);
+  if (!m2)
+    return;
+  CHECK_EQ_STR(OwnerOf(m2, "Money"), "Alpha");
+  CHECK_EQ_STR(OwnerOf(m2, "Money 1"), "Beta");
   delete m2;
 }

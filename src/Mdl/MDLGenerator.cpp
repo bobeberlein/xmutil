@@ -840,14 +840,10 @@ std::string MDLGenerator::GroupBannerPath(ModelGroup *group) const {
   // the group's own name states no nesting at all, and the forest was lost on
   // every write.
   //
-  // xmutil's ModelGroup name is the flattened path ('.' -> '-'), so for a model
-  // that came from a .mdl the child's name already begins with its owner's name
-  // plus a separator; stripping that prefix recovers the leaf and the emission
-  // is byte-stable across round trips. For a model from XMILE -- where the name
-  // and the nesting are independent claims -- there is no prefix to strip and
-  // the leaf is the whole name, so the group is re-read under its path
-  // (`Outer-Inner`). That rename is the .mdl format's, not a choice: a Vensim
-  // group has no identity apart from where it sits.
+  // A ModelGroup read from a .mdl is named by its last level only, so the
+  // path is the owners' names joined with '.'. A name that still begins with
+  // its owner's name plus '-' (the folded path an older reader produced) has
+  // that prefix stripped, so such a model writes the same path.
   std::vector<ModelGroup *> chain;
   // Bounded by the group count rather than written as a plain walk: nothing
   // re-validates a Model on the way into a writer, and a pOwner cycle would

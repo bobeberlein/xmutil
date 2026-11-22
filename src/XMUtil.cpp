@@ -404,8 +404,10 @@ double AngleFromPoints(double startx, double starty, double pointx, double point
 static bool g_ignoreViews = false;
 static bool g_dynamoSections = false;
 static bool g_ignoreGroups = false;
+static bool g_sectionModules = false;
 
-void SetVensimReadOptions(bool ignoreViews, bool dynamoSections, bool ignoreGroups) {
+void SetVensimReadOptions(bool ignoreViews, bool dynamoSections, bool ignoreGroups, bool sectionModules) {
+  g_sectionModules = sectionModules;
   g_ignoreViews = ignoreViews;
   g_dynamoSections = dynamoSections;
   g_ignoreGroups = ignoreGroups;
@@ -468,6 +470,7 @@ bool ParseNativeInput(Model &m, const char *source, uint32_t len, const char *fi
     vp.SetLongName(isLongName == 1);
     vp.SetIgnoreViews(g_ignoreViews);
     vp.SetDynamoSections(g_dynamoSections);
+    vp.SetSectionModules(g_sectionModules);
     m.SetAsSectors(isAsSectors);
     if (!vp.ProcessFile(fileName, source, len)) {
       return false;

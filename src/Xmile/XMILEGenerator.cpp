@@ -914,8 +914,11 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
     group->vVariables.clear();
   }
 
+  // Variables in no group are written in the root model itself. They are
+  // gathered in a group of their own so the passes below treat them alike, but
+  // that group gets no <module> or <model>: its <variables> are the root's.
   groups.push_back(new ModelGroup("Other not Grouped", NULL));
-  // we use addess of group for simplicity
+  ModelGroup *root_group = groups.back();
   std::vector<Variable *> vars = _model->GetVariables(ns);  // all symbols that are variables
   // for every variable in a view, put its causes into the same view if they are not in any view
   // otherwise we let the go cross level
@@ -986,7 +989,7 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
   tinyxml2::XMLElement *mainvariables = doc->NewElement("variables");
   mainmodel->InsertEndChild(mainvariables);
   for (ModelGroup *group : groups) {
-    if (emitted(group) && effective_owner[group] == NULL) {
+    if (group != root_group && emitted(group) && effective_owner[group] == NULL) {
       group->pModule = doc->NewElement("module");
       group->pModule->SetAttribute("name", group->sName.c_str());
       AppendGroupDoc(group->pModule, group);
@@ -998,6 +1001,11 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
   for (ModelGroup *group : groups) {
     if (!emitted(group))
       continue;
+    if (group == root_group) {
+      group->pModel = mainmodel;
+      group->pVariables = mainvariables;
+      continue;  // owns no modules: nothing names it as an owner
+    }
     group->pModel = doc->NewElement("model");
     group->pModel->SetAttribute("name", group->sName.c_str());
     element->InsertEndChild(group->pModel);
@@ -1049,8 +1057,10 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
   // root model's own x). So every cross level is one connect straight from the
   // defining group to the using group, however deep either sits, and only the
   // using group declares the variable access="input". The connect goes in the
-  // source's <module> element.
+  // source's <module> element, or the user's when the source is the root
+  // model, which has none.
   std::map<ModelGroup *, std::set<Variable *, SymbolNameLess>> inputs_of;
+  auto qualifier = [&](ModelGroup *g) { return g == root_group ? std::string() : g->sName; };
   for (ModelGroup *group : groups) {
     if (!emitted(group))
       continue;
@@ -1060,16 +1070,17 @@ bool XMILEGenerator::generateModelAsGroups(tinyxml2::XMLElement *element, std::v
       // connect rather than dereferencing NULL, in case a later change breaks
       // either invariant.
       ModelGroup *source = var->GetGroup();
-      if (!source || !source->pModule) {
+      tinyxml2::XMLElement *holder = !source ? nullptr : source == root_group ? group->pModule : source->pModule;
+      if (!holder) {
         log("warning: '%s' is used by group '%s' but belongs to no emitted module; dropping the cross level\n",
             var->GetName().c_str(), group->sName.c_str());
         continue;
       }
       const std::string name = "." + var->GetAlternateName();
       tinyxml2::XMLElement *connect = doc->NewElement("connect");
-      connect->SetAttribute("to", SpaceToUnderBar(group->sName + name).c_str());
-      connect->SetAttribute("from", SpaceToUnderBar(source->sName + name).c_str());
-      source->pModule->InsertEndChild(connect);
+      connect->SetAttribute("to", SpaceToUnderBar(qualifier(group) + name).c_str());
+      connect->SetAttribute("from", SpaceToUnderBar(qualifier(source) + name).c_str());
+      holder->InsertEndChild(connect);
       inputs_of[group].insert(var);
     }
   }

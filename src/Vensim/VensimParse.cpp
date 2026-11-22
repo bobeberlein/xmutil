@@ -10,6 +10,7 @@
 #include <set>
 #include <stdexcept>
 
+#include "../Mdl/MDLGenerator.h"
 #include "../Symbol/ExpressionList.h"
 #include "../Symbol/LeftHandSide.h"
 #include "../Symbol/Variable.h"
@@ -25,10 +26,9 @@ namespace {
 // A Vensim group banner names the group by its whole path: levels separated by
 // '.', with a leading '.' on the outermost one (".Physics",
 // ".Physics.Forcing", ".Physics.Forcing.Aerosols+CO+BC" -- all three appear in
-// C-LEARN v77). xmutil's ModelGroup name is that path with the separators
-// folded to '-', because the name also becomes an XMILE <module name=...>,
-// which cannot carry a '.'. The fold drops a leading separator rather than
-// emitting a leading '-'.
+// C-LEARN v77). The group itself is named by its last level only; this fold
+// ('.' -> '-') is the key VensimParse looks parent paths up by. The fold drops
+// a leading separator rather than emitting a leading '-'.
 std::string FlattenGroupPath(const std::string &path) {
   std::string out;
   for (char c : path) {
@@ -313,19 +313,29 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
           const std::string parent = FlattenGroupPath(ParentGroupPath(path));
           ModelGroup *group_owner = NULL;
           if (!parent.empty()) {
-            for (ModelGroup *g : _model->Groups()) {
-              if (g->sName == parent) {
-                group_owner = g;
-                break;
-              }
-            }
+            auto found = mGroupsByPath.find(parent);
+            if (found != mGroupsByPath.end())
+              group_owner = found->second;
           }
           // A path whose intermediate level was never itself declared as a
           // banner (C-LEARN has ".Input.Policy1" with no ".Input") leaves the
           // group at the root rather than synthesizing the missing level: an
           // invented group holds no variables, and a group with no variables
           // is not emitted by either writer.
-          _model->Groups().push_back(new ModelGroup(FlattenGroupPath(path), group_owner));
+          //
+          // A nested group is named by its own level only (".Top.Mod1" is
+          // "Mod1"); Model::AdjustGroupNames numbers any name that comes out
+          // taken. A '.' that names no owner is part of the name itself
+          // ("jf28.mdl, April 30, 2005"), which keeps its folded whole.
+          const std::string flat = FlattenGroupPath(path);
+          std::string leaf = flat;
+          if (group_owner)
+            leaf = path.substr(path.rfind('.') + 1);
+          if (leaf.empty())
+            leaf = flat;
+          _model->Groups().push_back(new ModelGroup(leaf, group_owner));
+          if (!mGroupsByPath.count(flat))
+            mGroupsByPath[flat] = _model->Groups().back();
           _model->Groups().back()->sComment = mVensimLex.GroupComment();
           pActiveGroup = _model->Groups().back();
         } else if (rval != endtok) {
@@ -453,6 +463,10 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
       // try to replace variable names with long names from the documentaion
       std::vector<Variable *> vars = _model->GetVariables(NULL);  // all symbols that are variables
       for (Variable *var : vars) {
+        // The control variables keep their names: the writers find the
+        // simulation's start, stop, dt and save interval by them.
+        if (MDLGenerator::IsControlVar(var->GetName()))
+          continue;
         std::string alt = compress_whitespace(var->Comment());
         if (alt == "Backlog") {
           bLongName = true;
@@ -926,7 +940,7 @@ bool VensimParse::ApplySectionBanner(bool dynamoBanner) {
     }
   }
   ModelGroup *sector = new ModelGroup(rest.empty() ? module + "." + section : rest, owner);
-  sector->bSector = true;
+  sector->bSector = !bSectionModules;
   sector->sComment = module + "." + section;
   _model->Groups().push_back(sector);
   pActiveGroup = sector;

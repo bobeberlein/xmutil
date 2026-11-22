@@ -871,7 +871,7 @@ TEST(Group_chain_of_empty_owners_survives_xmile_normalization) {
 // every empty ancestor and land on the nearest one that really is emitted, not
 // merely skip a single level. Vensim states the nesting in the banner path, so
 // a run of empty levels between two populated ones is written out longhand
-// here; the group's name is that path with the separators folded to '-'.
+// here; the group is named by its last level only ("Kid").
 TEST(Group_vensim_chain_of_empty_banner_owners_resolves_to_the_nearest_emitted_ancestor) {
   const std::string mdl = std::string("{UTF-8}\r\n") + Banner("Top", EqnBlock("c", "2")) + Banner("Top.E1", "") +
                           Banner("Top.E1.E2", "") + Banner("Top.E1.E2.E3", "") +
@@ -882,7 +882,7 @@ TEST(Group_vensim_chain_of_empty_banner_owners_resolves_to_the_nearest_emitted_a
   if (!m)
     return;
   // The banners really did chain through all three empty groups.
-  const char *const kKid = "Top-E1-E2-E3-Kid";
+  const char *const kKid = "Kid";
   ModelGroup *kid = GroupNamed(m, kKid);
   CHECK(kid != nullptr);
   if (kid)
@@ -1104,5 +1104,32 @@ TEST(Group_all_unwanted_members_is_not_an_emitted_group) {
   CHECK(CountOccurrences(doc, "<model name=\"Control\"") == 0);
   // Nothing else acquired an empty variables list either.
   CHECK(CountOccurrences(doc, "<variables/>") == 0);
+  CHECK(DanglingModuleNames(doc).empty());
+}
+
+// A variable above the first banner belongs to no group. The module emission
+// writes it in the root model itself (not a module of its own), and the
+// cross levels name it ".x" from whichever side holds a <module> element.
+TEST(Group_ungrouped_variables_live_in_the_root_model) {
+  const std::string mdl = std::string("{UTF-8}\r\n") + EqnBlock("var on root", "1") + EqnBlock("uses mod", "nested a") +
+                          Banner("Top", EqnBlock("in top", "var on root")) +
+                          Banner("Top.A", EqnBlock("nested a", "2")) +
+                          Banner("Other", EqnBlock("b", "3") + kControlSection);
+  Model *m = ParseMDL(mdl);
+  CHECK(m != nullptr);
+  if (!m)
+    return;
+  std::vector<std::string> printErrs;
+  const std::string doc = m->PrintXMILE(/*isCompact=*/false, printErrs, 1.0, 1.0);
+  delete m;
+  CHECK(printErrs.empty());
+  CHECK(doc.find("Other not Grouped") == std::string::npos);
+  const std::string root = RootModelBody(doc);
+  CHECK(root.find("<aux name=\"var on root\">") != std::string::npos);
+  CHECK(root.find("<aux name=\"nested a\" access=\"input\"/>") != std::string::npos);
+  CHECK(doc.find("<connect to=\"Top.var_on_root\" from=\".var_on_root\"/>") != std::string::npos);
+  CHECK(doc.find("<connect to=\".nested_a\" from=\"A.nested_a\"/>") != std::string::npos);
+  // The control variables only set the sim specs; no group holds them.
+  CHECK(CountOccurrences(doc, "<model name=\"Control\"") == 0);
   CHECK(DanglingModuleNames(doc).empty());
 }
