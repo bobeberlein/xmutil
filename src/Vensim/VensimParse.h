@@ -98,6 +98,8 @@ private:
   bool FindNextEq(bool want_comment);
   bool ApplySectionBanner(bool dynamoBanner);
   ModelGroup *ModuleGroup(const std::string &number);
+  static std::string LongNameCase(const std::string &name, bool stock);
+  static bool IsIntegVariable(Variable *var);
   Model *_model;
   std::string sFilename;
   VensimLex mVensimLex;

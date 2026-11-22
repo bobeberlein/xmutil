@@ -314,6 +314,7 @@ if(XMUTIL_BUILD_TESTS)
     test/mdl/WriterBugRegressionTest.cpp
     test/mdl/GroupNestingTest.cpp
     test/mdl/GroupDocTest.cpp
+    test/mdl/LongNameCaseTest.cpp
     test/mdl/CorpusRoundTripTest.cpp
     test/mdl/CEntryTest.cpp
     test/mdl/DynamoToMdlTest.cpp

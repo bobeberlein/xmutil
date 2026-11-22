@@ -456,8 +456,13 @@ bool VensimParse::ProcessFile(const std::string &filename, const char *contents,
         if (alt == "Backlog") {
           bLongName = true;
         }
+        const bool stock = IsIntegVariable(var);
+        if (!alt.empty() && alt.size() < 80)
+          alt = LongNameCase(alt, stock);
         if (!alt.empty() && alt.size() < 80 && pSymbolNameSpace->Rename(var, alt)) {
           var->SetAlternateName(alt);
+          if (stock)
+            var->MarkStockNameCase();
         }
       }
     }
@@ -784,6 +789,36 @@ void VensimParse::MacroExpression(Variable *name, ExpressionList *margs) {
 void VensimParse::MacroEnd() {
   pSymbolNameSpace = pMainSymbolNameSpace;
   mInMacro = false;
+}
+
+// A long name follows the SD capitalization convention: a stock has its first
+// letter capitalized and everything else lower case ("Capital stock"), any
+// other variable is all lower case. Only ASCII letters change, so UTF-8 bytes
+// pass through untouched.
+std::string VensimParse::LongNameCase(const std::string &name, bool stock) {
+  std::string out = name;
+  for (char &c : out) {
+    if (c >= 'A' && c <= 'Z')
+      c = static_cast<char>(c - 'A' + 'a');
+  }
+  if (stock && !out.empty() && out[0] >= 'a' && out[0] <= 'z')
+    out[0] = static_cast<char>(out[0] - 'a' + 'A');
+  return out;
+}
+
+// A Vensim stock's equation is one top-level INTEG(...). Variable types are
+// not marked until the post-parse pipeline, so the long-name pass asks this.
+bool VensimParse::IsIntegVariable(Variable *var) {
+  VariableContent *content = var->Content();
+  if (!content)
+    return false;
+  for (Equation *eq : content->GetAllEquations()) {
+    Expression *exp = eq->GetExpression();
+    Function *function = exp ? exp->GetFunction() : nullptr;  // INTEG is a memory function
+    if (function && function->GetName() == "INTEG")
+      return true;
+  }
+  return false;
 }
 
 bool VensimParse::LetterPolarity() const {

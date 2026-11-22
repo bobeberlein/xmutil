@@ -216,6 +216,8 @@ void Variable::AssignNonStockType() {
 
 Variable *Variable::AddRelated(SymbolNameSpace *sns, const char *suffix, XMILE_Type type) {
   std::string name = this->GetName() + suffix;
+  if (_stockNameCase && type != XMILE_Type_STOCK && !name.empty() && name[0] >= 'A' && name[0] <= 'Z')
+    name[0] = static_cast<char>(name[0] - 'A' + 'a');
   Variable *v = new Variable(sns, name);
   v->SetVariableType(type);
   v->SetView(this->GetView());

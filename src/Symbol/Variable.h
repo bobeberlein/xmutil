@@ -360,6 +360,15 @@ public:
   bool SynthesizedFlowProxy() const {
     return _synthesizedFlowProxy;
   }
+  // The name was given the stock capitalization convention (first letter
+  // capitalized, the rest lower case: VensimParse's long-name pass), so a
+  // flow named after this stock ("<stock> net flow") starts lower case.
+  void MarkStockNameCase() {
+    _stockNameCase = true;
+  }
+  bool StockNameCase() const {
+    return _stockNameCase;
+  }
   // Inside a Vensim macro, `name$` refers to the model's own `name` rather than
   // a macro-local one. XMILE has no such reference, so the reader strips the
   // `$` and marks the variable here; the .mdl writer puts the `$` back (it
@@ -441,6 +450,7 @@ private:
   bool _synthesizedFlowProxy;
   bool _macroGlobalReference = false;
   bool _unchangeable = false;
+  bool _stockNameCase = false;
   std::string _altNameWithoutContent;  // see SetAlternateName
   bool bAsFlow;
   bool bUsesMemory;
