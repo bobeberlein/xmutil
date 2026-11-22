@@ -791,18 +791,22 @@ void VensimParse::MacroEnd() {
   mInMacro = false;
 }
 
-// A long name follows the SD capitalization convention: a stock has its first
-// letter capitalized and everything else lower case ("Capital stock"), any
-// other variable is all lower case. Only ASCII letters change, so UTF-8 bytes
-// pass through untouched.
+// A long name follows the SD capitalization convention: a stock has the first
+// letter of each word capitalized and the rest lower case ("Household Average
+// Discount Rate For Factor"), any other variable is all lower case. Words are
+// separated by spaces or underscores (compress_whitespace has already turned
+// the documentation's spaces into underscores). Only ASCII letters change, so
+// UTF-8 bytes pass through untouched.
 std::string VensimParse::LongNameCase(const std::string &name, bool stock) {
   std::string out = name;
+  bool wordStart = true;
   for (char &c : out) {
     if (c >= 'A' && c <= 'Z')
       c = static_cast<char>(c - 'A' + 'a');
+    if (stock && wordStart && c >= 'a' && c <= 'z')
+      c = static_cast<char>(c - 'a' + 'A');
+    wordStart = c == ' ' || c == '_';
   }
-  if (stock && !out.empty() && out[0] >= 'a' && out[0] <= 'z')
-    out[0] = static_cast<char>(out[0] - 'a' + 'A');
   return out;
 }
 

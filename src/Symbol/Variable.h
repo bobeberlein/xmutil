@@ -360,9 +360,9 @@ public:
   bool SynthesizedFlowProxy() const {
     return _synthesizedFlowProxy;
   }
-  // The name was given the stock capitalization convention (first letter
-  // capitalized, the rest lower case: VensimParse's long-name pass), so a
-  // flow named after this stock ("<stock> net flow") starts lower case.
+  // The name was given the stock capitalization convention (each word
+  // capitalized: VensimParse's long-name pass), so a flow named after this
+  // stock ("<stock> net flow") is written all lower case.
   void MarkStockNameCase() {
     _stockNameCase = true;
   }

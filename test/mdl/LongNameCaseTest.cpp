@@ -1,6 +1,6 @@
 // Under --longnames a Vensim variable takes its documentation as its name, in
-// the SD capitalization convention: a stock with its first letter capitalized
-// and the rest lower case, everything else all lower case. Variables that keep
+// the SD capitalization convention: a stock with each word capitalized
+// (the rest lower case), everything else all lower case. Variables that keep
 // their own name (no usable documentation) are left as written.
 
 #include <cstdlib>
@@ -32,14 +32,14 @@ const char *kModel =
 
 }  // namespace
 
-TEST(LongNameCase_stock_capitalized_rest_lower) {
+TEST(LongNameCase_stock_words_capitalized_rest_lower) {
   const std::string mdl = kModel;
   std::string xmile =
       Take(convert_mdl_to_xmile(mdl.c_str(), static_cast<uint32_t>(mdl.size()), "c.mdl", false, 1, true));
-  CHECK(xmile.find("<stock name=\"Capital_stock\">") != std::string::npos);
+  CHECK(xmile.find("<stock name=\"Capital_Stock\">") != std::string::npos);
   CHECK(xmile.find("<flow name=\"investment_rate\">") != std::string::npos);
   CHECK(xmile.find("<aux name=\"fraction_invested\">") != std::string::npos);
-  CHECK(xmile.find("<eqn>Capital_stock*fraction_invested</eqn>") != std::string::npos);
+  CHECK(xmile.find("<eqn>Capital_Stock*fraction_invested</eqn>") != std::string::npos);
   // A flow made up for a stock whose net flow is not a sum of named flows is
   // named after the stock, but lower case like every other flow.
   CHECK(xmile.find("<flow name=\"outstanding_debt net flow\">") != std::string::npos);
