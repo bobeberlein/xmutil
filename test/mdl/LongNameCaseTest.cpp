@@ -1,6 +1,6 @@
 // Under --longnames a Vensim variable takes its documentation as its name, in
 // the SD capitalization convention: a stock with each word capitalized
-// (the rest lower case), everything else all lower case. Variables that keep
+// (the rest lower case, small words like "for" and "of" too), everything else all lower case. Variables that keep
 // their own name (no usable documentation) are left as written.
 
 #include <cstdlib>
@@ -22,6 +22,7 @@ const char *kModel =
     "CAP=INTEG(INV, 10)\r\n\t~\tWidgets\r\n\t~\tCAPITAL STOCK\r\n\t|\r\n"
     "INV=CAP*FRAC\r\n\t~\tWidgets/Year\r\n\t~\tInvestment RATE\r\n\t|\r\n"
     "DEBT=INTEG(INV*FRAC - DEBT/10, 0)\r\n\t~\tWidgets\r\n\t~\tOutstanding Debt\r\n\t|\r\n"
+    "VAL=INTEG(FRAC, 1)\r\n\t~\tWidgets\r\n\t~\tthe value OF stock for the household\r\n\t|\r\n"
     "FRAC=0.1\r\n\t~\t1/Year\r\n\t~\tFraction Invested\r\n\t|\r\n"
     "GTCIT=1\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
     "INITIAL TIME=0\r\n\t~\tYear\r\n\t~\t\r\n\t|\r\n"
@@ -38,8 +39,10 @@ TEST(LongNameCase_stock_words_capitalized_rest_lower) {
       Take(convert_mdl_to_xmile(mdl.c_str(), static_cast<uint32_t>(mdl.size()), "c.mdl", false, 1, true));
   CHECK(xmile.find("<stock name=\"Capital_Stock\">") != std::string::npos);
   CHECK(xmile.find("<flow name=\"investment_rate\">") != std::string::npos);
-  CHECK(xmile.find("<aux name=\"fraction_invested\">") != std::string::npos);
+  CHECK(xmile.find(" name=\"fraction_invested\">") != std::string::npos);  // VAL's inflow
   CHECK(xmile.find("<eqn>Capital_Stock*fraction_invested</eqn>") != std::string::npos);
+  // Small connecting words stay lower case unless they open the name.
+  CHECK(xmile.find("<stock name=\"The_Value_of_Stock_for_the_Household\">") != std::string::npos);
   // A flow made up for a stock whose net flow is not a sum of named flows is
   // named after the stock, but lower case like every other flow.
   CHECK(xmile.find("<flow name=\"outstanding_debt net flow\">") != std::string::npos);

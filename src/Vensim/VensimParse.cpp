@@ -7,6 +7,7 @@
 
 #include <cctype>
 #include <cstring>
+#include <set>
 #include <stdexcept>
 
 #include "../Symbol/ExpressionList.h"
@@ -793,19 +794,33 @@ void VensimParse::MacroEnd() {
 
 // A long name follows the SD capitalization convention: a stock has the first
 // letter of each word capitalized and the rest lower case ("Household Average
-// Discount Rate For Factor"), any other variable is all lower case. Words are
-// separated by spaces or underscores (compress_whitespace has already turned
-// the documentation's spaces into underscores). Only ASCII letters change, so
-// UTF-8 bytes pass through untouched.
+// Discount Rate for Factor"), except that short connecting words (for, of,
+// the, ...) stay lower case unless they open the name; any other variable is
+// all lower case. Words are separated by spaces or underscores
+// (compress_whitespace has already turned the documentation's spaces into
+// underscores). Only ASCII letters change, so UTF-8 bytes pass through
+// untouched.
 std::string VensimParse::LongNameCase(const std::string &name, bool stock) {
+  static const std::set<std::string> kSmallWords = {"a",   "an",   "and", "as",   "at",  "but", "by",
+                                                    "for", "from", "in",  "into", "nor", "of",  "on",
+                                                    "or",  "per",  "the", "to",   "vs",  "with"};
   std::string out = name;
-  bool wordStart = true;
   for (char &c : out) {
     if (c >= 'A' && c <= 'Z')
       c = static_cast<char>(c - 'A' + 'a');
-    if (stock && wordStart && c >= 'a' && c <= 'z')
-      c = static_cast<char>(c - 'a' + 'A');
-    wordStart = c == ' ' || c == '_';
+  }
+  if (!stock)
+    return out;
+  size_t start = 0;
+  while (start < out.size()) {
+    size_t end = out.find_first_of(" _", start);
+    if (end == std::string::npos)
+      end = out.size();
+    char &first = out[start];
+    if (end > start && first >= 'a' && first <= 'z' &&
+        (start == 0 || kSmallWords.count(out.substr(start, end - start)) == 0))
+      first = static_cast<char>(first - 'a' + 'A');
+    start = end + 1;
   }
   return out;
 }
